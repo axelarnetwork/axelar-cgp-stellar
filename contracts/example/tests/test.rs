@@ -136,7 +136,7 @@ fn gmp_example() {
             destination_address,
             payload_hash.clone(),
         ),
-        payload.clone(),
+        (payload.clone(),),
     );
 
     // Axelar hub signs the message approval, Signing message approval for destination

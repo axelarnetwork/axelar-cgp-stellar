@@ -230,3 +230,40 @@ pub fn rotate_signers(env: &Env, contract_id: &Address, new_signers: TestSignerS
         (),
     );
 }
+
+pub fn rotate_to_new_signers<'a>(
+    env: &Env,
+    signers: TestSignerSet,
+    client: &AxelarGatewayClient<'a>,
+    bypass_rotation_delay: bool,
+    num_signers: u32,
+    use_rng: bool,
+) -> TestSignerSet {
+    let (new_signers, proof) = generate_new_signers(
+        env,
+        signers,
+        num_signers,
+        use_rng,
+    );
+
+    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
+    new_signers
+}
+
+pub fn generate_new_signers(
+    env: &Env,
+    signers: TestSignerSet,
+    num_signers: u32,
+    use_rng: bool,
+) -> (TestSignerSet, Proof) {
+    let new_signers = if use_rng {
+        generate_signers_set(env, num_signers, signers.domain_separator.clone())
+    } else {
+        generate_deterministic_signers_set(env, num_signers, signers.domain_separator.clone())
+    };
+
+    let data_hash = new_signers.signers.signers_rotation_hash(env);
+    let proof = generate_proof(env, data_hash, signers);
+
+    (new_signers, proof)
+}
