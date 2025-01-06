@@ -1,12 +1,13 @@
 use axelar_gateway::error::ContractError;
+use axelar_gateway::event::{
+    ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
+};
 #[cfg(any(test, feature = "testutils"))]
 use axelar_gateway::testutils::{
-    generate_deterministic_test_message, generate_new_signers, generate_proof, generate_signers_set, generate_test_message, get_approve_hash, randint, rotate_to_new_signers
+    generate_deterministic_test_message, generate_new_signers, generate_proof,
+    generate_signers_set, generate_test_message, get_approve_hash, randint, rotate_to_new_signers,
 };
 use axelar_gateway::types::Message;
-use axelar_gateway::event::{
-    ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent
-};
 use axelar_soroban_std::{
     assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
 };
@@ -222,14 +223,7 @@ fn approve_messages_skip_duplicate_message() {
 #[test]
 fn rotate_signers() {
     let (env, signers, client) = setup_env(1, 5);
-    rotate_to_new_signers(
-        &env,
-        signers,
-        &client,
-        false,
-        5,
-        false
-    );
+    rotate_to_new_signers(&env, signers, &client, false, 5, false);
 
     goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 }
@@ -237,14 +231,7 @@ fn rotate_signers() {
 #[test]
 fn approve_messages_after_rotation() {
     let (env, signers, client) = setup_env(1, 5);
-    let new_signers = rotate_to_new_signers(
-        &env,
-        signers,
-        &client,
-        false,
-        5,
-        false
-    );
+    let new_signers = rotate_to_new_signers(&env, signers, &client, false, 5, false);
 
     let (message, _) = generate_deterministic_test_message(&env);
     let messages = vec![&env, message.clone()];
@@ -258,12 +245,7 @@ fn approve_messages_after_rotation() {
 #[test]
 fn rotate_signers_bypass_rotation_delay() {
     let (env, signers, client) = setup_env(1, 5);
-    let (new_signers, proof) = generate_new_signers(
-        &env,
-        signers,
-        5,
-        false,
-    );
+    let (new_signers, proof) = generate_new_signers(&env, signers, 5, false);
     let bypass_rotation_delay = true;
 
     assert_invoke_auth_ok!(
@@ -277,12 +259,7 @@ fn rotate_signers_bypass_rotation_delay() {
 #[test]
 fn rotate_signers_bypass_rotation_delay_unauthorized() {
     let (env, signers, client) = setup_env(1, 5);
-    let (new_signers, proof) = generate_new_signers(
-        &env,
-        signers,
-        5,
-        true,
-    );
+    let (new_signers, proof) = generate_new_signers(&env, signers, 5, true);
     let bypass_rotation_delay = true;
 
     assert_invoke_auth_err!(

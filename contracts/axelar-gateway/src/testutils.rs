@@ -94,11 +94,19 @@ pub fn randint(a: u32, b: u32) -> u32 {
     rand::thread_rng().gen_range(a..b)
 }
 
-pub fn generate_signers_set(env: &Env, num_signers: u32, domain_separator: BytesN<32>) -> TestSignerSet {
+pub fn generate_signers_set(
+    env: &Env,
+    num_signers: u32,
+    domain_separator: BytesN<32>,
+) -> TestSignerSet {
     generate_signers_set_with_randomness(env, num_signers, domain_separator, true)
 }
 
-pub fn generate_deterministic_signers_set(env: &Env, num_signers: u32, domain_separator: BytesN<32>) -> TestSignerSet {
+pub fn generate_deterministic_signers_set(
+    env: &Env,
+    num_signers: u32,
+    domain_separator: BytesN<32>,
+) -> TestSignerSet {
     generate_signers_set_with_randomness(env, num_signers, domain_separator, false)
 }
 
@@ -239,12 +247,7 @@ pub fn rotate_to_new_signers<'a>(
     num_signers: u32,
     use_rng: bool,
 ) -> TestSignerSet {
-    let (new_signers, proof) = generate_new_signers(
-        env,
-        signers,
-        num_signers,
-        use_rng,
-    );
+    let (new_signers, proof) = generate_new_signers(env, signers, num_signers, use_rng);
 
     client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
     new_signers

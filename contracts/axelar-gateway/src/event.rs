@@ -48,10 +48,7 @@ impl Event for ContractCalledEvent {
 
 impl Event for MessageApprovedEvent {
     fn topics(&self, env: &Env) -> impl Topics + Debug {
-        (
-            Symbol::new(env, "message_approved"),
-            self.message.clone(),
-        )
+        (Symbol::new(env, "message_approved"), self.message.clone())
     }
 
     fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
@@ -61,10 +58,7 @@ impl Event for MessageApprovedEvent {
 
 impl Event for MessageExecutedEvent {
     fn topics(&self, env: &Env) -> impl Topics + Debug {
-        (
-            Symbol::new(env, "message_executed"),
-            self.message.clone(),
-        )
+        (Symbol::new(env, "message_executed"), self.message.clone())
     }
 
     fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
@@ -89,7 +83,6 @@ impl Event for SignersRotatedEvent {
 #[cfg(any(test, feature = "testutils"))]
 use axelar_soroban_std::impl_event_testutils;
 
-
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(
     ContractCalledEvent,
@@ -98,22 +91,10 @@ impl_event_testutils!(
 );
 
 #[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(
-    MessageApprovedEvent,
-    (Symbol, Message),
-    ()
-);
+impl_event_testutils!(MessageApprovedEvent, (Symbol, Message), ());
 
 #[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(
-    MessageExecutedEvent,
-    (Symbol, Message),
-    ()
-);
+impl_event_testutils!(MessageExecutedEvent, (Symbol, Message), ());
 
 #[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(
-    SignersRotatedEvent,
-    (Symbol, u64, BytesN<32>),
-    ()
-);
+impl_event_testutils!(SignersRotatedEvent, (Symbol, u64, BytesN<32>), ());
