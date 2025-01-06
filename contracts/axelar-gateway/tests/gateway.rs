@@ -1,7 +1,7 @@
 use axelar_gateway::error::ContractError;
 #[cfg(any(test, feature = "testutils"))]
 use axelar_gateway::testutils::{
-    generate_proof, generate_signers_set, generate_test_message, get_approve_hash, randint,
+    generate_deterministic_signers_set, generate_deterministic_test_message, generate_proof, generate_signers_set, generate_test_message, get_approve_hash, randint,
 };
 use axelar_gateway::types::Message;
 use axelar_gateway::event::{
@@ -101,7 +101,7 @@ fn validate_message() {
 #[test]
 fn approve_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_test_message(&env);
+    let (message, _) = generate_deterministic_test_message(&env);
     let Message {
         source_chain,
         message_id,
@@ -216,7 +216,7 @@ fn rotate_signers() {
     // TODO: uncomment once signers_hash is predictable
     // goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 
-    let (message, _) = generate_test_message(&env);
+    let (message, _) = generate_deterministic_test_message(&env);
     let messages = vec![&env, message.clone()];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, new_signers);
@@ -228,7 +228,7 @@ fn rotate_signers() {
 #[test]
 fn rotate_signers_bypass_rotation_delay() {
     let (env, signers, client) = setup_env(1, 5);
-    let new_signers = generate_signers_set(&env, 5, signers.domain_separator.clone());
+    let new_signers = generate_deterministic_signers_set(&env, 5, signers.domain_separator.clone());
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
