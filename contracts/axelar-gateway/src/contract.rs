@@ -4,6 +4,7 @@ use crate::messaging_interface::AxelarGatewayMessagingInterface;
 use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
 use crate::{auth, event};
+use axelar_soroban_std::events::Event;
 use axelar_soroban_std::ttl::extend_instance_ttl;
 use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use soroban_sdk::xdr::ToXdr;
@@ -51,14 +52,14 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 
         let payload_hash = env.crypto().keccak256(&payload).into();
 
-        event::call_contract(
-            &env,
-            caller,
-            destination_chain,
-            destination_address,
-            payload,
+        event::ContractCalledEvent {
+            caller: caller.clone(),
+            destination_chain: destination_chain.clone(),
+            destination_address: destination_address.clone(),
+            payload: payload.clone(),
             payload_hash,
-        );
+        }
+        .emit(&env);
     }
 
     fn is_message_approved(
@@ -120,7 +121,10 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
                 &MessageApprovalValue::Executed,
             );
 
-            event::execute_message(&env, message);
+            event::MessageExecutedEvent {
+                message: message.clone(),
+            }
+            .emit(&env);
 
             return true;
         }
@@ -161,7 +165,10 @@ impl AxelarGatewayInterface for AxelarGateway {
                 &Self::message_approval_hash(&env, message.clone()),
             );
 
-            event::approve_message(&env, message);
+            event::MessageApprovedEvent {
+                message: message.clone(),
+            }
+            .emit(&env);
         }
 
         extend_instance_ttl(&env);
