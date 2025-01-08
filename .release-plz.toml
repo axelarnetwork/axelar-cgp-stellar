@@ -26,6 +26,10 @@ Changes:
 {% endfor -%}
 """
 
+[[package]]
+name = "example"
+release = false # don't process this package
+
 [changelog]
 header = """# Changelog
 
