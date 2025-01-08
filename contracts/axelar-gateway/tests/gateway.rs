@@ -109,7 +109,7 @@ fn approve_message() {
         source_address,
         contract_address,
         payload_hash,
-    } = message;
+    } = message.clone();
 
     let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
@@ -139,7 +139,7 @@ fn execute_approved_message() {
         source_address,
         contract_address,
         payload_hash,
-    } = message;
+    } = message.clone();
 
     let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
