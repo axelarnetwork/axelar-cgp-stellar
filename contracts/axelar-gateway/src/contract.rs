@@ -1,9 +1,10 @@
+use crate::auth;
 use crate::error::ContractError;
+use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
 use crate::interface::AxelarGatewayInterface;
 use crate::messaging_interface::AxelarGatewayMessagingInterface;
 use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
-use crate::{auth, event};
 use axelar_soroban_std::events::Event;
 use axelar_soroban_std::ttl::extend_instance_ttl;
 use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
@@ -52,11 +53,11 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 
         let payload_hash = env.crypto().keccak256(&payload).into();
 
-        event::ContractCalledEvent {
-            caller: caller.clone(),
-            destination_chain: destination_chain.clone(),
-            destination_address: destination_address.clone(),
-            payload: payload.clone(),
+        ContractCalledEvent {
+            caller,
+            destination_chain,
+            destination_address,
+            payload,
             payload_hash,
         }
         .emit(&env);
@@ -121,10 +122,7 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
                 &MessageApprovalValue::Executed,
             );
 
-            event::MessageExecutedEvent {
-                message: message.clone(),
-            }
-            .emit(&env);
+            MessageExecutedEvent { message }.emit(&env);
 
             return true;
         }
@@ -132,6 +130,7 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
         false
     }
 }
+
 #[contractimpl]
 impl AxelarGatewayInterface for AxelarGateway {
     fn approve_messages(
@@ -165,10 +164,7 @@ impl AxelarGatewayInterface for AxelarGateway {
                 &Self::message_approval_hash(&env, message.clone()),
             );
 
-            event::MessageApprovedEvent {
-                message: message.clone(),
-            }
-            .emit(&env);
+            MessageApprovedEvent { message }.emit(&env);
         }
 
         extend_instance_ttl(&env);

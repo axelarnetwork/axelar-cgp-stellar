@@ -4,7 +4,7 @@ use axelar_soroban_std::ensure;
 use axelar_soroban_std::events::Event;
 use soroban_sdk::{crypto::Hash, Bytes, BytesN, Env, Vec};
 
-use crate::event;
+use crate::event::SignersRotatedEvent;
 use crate::storage_types::DataKey;
 use crate::types::{Proof, WeightedSigners};
 
@@ -105,9 +105,9 @@ pub fn rotate_signers(
         &new_epoch,
     );
 
-    event::SignersRotatedEvent {
-        epoch: new_epoch.clone(),
-        signers_hash: new_signers_hash.clone(),
+    SignersRotatedEvent {
+        epoch: new_epoch,
+        signers_hash: new_signers_hash,
     }
     .emit(env);
 

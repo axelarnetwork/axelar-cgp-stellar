@@ -59,24 +59,24 @@ pub fn get_approve_hash(env: &Env, messages: Vec<Message>) -> BytesN<32> {
         .into()
 }
 
+pub fn get_deterministic_rng() -> rand_chacha::ChaCha20Rng {
+    use rand::SeedableRng;
+    rand_chacha::ChaCha20Rng::seed_from_u64(42)
+}
+
 pub fn generate_test_message(env: &Env) -> (Message, Bytes) {
-    generate_test_message_with_randomness(env, true)
+    generate_test_message_with_rng(env, rand::thread_rng())
 }
 
-pub fn generate_deterministic_test_message(env: &Env) -> (Message, Bytes) {
-    generate_test_message_with_randomness(env, false)
-}
+pub fn generate_test_message_with_rng(
+    env: &Env,
+    mut rng: impl Rng + rand::CryptoRng,
+) -> (Message, Bytes) {
+    let len = rng.gen_range(0..20);
+    let mut payload = std::vec![0u8; len];
+    rng.fill(&mut payload[..]);
 
-fn generate_test_message_with_randomness(env: &Env, use_rng: bool) -> (Message, Bytes) {
-    let payload = if use_rng {
-        let mut rng = rand::thread_rng();
-        let len = rng.gen_range(0..20);
-        let mut payload = std::vec![0u8; len];
-        rng.fill(&mut payload[..]);
-        Bytes::from_slice(env, &payload[..])
-    } else {
-        Bytes::from_array(env, &[0xde, 0xad, 0xbe, 0xef])
-    };
+    let payload = Bytes::from_slice(env, &payload[..]);
 
     (
         Message {
@@ -99,41 +99,19 @@ pub fn generate_signers_set(
     num_signers: u32,
     domain_separator: BytesN<32>,
 ) -> TestSignerSet {
-    generate_signers_set_with_randomness(env, num_signers, domain_separator, true)
+    generate_signers_set_with_rng(env, num_signers, domain_separator, rand::thread_rng())
 }
 
-pub fn generate_deterministic_signers_set(
+pub fn generate_signers_set_with_rng(
     env: &Env,
     num_signers: u32,
     domain_separator: BytesN<32>,
+    mut rng: impl Rng + rand::CryptoRng,
 ) -> TestSignerSet {
-    generate_signers_set_with_randomness(env, num_signers, domain_separator, false)
-}
-
-fn generate_signers_set_with_randomness(
-    env: &Env,
-    num_signers: u32,
-    domain_separator: BytesN<32>,
-    use_rng: bool,
-) -> TestSignerSet {
-    let mut rng = rand::thread_rng();
-
     let mut signer_keypair: std::vec::Vec<_> = (0..num_signers)
-        .map(|s| {
-            let signing_key = if use_rng {
-                SigningKey::generate(&mut rng)
-            } else {
-                let mut seed = [0u8; 32];
-                seed[0] = s as u8;
-                SigningKey::from_bytes(&seed)
-            };
-
-            let weight = if use_rng {
-                rng.gen_range(1..10) as u128
-            } else {
-                (s as u128 % 9) + 1
-            };
-
+        .map(|_| {
+            let signing_key = SigningKey::generate(&mut rng);
+            let weight = rng.gen_range(1..10) as u128;
             (signing_key, weight)
         })
         .collect();
@@ -155,11 +133,7 @@ fn generate_signers_set_with_randomness(
         })
         .collect();
 
-    let threshold = if use_rng {
-        rng.gen_range(1..=total_weight)
-    } else {
-        total_weight / 2 + 1
-    };
+    let threshold = rng.gen_range(1..=total_weight);
 
     let signers = WeightedSigners {
         signers: signer_vec.into_vec(env),
@@ -237,36 +211,4 @@ pub fn rotate_signers(env: &Env, contract_id: &Address, new_signers: TestSignerS
         ),
         (),
     );
-}
-
-pub fn rotate_to_new_signers<'a>(
-    env: &Env,
-    signers: TestSignerSet,
-    client: &AxelarGatewayClient<'a>,
-    bypass_rotation_delay: bool,
-    num_signers: u32,
-    use_rng: bool,
-) -> TestSignerSet {
-    let (new_signers, proof) = generate_new_signers(env, signers, num_signers, use_rng);
-
-    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
-    new_signers
-}
-
-pub fn generate_new_signers(
-    env: &Env,
-    signers: TestSignerSet,
-    num_signers: u32,
-    use_rng: bool,
-) -> (TestSignerSet, Proof) {
-    let new_signers = if use_rng {
-        generate_signers_set(env, num_signers, signers.domain_separator.clone())
-    } else {
-        generate_deterministic_signers_set(env, num_signers, signers.domain_separator.clone())
-    };
-
-    let data_hash = new_signers.signers.signers_rotation_hash(env);
-    let proof = generate_proof(env, data_hash, signers);
-
-    (new_signers, proof)
 }

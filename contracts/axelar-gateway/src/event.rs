@@ -42,7 +42,7 @@ impl Event for ContractCalledEvent {
     }
 
     fn data(&self, _env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        (self.payload.clone(),)
+        (self.payload.to_val(),)
     }
 }
 
@@ -80,21 +80,16 @@ impl Event for SignersRotatedEvent {
     }
 }
 
-#[cfg(any(test, feature = "testutils"))]
-use axelar_soroban_std::impl_event_testutils;
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(
-    ContractCalledEvent,
-    (Symbol, Address, String, String, BytesN<32>),
-    (Bytes)
-);
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(MessageApprovedEvent, (Symbol, Message), ());
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(MessageExecutedEvent, (Symbol, Message), ());
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(SignersRotatedEvent, (Symbol, u64, BytesN<32>), ());
+cfg_if::cfg_if! {
+    if #[cfg(any(test, feature = "testutils"))] {
+        use axelar_soroban_std::impl_event_testutils;
+        impl_event_testutils!(
+            ContractCalledEvent,
+            (Symbol, Address, String, String, BytesN<32>),
+            (Bytes)
+        );
+        impl_event_testutils!(MessageApprovedEvent, (Symbol, Message), ());
+        impl_event_testutils!(MessageExecutedEvent, (Symbol, Message), ());
+        impl_event_testutils!(SignersRotatedEvent, (Symbol, u64, BytesN<32>), ());
+    }
+}

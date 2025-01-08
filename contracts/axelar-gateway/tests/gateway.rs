@@ -4,8 +4,8 @@ use axelar_gateway::event::{
 };
 #[cfg(any(test, feature = "testutils"))]
 use axelar_gateway::testutils::{
-    generate_deterministic_test_message, generate_new_signers, generate_proof,
-    generate_signers_set, generate_test_message, get_approve_hash, randint, rotate_to_new_signers,
+    generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
+    generate_test_message_with_rng, get_approve_hash, get_deterministic_rng, randint,
 };
 use axelar_gateway::types::Message;
 use axelar_soroban_std::{
@@ -102,7 +102,7 @@ fn validate_message() {
 #[test]
 fn approve_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_deterministic_test_message(&env);
+    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
     let Message {
         source_chain,
         message_id,
@@ -132,7 +132,7 @@ fn approve_message() {
 #[test]
 fn execute_approved_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_deterministic_test_message(&env);
+    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
     let Message {
         source_chain,
         message_id,
@@ -223,7 +223,18 @@ fn approve_messages_skip_duplicate_message() {
 #[test]
 fn rotate_signers() {
     let (env, signers, client) = setup_env(1, 5);
-    rotate_to_new_signers(&env, signers, &client, false, 5, false);
+
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        get_deterministic_rng(),
+    );
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
+    let bypass_rotation_delay = false;
+
+    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
 
     goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 }
@@ -231,12 +242,24 @@ fn rotate_signers() {
 #[test]
 fn approve_messages_after_rotation() {
     let (env, signers, client) = setup_env(1, 5);
-    let new_signers = rotate_to_new_signers(&env, signers, &client, false, 5, false);
 
-    let (message, _) = generate_deterministic_test_message(&env);
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        get_deterministic_rng(),
+    );
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
+    let bypass_rotation_delay = false;
+
+    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
+
+    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
     let messages = vec![&env, message.clone()];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, new_signers);
+
     client.approve_messages(&messages, &proof);
 
     goldie::assert!(events::fmt_last_emitted_event::<MessageApprovedEvent>(&env));
@@ -245,7 +268,14 @@ fn approve_messages_after_rotation() {
 #[test]
 fn rotate_signers_bypass_rotation_delay() {
     let (env, signers, client) = setup_env(1, 5);
-    let (new_signers, proof) = generate_new_signers(&env, signers, 5, false);
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        get_deterministic_rng(),
+    );
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
 
     assert_invoke_auth_ok!(
@@ -259,7 +289,11 @@ fn rotate_signers_bypass_rotation_delay() {
 #[test]
 fn rotate_signers_bypass_rotation_delay_unauthorized() {
     let (env, signers, client) = setup_env(1, 5);
-    let (new_signers, proof) = generate_new_signers(&env, signers, 5, true);
+
+    let new_signers = generate_signers_set(&env, 5, signers.domain_separator.clone());
+
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
 
     assert_invoke_auth_err!(

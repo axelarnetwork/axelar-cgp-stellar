@@ -6,7 +6,6 @@
 extern crate std;
 
 pub mod error;
-pub mod event;
 pub mod executable;
 mod messaging_interface;
 pub mod types;
@@ -25,6 +24,7 @@ cfg_if::cfg_if! {
         pub use interface::{AxelarGatewayClient, AxelarGatewayInterface};
     } else {
         mod auth;
+        pub mod event;
         mod storage_types;
         mod contract;
 
