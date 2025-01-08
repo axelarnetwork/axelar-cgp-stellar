@@ -42,12 +42,7 @@ fn call_contract() {
         &user,
         &client.address,
         "call_contract",
-        (
-            &user,
-            destination_chain,
-            destination_address,
-            payload,
-        ),
+        (&user, destination_chain, destination_address, payload),
     );
 
     goldie::assert!(events::fmt_last_emitted_event::<ContractCalledEvent>(&env));
