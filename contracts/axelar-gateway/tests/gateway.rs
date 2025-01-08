@@ -1,17 +1,20 @@
 use axelar_gateway::error::ContractError;
+use axelar_gateway::event::{
+    ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
+};
 #[cfg(any(test, feature = "testutils"))]
 use axelar_gateway::testutils::{
-    generate_proof, generate_signers_set, generate_test_message, get_approve_hash, randint,
+    deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
+    generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
 use axelar_gateway::types::Message;
 use axelar_soroban_std::{
-    assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok,
-    assert_last_emitted_event,
+    assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
 };
 use soroban_sdk::{
     bytes,
     testutils::{Address as _, Events},
-    vec, Address, BytesN, String, Symbol,
+    vec, Address, BytesN, String,
 };
 
 mod utils;
@@ -39,26 +42,10 @@ fn call_contract() {
         &user,
         &client.address,
         "call_contract",
-        (
-            &user,
-            destination_chain.clone(),
-            destination_address.clone(),
-            payload.clone(),
-        ),
+        (&user, destination_chain, destination_address, payload),
     );
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (
-            Symbol::new(&env, "contract_called"),
-            user,
-            destination_chain,
-            destination_address,
-            env.crypto().keccak256(&payload),
-        ),
-        payload,
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<ContractCalledEvent>(&env));
 }
 
 #[test]
@@ -110,7 +97,7 @@ fn validate_message() {
 #[test]
 fn approve_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_test_message(&env);
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let Message {
         source_chain,
         message_id,
@@ -119,18 +106,13 @@ fn approve_message() {
         payload_hash,
     } = message.clone();
 
-    let messages = vec![&env, message.clone()];
+    let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, signers);
 
     client.approve_messages(&messages, &proof);
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (Symbol::new(&env, "message_approved"), message.clone()),
-        (),
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<MessageApprovedEvent>(&env));
 
     let is_approved = client.is_message_approved(
         &source_chain,
@@ -140,6 +122,24 @@ fn approve_message() {
         &payload_hash,
     );
     assert!(is_approved);
+}
+
+#[test]
+fn execute_approved_message() {
+    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
+    let Message {
+        source_chain,
+        message_id,
+        source_address,
+        contract_address,
+        payload_hash,
+    } = message.clone();
+
+    let messages = vec![&env, message];
+    let data_hash = get_approve_hash(&env, messages.clone());
+    let proof = generate_proof(&env, data_hash, signers);
+    client.approve_messages(&messages, &proof);
 
     let approved = assert_invoke_auth_ok!(
         contract_address,
@@ -153,12 +153,7 @@ fn approve_message() {
     );
     assert!(approved);
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (Symbol::new(&env, "message_executed"), message),
-        (),
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<MessageExecutedEvent>(&env));
 
     let is_approved = client.is_message_approved(
         &source_chain,
@@ -224,63 +219,66 @@ fn approve_messages_skip_duplicate_message() {
 fn rotate_signers() {
     let (env, signers, client) = setup_env(1, 5);
 
-    let new_signers = generate_signers_set(&env, 5, signers.domain_separator.clone());
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        deterministic_rng(),
+    );
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = false;
-    let new_epoch: u64 = client.epoch() + 1;
 
     client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (
-            Symbol::new(&env, "signers_rotated"),
-            new_epoch,
-            new_signers.signers.hash(&env),
-        ),
-        (),
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
+}
 
-    let (message, _) = generate_test_message(&env);
-    let messages = vec![&env, message.clone()];
+#[test]
+fn approve_messages_after_rotation() {
+    let (env, signers, client) = setup_env(1, 5);
+
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        deterministic_rng(),
+    );
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
+    let bypass_rotation_delay = false;
+
+    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
+
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
+    let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, new_signers);
+
     client.approve_messages(&messages, &proof);
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (Symbol::new(&env, "message_approved"), message),
-        (),
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<MessageApprovedEvent>(&env));
 }
 
 #[test]
 fn rotate_signers_bypass_rotation_delay() {
     let (env, signers, client) = setup_env(1, 5);
-    let new_signers = generate_signers_set(&env, 5, signers.domain_separator.clone());
+    let new_signers = generate_signers_set_with_rng(
+        &env,
+        5,
+        signers.domain_separator.clone(),
+        deterministic_rng(),
+    );
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
-    let new_epoch: u64 = client.epoch() + 1;
 
     assert_invoke_auth_ok!(
         client.operator(),
         client.try_rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
     );
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (
-            Symbol::new(&env, "signers_rotated"),
-            new_epoch,
-            new_signers.signers.hash(&env),
-        ),
-        (),
-    );
+    goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 }
 
 #[test]
