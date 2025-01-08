@@ -44,9 +44,9 @@ fn call_contract() {
         "call_contract",
         (
             &user,
-            destination_chain.clone(),
-            destination_address.clone(),
-            payload.clone(),
+            destination_chain,
+            destination_address,
+            payload,
         ),
     );
 
