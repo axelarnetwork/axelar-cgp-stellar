@@ -4,8 +4,8 @@ use axelar_gateway::event::{
 };
 #[cfg(any(test, feature = "testutils"))]
 use axelar_gateway::testutils::{
-    generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
-    generate_test_message_with_rng, get_approve_hash, get_deterministic_rng, randint,
+    deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
+    generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
 use axelar_gateway::types::Message;
 use axelar_soroban_std::{
@@ -97,7 +97,7 @@ fn validate_message() {
 #[test]
 fn approve_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let Message {
         source_chain,
         message_id,
@@ -127,7 +127,7 @@ fn approve_message() {
 #[test]
 fn execute_approved_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
-    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let Message {
         source_chain,
         message_id,
@@ -223,7 +223,7 @@ fn rotate_signers() {
         &env,
         5,
         signers.domain_separator.clone(),
-        get_deterministic_rng(),
+        deterministic_rng(),
     );
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);
@@ -242,7 +242,7 @@ fn approve_messages_after_rotation() {
         &env,
         5,
         signers.domain_separator.clone(),
-        get_deterministic_rng(),
+        deterministic_rng(),
     );
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);
@@ -250,7 +250,7 @@ fn approve_messages_after_rotation() {
 
     client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
 
-    let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
+    let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, new_signers);
@@ -267,7 +267,7 @@ fn rotate_signers_bypass_rotation_delay() {
         &env,
         5,
         signers.domain_separator.clone(),
-        get_deterministic_rng(),
+        deterministic_rng(),
     );
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash, signers);

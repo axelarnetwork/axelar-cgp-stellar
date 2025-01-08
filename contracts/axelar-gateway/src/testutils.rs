@@ -4,6 +4,7 @@ use crate::auth::{self, epoch};
 use crate::{AxelarGateway, AxelarGatewayClient};
 use axelar_soroban_std::{assert_last_emitted_event, assert_ok};
 use ed25519_dalek::{Signature, Signer, SigningKey};
+use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
 
 use soroban_sdk::Symbol;
@@ -15,9 +16,6 @@ use crate::types::{
 };
 
 use axelar_soroban_std::traits::IntoVec;
-
-const DESTINATION_CHAIN: &str = "ethereum";
-const DESTINATION_ADDRESS: &str = "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59";
 
 #[derive(Clone, Debug)]
 pub struct TestSignerSet {
@@ -59,7 +57,7 @@ pub fn get_approve_hash(env: &Env, messages: Vec<Message>) -> BytesN<32> {
         .into()
 }
 
-pub fn get_deterministic_rng() -> rand_chacha::ChaCha20Rng {
+pub fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
     use rand::SeedableRng;
     rand_chacha::ChaCha20Rng::seed_from_u64(42)
 }
@@ -80,9 +78,9 @@ pub fn generate_test_message_with_rng(
 
     (
         Message {
-            source_chain: String::from_str(env, DESTINATION_CHAIN),
-            message_id: String::from_str(env, "test"),
-            source_address: String::from_str(env, DESTINATION_ADDRESS),
+            source_chain: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 10)),
+            message_id: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 16)),
+            source_address: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 42)),
             contract_address: Address::generate(env),
             payload_hash: env.crypto().keccak256(&payload).into(),
         },

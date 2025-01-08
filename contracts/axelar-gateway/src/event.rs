@@ -3,6 +3,7 @@ use crate::types::Message;
 use core::fmt::Debug;
 
 use axelar_soroban_std::events::Event;
+use cfg_if::cfg_if;
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -80,9 +81,10 @@ impl Event for SignersRotatedEvent {
     }
 }
 
-cfg_if::cfg_if! {
+cfg_if! {
     if #[cfg(any(test, feature = "testutils"))] {
         use axelar_soroban_std::impl_event_testutils;
+
         impl_event_testutils!(
             ContractCalledEvent,
             (Symbol, Address, String, String, BytesN<32>),
