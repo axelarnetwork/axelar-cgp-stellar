@@ -109,9 +109,9 @@ fn approve_message() {
         source_address,
         contract_address,
         payload_hash,
-    } = message.clone();
+    } = message;
 
-    let messages = vec![&env, message.clone()];
+    let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, signers);
 
@@ -139,9 +139,9 @@ fn execute_approved_message() {
         source_address,
         contract_address,
         payload_hash,
-    } = message.clone();
+    } = message;
 
-    let messages = vec![&env, message.clone()];
+    let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, signers);
     client.approve_messages(&messages, &proof);
@@ -256,7 +256,7 @@ fn approve_messages_after_rotation() {
     client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
 
     let (message, _) = generate_test_message_with_rng(&env, get_deterministic_rng());
-    let messages = vec![&env, message.clone()];
+    let messages = vec![&env, message];
     let data_hash = get_approve_hash(&env, messages.clone());
     let proof = generate_proof(&env, data_hash, new_signers);
 
