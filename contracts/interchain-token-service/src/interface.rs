@@ -34,6 +34,18 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
 
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType;
 
+    fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128>;
+
+    fn set_flow_limit(
+        env: &Env,
+        token_id: BytesN<32>,
+        flow_limit: Option<i128>,
+    ) -> Result<(), ContractError>;
+
+    fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128;
+
+    fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128;
+
     fn deploy_interchain_token(
         env: &Env,
         deployer: Address,

@@ -14,6 +14,12 @@ pub struct TrustedChainRemovedEvent {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+pub struct FlowLimitSetEvent {
+    pub token_id: BytesN<32>,
+    pub flow_limit: Option<i128>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct InterchainTokenDeployedEvent {
     pub token_id: BytesN<32>,
     pub token_address: Address,
@@ -76,6 +82,20 @@ impl Event for TrustedChainRemovedEvent {
         (
             Symbol::new(env, "trusted_chain_removed"),
             self.chain.to_val(),
+        )
+    }
+
+    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
+        Vec::<Val>::new(env)
+    }
+}
+
+impl Event for FlowLimitSetEvent {
+    fn topics(&self, env: &Env) -> impl Topics + Debug {
+        (
+            Symbol::new(env, "flow_limit_set"),
+            self.token_id.to_val(),
+            self.flow_limit,
         )
     }
 
@@ -178,6 +198,9 @@ impl_event_testutils!(TrustedChainSetEvent, (Symbol, String), ());
 
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(TrustedChainRemovedEvent, (Symbol, String), ());
+
+#[cfg(any(test, feature = "testutils"))]
+impl_event_testutils!(FlowLimitSetEvent, (Symbol, BytesN<32>, Option<i128>), ());
 
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(

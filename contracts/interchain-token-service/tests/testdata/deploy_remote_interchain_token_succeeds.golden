@@ -1,3 +1,3 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARQG5)
-topics: (Symbol(token_deployment_started), BytesN<32>(127, 197, 48, 155, 232, 144, 233, 5, 104, 135, 130, 118, 76, 97, 230, 164, 117, 144, 45, 242, 69, 90, 124, 72, 93, 71, 115, 62, 188, 31, 2, 167), Contract(CBXOPW23I3THDRTZG2QKYC3WFGQ2Y5BEU2OAPTNLCLFFXQE3BEUJKBOQ), String(ethereum), String(name), String(symbol), 6, None)
+contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON)
+topics: (Symbol(token_deployment_started), BytesN<32>(99, 53, 232, 73, 94, 142, 208, 34, 221, 37, 56, 71, 241, 2, 248, 182, 137, 194, 30, 8, 231, 132, 62, 118, 139, 56, 235, 69, 172, 181, 4, 10), Contract(CAQT3W6SGEY6V6DZTKTX5JNNABDPW75R7BWIJFUY2IN4IKCUSIMZPCNG), String(ethereum), String(name), String(symbol), 6, None)
 data: ()

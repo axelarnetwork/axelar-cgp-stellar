@@ -12,6 +12,9 @@ pub enum DataKey {
     ChainName,
     InterchainTokenWasmHash,
     TokenIdConfigKey(BytesN<32>),
+    FlowLimit(BytesN<32>),
+    FlowOut(BytesN<32>, u64),
+    FlowIn(BytesN<32>, u64),
 }
 
 #[contracttype]
