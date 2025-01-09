@@ -21,7 +21,7 @@ const EPOCH_TIME: u64 = 6 * 60 * 60;
 fn setup_flow_limit(env: &Env, client: &InterchainTokenServiceClient) -> (BytesN<32>, Address) {
     let supply = i128::MAX;
     let deployer = Address::generate(env);
-    let token_id = setup_its_token(env, &client, &deployer, supply);
+    let token_id = setup_its_token(env, client, &deployer, supply);
 
     env.mock_all_auths();
     client.set_flow_limit(&token_id, &TEST_FLOW_LIMIT);
@@ -35,8 +35,8 @@ fn create_interchain_transfer_message(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> (String, String, String, Bytes, Vec<GatewayMessage>) {
-    let sender = Address::generate(env).to_xdr(&env);
-    let recipient = Address::generate(env).to_xdr(&env);
+    let sender = Address::generate(env).to_xdr(env);
+    let recipient = Address::generate(env).to_xdr(env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(env).to_string();
 
