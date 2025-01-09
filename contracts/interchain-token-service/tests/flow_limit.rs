@@ -20,8 +20,8 @@ const EPOCH_TIME: u64 = 6 * 60 * 60;
 
 fn setup_flow_limit(env: &Env, client: &InterchainTokenServiceClient) -> (BytesN<32>, Address) {
     let supply = i128::MAX;
-    let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, supply);
+    let deployer = Address::generate(env);
+    let token_id = setup_its_token(env, &client, &deployer, supply);
 
     env.mock_all_auths();
     client.set_flow_limit(&token_id, &TEST_FLOW_LIMIT);
@@ -35,13 +35,13 @@ fn create_interchain_transfer_message(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> (String, String, String, Bytes, Vec<GatewayMessage>) {
-    let sender = Address::generate(&env).to_xdr(&env);
-    let recipient = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(env).to_xdr(&env);
+    let recipient = Address::generate(env).to_xdr(&env);
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address = Address::generate(env).to_string();
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: String::from_str(env, HUB_CHAIN),
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,
@@ -50,7 +50,7 @@ fn create_interchain_transfer_message(
             data: None,
         }),
     };
-    let payload = msg.abi_encode(&env).unwrap();
+    let payload = msg.abi_encode(env).unwrap();
     let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
     let message_id = Address::generate(env).to_string();
@@ -218,7 +218,7 @@ fn add_flow_out_fails_exceeds_flow_limit() {
         &destination_address,
         &amount,
         &data,
-        &gas_token.clone(),
+        &gas_token,
     );
 
     let second_amount = 1;
