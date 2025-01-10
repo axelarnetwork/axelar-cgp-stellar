@@ -34,10 +34,12 @@ impl FlowDirection {
             token_id,
             epoch: current_epoch(env),
         };
+
         let key = match self {
             Self::In => DataKey::FlowIn(flow_key),
             Self::Out => DataKey::FlowOut(flow_key),
         };
+
         env.storage().temporary().set(&key, &new_flow);
     }
 }
