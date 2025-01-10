@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use axelar_soroban_std::events::Event;
-use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
+use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TrustedChainSetEvent {
@@ -16,6 +16,7 @@ pub struct TrustedChainRemovedEvent {
 #[derive(Debug, PartialEq, Eq)]
 pub struct FlowLimitSetEvent {
     pub token_id: BytesN<32>,
+    /// Setting to None bypasses flow limit checks
     pub flow_limit: Option<i128>,
 }
 
@@ -71,10 +72,6 @@ impl Event for TrustedChainSetEvent {
     fn topics(&self, env: &Env) -> impl Topics + Debug {
         (Symbol::new(env, "trusted_chain_set"), self.chain.to_val())
     }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
 }
 
 impl Event for TrustedChainRemovedEvent {
@@ -83,10 +80,6 @@ impl Event for TrustedChainRemovedEvent {
             Symbol::new(env, "trusted_chain_removed"),
             self.chain.to_val(),
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 
@@ -97,10 +90,6 @@ impl Event for FlowLimitSetEvent {
             self.token_id.to_val(),
             self.flow_limit,
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 
@@ -115,10 +104,6 @@ impl Event for InterchainTokenDeployedEvent {
             self.decimals,
             self.minter.clone(),
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 
@@ -135,10 +120,6 @@ impl Event for InterchainTokenDeploymentStartedEvent {
             self.minter.clone(),
         )
     }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
 }
 
 impl Event for InterchainTokenIdClaimedEvent {
@@ -149,10 +130,6 @@ impl Event for InterchainTokenIdClaimedEvent {
             self.deployer.to_val(),
             self.salt.to_val(),
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 

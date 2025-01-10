@@ -162,10 +162,42 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .into()
     }
 
+    /// Retrieves the flow limit for the token associated with the specified token ID.
+    /// Returns None if no limit is set.
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
         flow_limit::flow_limit(env, token_id)
     }
 
+    /// Retrieves the flow out amount for the current epoch for the token
+    /// associated with the specified token ID.
+    fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128 {
+        flow_limit::flow_out_amount(env, token_id)
+    }
+
+    /// Retrieves the flow out amount for the current epoch for the token
+    /// associated with the specified token ID.
+    fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
+        flow_limit::flow_in_amount(env, token_id)
+    }
+
+    /// Sets or updates the flow limit for a token.
+    ///
+    /// Flow limit controls how many tokens can flow in/out during a single epoch.
+    /// Setting the limit to None disables flow limit checks for the token.
+    /// Setting the limit to 0 effectively freezes the token by preventing any flow.
+    ///
+    /// # Arguments
+    /// - `env`: Reference to the contract environment.
+    /// - `token_id`: Unique identifier of the token.
+    /// - `flow_limit`: The new flow limit value. Must be positive if Some.
+    ///
+    /// # Returns
+    /// - `Result<(), ContractError>`: Ok(()) on success.
+    ///
+    /// # Errors
+    /// - `ContractError::InvalidFlowLimit`: If the provided flow limit is not positive.
+    ///
+    /// Authorization: Only the operator can call this function. Unauthorized calls will panic.
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
@@ -174,14 +206,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::operator(env).require_auth();
 
         flow_limit::set_flow_limit(env, token_id, flow_limit)
-    }
-
-    fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128 {
-        flow_limit::flow_out_amount(env, token_id)
-    }
-
-    fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
-        flow_limit::flow_in_amount(env, token_id)
     }
 
     /// Computes a 32-byte deployment salt for a canonical token using the provided token address.

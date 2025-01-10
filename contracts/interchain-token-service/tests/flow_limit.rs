@@ -23,8 +23,9 @@ fn setup_flow_limit(env: &Env, client: &InterchainTokenServiceClient) -> (BytesN
     let deployer = Address::generate(env);
     let token_id = setup_its_token(env, client, &deployer, supply);
 
-    env.mock_all_auths();
-    client.set_flow_limit(&token_id, &TEST_FLOW_LIMIT);
+    client
+        .mock_all_auths()
+        .set_flow_limit(&token_id, &TEST_FLOW_LIMIT);
 
     (token_id, deployer)
 }
@@ -87,16 +88,33 @@ fn set_flow_limit_succeeds() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #20)")] // FlowLimitExceeded
+fn zero_flow_limit_freezes_token() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+    register_chains(&env, &client);
+    let (token_id, _) = setup_flow_limit(&env, &client);
+
+    client.mock_all_auths().set_flow_limit(&token_id, &Some(0));
+
+    let amount = 1;
+    let (source_chain, message_id, source_address, payload, messages) =
+        create_interchain_transfer_message(&env, &client, &token_id, amount);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    client.execute(&source_chain, &message_id, &source_address, &payload);
+}
+
+#[test]
 fn set_flow_limit_fails_invalid_amount() {
     let (env, client, _, _, _) = setup_env();
     let token_id = BytesN::from_array(&env, &[1; 32]);
 
     let invalid_limit = Some(-1);
 
-    env.mock_all_auths();
-
     assert_contract_err!(
-        client.try_set_flow_limit(&token_id, &invalid_limit),
+        client
+            .mock_all_auths()
+            .try_set_flow_limit(&token_id, &invalid_limit),
         ContractError::InvalidFlowLimit
     );
 }
@@ -242,8 +260,9 @@ fn add_flow_fails_on_flow_comparison_overflow() {
     let (token_id, sender) = setup_flow_limit(&env, &client);
     let gas_token = setup_gas_token(&env, &sender);
 
-    env.mock_all_auths();
-    client.set_flow_limit(&token_id, &Some(i128::MAX - 50));
+    client
+        .mock_all_auths()
+        .set_flow_limit(&token_id, &Some(i128::MAX - 50));
 
     let high_amount = i128::MAX - 100;
     let (source_chain, message_id, source_address, payload, messages) =

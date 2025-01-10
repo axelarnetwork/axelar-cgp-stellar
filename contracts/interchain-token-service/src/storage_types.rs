@@ -13,8 +13,8 @@ pub enum DataKey {
     InterchainTokenWasmHash,
     TokenIdConfigKey(BytesN<32>),
     FlowLimit(BytesN<32>),
-    FlowOut(BytesN<32>, u64),
-    FlowIn(BytesN<32>, u64),
+    FlowOut(FlowKey),
+    FlowIn(FlowKey),
 }
 
 #[contracttype]
@@ -22,4 +22,11 @@ pub enum DataKey {
 pub struct TokenIdConfigValue {
     pub token_address: Address,
     pub token_manager_type: TokenManagerType,
+}
+
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct FlowKey {
+    pub token_id: BytesN<32>,
+    pub epoch: u64,
 }
