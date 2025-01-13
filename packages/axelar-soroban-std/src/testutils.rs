@@ -140,3 +140,34 @@ macro_rules! auth_invocation {
         )]
     }};
 }
+
+#[macro_export]
+macro_rules! build_mock_invoke {
+    (
+        $env:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
+        $sub_invokes:expr
+    ) => {{
+        soroban_sdk::testutils::MockAuthInvoke {
+            contract: &$client.address,
+            fn_name: &stringify!($method),
+            args: ($($arg.clone(),)*).into_val(&$env),
+            sub_invokes: $sub_invokes,
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! build_mock_auth {
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
+        $sub_invokes:expr
+    ) => {{
+        soroban_sdk::testutils::MockAuth {
+            address: &$caller,
+            invoke: &build_mock_invoke!($env, $client . $method ( $($arg),* ), $sub_invokes),
+        }
+    }};
+}

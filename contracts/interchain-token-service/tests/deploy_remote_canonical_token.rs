@@ -1,17 +1,15 @@
 mod utils;
 
-use axelar_soroban_std::{address::AddressExt, auth_invocation, events};
+use axelar_soroban_std::{
+    address::AddressExt, auth_invocation, build_mock_auth, build_mock_invoke, events,
+};
 use interchain_token_service::{
     event::InterchainTokenDeploymentStartedEvent,
     types::{DeployInterchainToken, HubMessage, Message, TokenManagerType},
 };
-use soroban_sdk::testutils::{
-    Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke,
-};
-use soroban_sdk::{
-    token::{self, StellarAssetClient},
-    TryIntoVal,
-};
+use soroban_sdk::testutils::MockAuthInvoke;
+use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
+use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use utils::{setup_env, setup_gas_token};
@@ -67,60 +65,35 @@ fn deploy_remote_canonical_token_succeeds() {
     }
     .abi_encode(&env);
 
-    let payload_val = payload.clone().expect("").to_val();
-    let gas_token_val = gas_token.try_into_val(&env).expect("");
+    let transfer_token_auth = build_mock_invoke!(
+        env,
+        gas_token.transfer(spender, gas_service.address, gas_token.amount),
+        &[]
+    );
 
-    let transfer_token_auth = MockAuthInvoke {
-        contract: &gas_token.address,
-        fn_name: "transfer",
-        args: soroban_sdk::vec![
-            &env,
-            spender.to_val(),
-            gas_service.address.to_val(),
-            gas_token.amount.into_val(&env),
-        ],
-        sub_invokes: &[],
-    };
+    let pay_gas_auth = build_mock_auth!(
+        env,
+        spender,
+        gas_service.pay_gas(
+            client.address,
+            its_hub_chain,
+            its_hub_address,
+            payload,
+            spender,
+            gas_token,
+            Bytes::new(&env)
+        ),
+        &[transfer_token_auth]
+    );
 
-    let pay_gas_auth = MockAuthInvoke {
-        contract: &gas_service.address,
-        fn_name: "pay_gas",
-        args: soroban_sdk::vec![
-            &env,
-            client.address.to_val(),
-            its_hub_chain.to_val(),
-            its_hub_address.to_val(),
-            payload_val,
-            spender.to_val(),
-            gas_token_val,
-            Bytes::new(&env).into(),
-        ],
-        sub_invokes: &[transfer_token_auth],
-    };
+    let call_contract_auth = build_mock_auth!(
+        env,
+        spender,
+        gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload),
+        &[]
+    );
 
-    let call_contract_auth = MockAuthInvoke {
-        contract: &gateway.address,
-        fn_name: "call_contract",
-        args: soroban_sdk::vec![
-            &env,
-            client.address.to_val(),
-            its_hub_chain.to_val(),
-            its_hub_address.to_val(),
-            payload_val,
-        ],
-        sub_invokes: &[],
-    };
-
-    env.mock_auths(&[
-        MockAuth {
-            address: &spender,
-            invoke: &pay_gas_auth,
-        },
-        MockAuth {
-            address: &spender,
-            invoke: &call_contract_auth,
-        },
-    ]);
+    env.mock_auths(&[pay_gas_auth, call_contract_auth]);
 
     let deployed_token_id = client.deploy_remote_canonical_token(
         &token_address,
