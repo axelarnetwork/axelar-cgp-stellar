@@ -3,7 +3,7 @@ extern crate std;
 
 use axelar_operators::error::ContractError;
 use axelar_soroban_std::{
-    assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event,
+    assert_contract_err, assert_auth_err, assert_last_emitted_event,
     testutils::assert_invocation,
 };
 
@@ -11,6 +11,7 @@ use axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use soroban_sdk::{
     contract, contractimpl, symbol_short, testutils::Address as _, Address, Env, Symbol, Val, Vec,
 };
+use paste::paste;
 
 #[contract]
 pub struct TestTarget;
@@ -201,9 +202,9 @@ fn fail_execute_when_target_panics() {
     client.add_operator(&operator);
 
     // call execute as an operator
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         operator,
-        client.try_execute(
+        client.execute(
             &operator,
             &target,
             &symbol_short!("failing"),

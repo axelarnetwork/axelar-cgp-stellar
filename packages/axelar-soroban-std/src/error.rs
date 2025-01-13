@@ -106,13 +106,15 @@ macro_rules! assert_some {
 }
 
 #[macro_export]
-macro_rules! assert_invoke_auth_ok {
+macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::IntoVal;
 
-        let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
+        paste! {
+            let call_result = $client
+                .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
+                .[<try_ $method>]($($arg),*);
+        }
 
         match call_result {
             Ok(outer) => {
@@ -127,14 +129,15 @@ macro_rules! assert_invoke_auth_ok {
 }
 
 #[macro_export]
-macro_rules! assert_invoke_auth_err {
+macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
 
+        paste! {
         let call_result = $client
             .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
-
+            .[<try_ $method>]($($arg),*);
+        }
         match call_result {
             Err(_) => {
                 let val = ScVal::Error(ScError::Context(ScErrorCode::InvalidAction));

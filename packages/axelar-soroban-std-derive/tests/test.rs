@@ -2,8 +2,9 @@ use soroban_sdk::{contract, contracterror, contractimpl, testutils::Address as _
 
 mod testdata;
 mod operatable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OperatableClient};
+    use axelar_soroban_std::{assert_auth, interfaces::OperatableClient};
     use axelar_soroban_std_derive::Operatable;
+    use paste::paste;
 
     use super::*;
 
@@ -34,16 +35,17 @@ mod operatable {
         assert_eq!(operator, client.operator());
 
         let new_operator = Address::generate(&env);
-        assert_invoke_auth_ok!(operator, client.try_transfer_operatorship(&new_operator));
+        assert_auth!(operator, client.transfer_operatorship(&new_operator));
         assert_eq!(new_operator, client.operator());
     }
 }
 
 mod ownable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OwnableClient};
+    use axelar_soroban_std::{assert_auth, interfaces::OwnableClient};
     use axelar_soroban_std_derive::Ownable;
 
     use super::*;
+    use paste::paste;
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -72,16 +74,17 @@ mod ownable {
         assert_eq!(owner, client.owner());
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_ok!(owner, client.try_transfer_ownership(&new_owner));
+        assert_auth!(owner, client.transfer_ownership(&new_owner));
         assert_eq!(new_owner, client.owner());
     }
 }
 
 mod upgradable {
-    use axelar_soroban_std::assert_invoke_auth_ok;
+    use axelar_soroban_std::assert_auth;
     use axelar_soroban_std_derive::{Ownable, Upgradable};
 
     use super::*;
+    use paste::paste;
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -125,9 +128,9 @@ mod upgradable {
         let client = ContractClient::new(env, &contract_id);
         let new_wasm_hash = env.deployer().upload_contract_wasm(UPGRADED_WASM);
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&new_wasm_hash));
+        assert_auth!(owner, client.upgrade(&new_wasm_hash));
 
         let client = testdata::ContractClient::new(env, &contract_id);
-        assert_invoke_auth_ok!(owner, client.try_migrate(&()));
+        assert_auth!(owner, client.migrate(&()));
     }
 }

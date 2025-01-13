@@ -19,6 +19,7 @@ cfg-if = { workspace = true }
 interchain-token = { workspace = true, features = ["library"] }
 soroban-sdk = { workspace = true, features = ["alloc"] }
 soroban-token-sdk = { workspace = true }
+paste = { workspace = true }
 
 [dev-dependencies]
 axelar-gas-service = { workspace = true, features = ["testutils"] }

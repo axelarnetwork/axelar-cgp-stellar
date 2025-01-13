@@ -371,6 +371,7 @@ version = "0.1.0"
 dependencies = [
  "axelar-soroban-std",
  "cfg-if",
+ "paste",
  "soroban-sdk",
 ]
 
@@ -385,6 +386,7 @@ dependencies = [
  "goldie",
  "hex",
  "hex-literal",
+ "paste",
  "rand",
  "rand_chacha",
  "soroban-sdk",
@@ -395,6 +397,7 @@ name = "axelar-operators"
 version = "0.1.0"
 dependencies = [
  "axelar-soroban-std",
+ "paste",
  "soroban-sdk",
 ]
 
@@ -405,6 +408,7 @@ dependencies = [
  "axelar-soroban-std-derive",
  "goldie",
  "hex",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
 ]
@@ -414,6 +418,7 @@ name = "axelar-soroban-std-derive"
 version = "0.1.0"
 dependencies = [
  "axelar-soroban-std",
+ "paste",
  "proc-macro2",
  "quote",
  "soroban-sdk",
@@ -1159,6 +1164,7 @@ version = "0.1.0"
 dependencies = [
  "axelar-soroban-std",
  "cfg-if",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
 ]
@@ -1177,6 +1183,7 @@ dependencies = [
  "hex",
  "interchain-token",
  "interchain-token-service",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
 ]

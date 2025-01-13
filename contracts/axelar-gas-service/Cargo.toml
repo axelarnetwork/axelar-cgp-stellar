@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 axelar-soroban-std = { workspace = true }
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
+paste = { workspace = true }
 
 [dev-dependencies]
 axelar-soroban-std = { workspace = true, features = ["testutils"] }

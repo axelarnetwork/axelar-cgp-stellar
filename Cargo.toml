@@ -25,6 +25,7 @@ alloy-sol-types = { version = "0.8.14", default-features = false, features = [
 ] }
 goldie = "0.5.0"
 hex = { version = "0.4" }
+paste = "1.0"
 
 [workspace.lints.clippy]
 nursery = { level = "warn", priority = -1 }

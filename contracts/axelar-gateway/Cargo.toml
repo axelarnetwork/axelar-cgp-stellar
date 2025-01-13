@@ -26,6 +26,7 @@ hex = "0.4"
 hex-literal = "0.4"
 rand = { version = "0.8.5" }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+paste = { workspace = true }
 
 [features]
 library = [] # Only export the contract interface

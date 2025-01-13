@@ -107,12 +107,13 @@ pub enum MigrationError {
 #[cfg(test)]
 mod test {
     use crate::interfaces::upgradable::UpgradedEvent;
-    use crate::{assert_invoke_auth_err, assert_invoke_auth_ok, events};
+    use crate::{assert_auth_err, assert_auth, events};
 
     use crate::interfaces::testdata::{ContractClient, ContractNonTrivialClient, MigrationData};
     use crate::interfaces::{testdata, upgradable};
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, BytesN, Env, String};
+    use paste::paste;
 
     const WASM: &[u8] = include_bytes!("testdata/contract_trivial_migration.wasm");
     const WASM_NON_TRIVIAL: &[u8] = include_bytes!("testdata/contract_non_trivial_migration.wasm");
@@ -151,7 +152,7 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner));
 
-        assert_invoke_auth_err!(Address::generate(&env), client.try_upgrade(&hash));
+        assert_auth_err!(Address::generate(&env), client.upgrade(&hash));
     }
 
     #[test]
@@ -160,7 +161,7 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
+        assert_auth!(owner, client.upgrade(&hash));
     }
 
     #[test]
@@ -169,7 +170,7 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
+        assert_auth!(owner, client.upgrade(&hash));
         assert!(client.try_migrate(&()).is_err());
     }
 
@@ -179,8 +180,8 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
-        assert_invoke_auth_err!(Address::generate(&env), client.try_migrate(&()));
+        assert_auth!(owner, client.upgrade(&hash));
+        assert_auth_err!(Address::generate(&env), client.migrate(&()));
     }
 
     #[test]
@@ -189,7 +190,7 @@ mod test {
         let owner = Address::generate(&env);
         let (client, _) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_err!(owner, client.try_migrate(&()));
+        assert_auth_err!(owner, client.migrate(&()));
     }
 
     #[test]
@@ -198,11 +199,11 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
+        assert_auth!(owner, client.upgrade(&hash));
 
         assert!(client.migration_data().is_none());
 
-        assert_invoke_auth_ok!(owner, client.try_migrate(&()));
+        assert_auth!(owner, client.migrate(&()));
 
         assert_eq!(
             client.migration_data(),
@@ -221,7 +222,7 @@ mod test {
         let hash = env.deployer().upload_contract_wasm(WASM_NON_TRIVIAL);
         let client = ContractNonTrivialClient::new(&env, &contract_id);
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
+        assert_auth!(owner, client.upgrade(&hash));
 
         assert!(client.migration_data().is_none());
 
@@ -231,7 +232,7 @@ mod test {
             data3: 42,
         };
 
-        assert_invoke_auth_ok!(owner, client.try_migrate(&data));
+        assert_auth!(owner, client.migrate(&data));
 
         assert_eq!(client.migration_data(), Some(data.data1));
 
@@ -251,7 +252,7 @@ mod test {
         });
 
         let client = ContractClient::new(&env, &contract_id);
-        assert_invoke_auth_ok!(owner, client.try_migrate(&()));
+        assert_auth!(owner, client.migrate(&()));
     }
 
     #[test]
@@ -260,8 +261,8 @@ mod test {
         let owner = Address::generate(&env);
         let (client, hash) = prepare_client_and_bytecode(&env, Some(owner.clone()));
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&hash));
-        assert_invoke_auth_ok!(owner, client.try_migrate(&()));
-        assert_invoke_auth_err!(owner, client.try_migrate(&()));
+        assert_auth!(owner, client.upgrade(&hash));
+        assert_auth!(owner, client.migrate(&()));
+        assert_auth_err!(owner, client.migrate(&()));
     }
 }
