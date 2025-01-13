@@ -111,7 +111,12 @@ macro_rules! assert_invoke_auth_ok {
         use soroban_sdk::IntoVal;
 
         let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
             .$method($($arg),*);
 
         match call_result {
@@ -132,7 +137,12 @@ macro_rules! assert_invoke_auth_err {
         use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
 
         let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
             .$method($($arg),*);
 
         match call_result {
@@ -150,15 +160,20 @@ macro_rules! assert_invoke_auth_err {
 
 #[macro_export]
 macro_rules! mock_auth {
-    ($caller:expr, $client:ident, $method:ident, $($arg:expr),*) => {
-        &[soroban_sdk::testutils::MockAuth {
-                address: &$caller,
-                invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                    contract: &$client.address,
-                    fn_name: &stringify!($method).replace("try_", ""),
-                    args: ($($arg.clone(),)*).into_val(&$client.env),
-                    sub_invokes: &[],
-                },
-            }]
-    };
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
+        $sub_invokes:expr
+    ) => {{
+        soroban_sdk::testutils::MockAuth {
+            address: &$caller,
+            invoke: &soroban_sdk::testutils::MockAuthInvoke {
+                contract: &$client.address,
+                fn_name: &stringify!($method).replace("try_", ""),
+                args: ($($arg.clone(),)*).into_val(&$env),
+                sub_invokes: $sub_invokes,
+            },
+        }
+    }};
 }
