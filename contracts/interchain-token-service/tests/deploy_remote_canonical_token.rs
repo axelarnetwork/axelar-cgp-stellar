@@ -63,13 +63,14 @@ fn deploy_remote_canonical_token_succeeds() {
     }
     .abi_encode(&env);
 
-    let transfer_token_auth = build_mock_invoke!(
+    let transfer_token_auth = mock_auth!(
         env,
+        spender,
         gas_token.transfer(spender, gas_service.address, gas_token.amount),
         &[]
     );
 
-    let pay_gas_auth = build_mock_auth!(
+    let pay_gas_auth = mock_auth!(
         env,
         spender,
         gas_service.pay_gas(
@@ -81,10 +82,10 @@ fn deploy_remote_canonical_token_succeeds() {
             gas_token,
             Bytes::new(&env)
         ),
-        &[transfer_token_auth]
+        &[(transfer_token_auth.invoke).clone()]
     );
 
-    let call_contract_auth = build_mock_auth!(
+    let call_contract_auth = mock_auth!(
         env,
         spender,
         gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload),
