@@ -16,7 +16,7 @@ pub struct TrustedChainRemovedEvent {
 #[derive(Debug, PartialEq, Eq)]
 pub struct FlowLimitSetEvent {
     pub token_id: BytesN<32>,
-    /// Setting to None bypasses flow limit checks
+    /// A `None` value implies that flow limit checks have been disabled for this `token_id`
     pub flow_limit: Option<i128>,
 }
 

@@ -7,6 +7,7 @@ pub use testutils::*;
 pub trait Event: Debug + PartialEq {
     fn topics(&self, env: &Env) -> impl Topics + Debug;
 
+    /// A default empty tuple/vector is used for event data, since majority of events only use topics.
     fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
         Vec::<Val>::new(env)
     }

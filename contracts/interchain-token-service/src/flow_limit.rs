@@ -9,8 +9,10 @@ use crate::{
 
 const EPOCH_TIME: u64 = 6 * 60 * 60; // 6 hours in seconds = 21600
 
-enum FlowDirection {
+pub enum FlowDirection {
+    /// An interchain transfer coming in to this chain from another chain
     In,
+    /// An interchain transfer going out from this chain to another chain
     Out,
 }
 
@@ -41,6 +43,43 @@ impl FlowDirection {
         };
 
         env.storage().temporary().set(&key, &new_flow);
+    }
+
+    /// Adds flow amount in the specified direction (in/out) for a token.
+    /// Flow amounts are stored in temporary storage since they only need to persist for
+    /// the 6-hour epoch duration.
+    ///
+    /// Checks that:
+    /// - Flow amount doesn't exceed the flow limit
+    /// - Adding flows won't cause overflow
+    /// - Total flow in one direction doesn't exceed flow in opposite direction plus limit
+    pub fn add_flow(
+        &self,
+        env: &Env,
+        token_id: BytesN<32>,
+        flow_amount: i128,
+    ) -> Result<(), ContractError> {
+        let Some(flow_limit) = flow_limit(env, token_id.clone()) else {
+            return Ok(());
+        };
+
+        let flow_to_add = self.flow(env, token_id.clone());
+        let flow_to_compare = self.reverse_flow(env, token_id.clone());
+
+        ensure!(flow_amount <= flow_limit, ContractError::FlowLimitExceeded);
+        let new_flow = flow_to_add
+            .checked_add(flow_amount)
+            .ok_or(ContractError::FlowLimitExceeded)?;
+        let max_allowed = flow_to_compare
+            .checked_add(flow_limit)
+            .ok_or(ContractError::FlowLimitExceeded)?;
+        ensure!(new_flow <= max_allowed, ContractError::FlowLimitExceeded);
+
+        self.update_flow(env, token_id.clone(), new_flow);
+
+        extend_persistent_ttl(env, &DataKey::FlowLimit(token_id));
+
+        Ok(())
     }
 }
 
@@ -94,59 +133,4 @@ pub fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
             epoch: current_epoch(env),
         }))
         .unwrap_or(0)
-}
-
-pub fn add_flow_in(
-    env: &Env,
-    token_id: BytesN<32>,
-    flow_amount: i128,
-) -> Result<(), ContractError> {
-    add_flow(env, token_id, flow_amount, FlowDirection::In)
-}
-
-pub fn add_flow_out(
-    env: &Env,
-    token_id: BytesN<32>,
-    flow_amount: i128,
-) -> Result<(), ContractError> {
-    add_flow(env, token_id, flow_amount, FlowDirection::Out)
-}
-
-/// Adds flow amount in the specified direction (in/out) for a token.
-/// Flow amounts are stored in temporary storage since they only need to persist for
-/// the 6-hour epoch duration.
-///
-/// Checks that:
-/// - Flow amount doesn't exceed the flow limit
-/// - Adding flows won't cause overflow
-/// - Total flow in one direction doesn't exceed flow in opposite direction plus limit
-fn add_flow(
-    env: &Env,
-    token_id: BytesN<32>,
-    flow_amount: i128,
-    direction: FlowDirection,
-) -> Result<(), ContractError> {
-    let Some(flow_limit) = flow_limit(env, token_id.clone()) else {
-        return Ok(());
-    };
-
-    let flow_to_add = direction.flow(env, token_id.clone());
-    let flow_to_compare = direction.reverse_flow(env, token_id.clone());
-
-    ensure!(flow_amount <= flow_limit, ContractError::FlowLimitExceeded);
-
-    let new_flow = flow_to_add
-        .checked_add(flow_amount)
-        .ok_or(ContractError::FlowLimitExceeded)?;
-    let max_allowed = flow_to_compare
-        .checked_add(flow_limit)
-        .ok_or(ContractError::FlowLimitExceeded)?;
-
-    ensure!(new_flow <= max_allowed, ContractError::FlowLimitExceeded);
-
-    direction.update_flow(env, token_id.clone(), new_flow);
-
-    extend_persistent_ttl(env, &DataKey::FlowLimit(token_id));
-
-    Ok(())
 }

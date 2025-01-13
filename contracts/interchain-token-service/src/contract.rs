@@ -1,31 +1,39 @@
 use axelar_gas_service::AxelarGasServiceClient;
 use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std::token::validate_token_metadata;
-use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use axelar_soroban_std::{
-    address::AddressExt, ensure, interfaces, types::Token, Operatable, Ownable, Upgradable,
+    address::AddressExt,
+    ensure,
+    events::Event,
+    interfaces,
+    token::validate_token_metadata,
+    ttl::{extend_instance_ttl, extend_persistent_ttl},
+    types::Token,
+    Operatable, Ownable, Upgradable,
 };
 use interchain_token::InterchainTokenClient;
-use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::xdr::{FromXdr, ToXdr};
-use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{
+    contract, contractimpl, panic_with_error,
+    token::{self, StellarAssetClient},
+    xdr::{FromXdr, ToXdr},
+    Address, Bytes, BytesN, Env, String,
+};
 use soroban_token_sdk::metadata::TokenMetadata;
 
-use crate::abi::{get_message_type, MessageType as EncodedMessageType};
-use crate::error::ContractError;
-use crate::event::{
-    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
-    InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
-    TrustedChainRemovedEvent, TrustedChainSetEvent,
+use crate::{
+    abi::{get_message_type, MessageType as EncodedMessageType},
+    error::ContractError,
+    event::{
+        InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
+        InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent,
+        InterchainTransferSentEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
+    },
+    executable::InterchainTokenExecutableClient,
+    flow_limit::{self, FlowDirection},
+    interface::InterchainTokenServiceInterface,
+    storage_types::{DataKey, TokenIdConfigValue},
+    token_handler,
+    types::{DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType},
 };
-use crate::executable::InterchainTokenExecutableClient;
-use crate::interface::InterchainTokenServiceInterface;
-use crate::storage_types::{DataKey, TokenIdConfigValue};
-use crate::types::{
-    DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
-};
-use crate::{flow_limit, token_handler};
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
@@ -162,42 +170,18 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .into()
     }
 
-    /// Retrieves the flow limit for the token associated with the specified token ID.
-    /// Returns None if no limit is set.
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
         flow_limit::flow_limit(env, token_id)
     }
 
-    /// Retrieves the flow out amount for the current epoch for the token
-    /// associated with the specified token ID.
     fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128 {
         flow_limit::flow_out_amount(env, token_id)
     }
 
-    /// Retrieves the flow out amount for the current epoch for the token
-    /// associated with the specified token ID.
     fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
         flow_limit::flow_in_amount(env, token_id)
     }
 
-    /// Sets or updates the flow limit for a token.
-    ///
-    /// Flow limit controls how many tokens can flow in/out during a single epoch.
-    /// Setting the limit to None disables flow limit checks for the token.
-    /// Setting the limit to 0 effectively freezes the token by preventing any flow.
-    ///
-    /// # Arguments
-    /// - `env`: Reference to the contract environment.
-    /// - `token_id`: Unique identifier of the token.
-    /// - `flow_limit`: The new flow limit value. Must be positive if Some.
-    ///
-    /// # Returns
-    /// - `Result<(), ContractError>`: Ok(()) on success.
-    ///
-    /// # Errors
-    /// - `ContractError::InvalidFlowLimit`: If the provided flow limit is not positive.
-    ///
-    /// Authorization: Only the operator can call this function. Unauthorized calls will panic.
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
@@ -385,7 +369,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             amount,
         )?;
 
-        flow_limit::add_flow_out(env, token_id.clone(), amount)?;
+        FlowDirection::Out.add_flow(env, token_id.clone(), amount)?;
 
         InterchainTransferSentEvent {
             token_id: token_id.clone(),
@@ -554,7 +538,7 @@ impl InterchainTokenService {
                 let token_config_value =
                     Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
 
-                flow_limit::add_flow_in(env, token_id.clone(), amount)?;
+                FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
 
                 token_handler::give_token(
                     env,
