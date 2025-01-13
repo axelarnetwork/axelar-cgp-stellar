@@ -14,7 +14,7 @@ use utils::{setup_env, setup_gas_token};
 
 #[test]
 fn deploy_remote_canonical_token_succeeds() {
-    let (env, client, _, gas_service, _) = setup_env();
+    let (env, client, gateway, gas_service, _) = setup_env();
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
@@ -63,9 +63,67 @@ fn deploy_remote_canonical_token_succeeds() {
     }
     .abi_encode(&env);
 
-    let deployed_token_id = client
-        .mock_all_auths_allowing_non_root_auth()
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+    let payload_val = payload.clone().expect("").to_val();
+    let gas_token_val = gas_token.try_into_val(&env).expect("");
+
+    let transfer_token_auth = MockAuthInvoke {
+        contract: &gas_token.address,
+        fn_name: "transfer",
+        args: soroban_sdk::vec![
+            &env,
+            spender.to_val(),
+            gas_service.address.to_val(),
+            gas_token.amount.into_val(&env),
+        ],
+        sub_invokes: &[],
+    };
+
+    let pay_gas_auth = MockAuthInvoke {
+        contract: &gas_service.address,
+        fn_name: "pay_gas",
+        args: soroban_sdk::vec![
+            &env,
+            client.address.to_val(),
+            its_hub_chain.to_val(),
+            its_hub_address.to_val(),
+            payload_val,
+            spender.to_val(),
+            gas_token_val,
+            Bytes::new(&env).into(),
+        ],
+        sub_invokes: &[transfer_token_auth],
+    };
+
+    let call_contract_auth = MockAuthInvoke {
+        contract: &gateway.address,
+        fn_name: "call_contract",
+        args: soroban_sdk::vec![
+            &env,
+            client.address.to_val(),
+            its_hub_chain.to_val(),
+            its_hub_address.to_val(),
+            payload_val,
+        ],
+        sub_invokes: &[],
+    };
+
+    env.mock_auths(&[
+        MockAuth {
+            address: &spender,
+            invoke: &pay_gas_auth,
+        },
+        MockAuth {
+            address: &spender,
+            invoke: &call_contract_auth,
+        },
+    ]);
+
+    let deployed_token_id = client.deploy_remote_canonical_token(
+        &token_address,
+        &destination_chain,
+        &spender,
+        &gas_token,
+    );
     assert_eq!(expected_id, deployed_token_id);
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
