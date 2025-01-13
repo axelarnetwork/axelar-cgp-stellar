@@ -1,0 +1,3 @@
+contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+topics: (Symbol(message_approved), Message { source_chain: String(GyKqKWL06c), message_id: String(eEcXxGu98ZnxuVEI), source_address: String(Rio2MfZ6FAeTrXvJnvvmWvMIS10fFjmfpPkFPLy7aR), contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4), payload_hash: BytesN<32>(160, 25, 21, 204, 150, 24, 176, 125, 78, 101, 121, 85, 21, 33, 225, 157, 173, 108, 218, 34, 118, 36, 49, 164, 191, 187, 162, 107, 156, 177, 122, 148) })
+data: ()

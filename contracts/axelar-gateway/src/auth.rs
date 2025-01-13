@@ -1,9 +1,10 @@
 use crate::error::ContractError;
 use crate::types::{ProofSignature, ProofSigner, WeightedSigner};
 use axelar_soroban_std::ensure;
+use axelar_soroban_std::events::Event;
 use soroban_sdk::{crypto::Hash, Bytes, BytesN, Env, Vec};
 
-use crate::event;
+use crate::event::SignersRotatedEvent;
 use crate::storage_types::DataKey;
 use crate::types::{Proof, WeightedSigners};
 
@@ -104,7 +105,11 @@ pub fn rotate_signers(
         &new_epoch,
     );
 
-    event::rotate_signers(env, new_epoch, new_signers_hash);
+    SignersRotatedEvent {
+        epoch: new_epoch,
+        signers_hash: new_signers_hash,
+    }
+    .emit(env);
 
     Ok(())
 }

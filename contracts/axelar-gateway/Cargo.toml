@@ -14,9 +14,11 @@ axelar-soroban-std = { workspace = true }
 cfg-if = { workspace = true }
 ed25519-dalek = { version = "^2.1", default-features = false, optional = true }
 rand = { version = "0.8.5", optional = true }
+rand_chacha = "0.3"
 soroban-sdk = { workspace = true }
 
 [dev-dependencies]
+axelar-gateway = { workspace = true, features = ["testutils"] }
 axelar-soroban-std = { workspace = true, features = ["testutils"] }
 ed25519-dalek = { version = "^2.1" }
 goldie = { workspace = true }

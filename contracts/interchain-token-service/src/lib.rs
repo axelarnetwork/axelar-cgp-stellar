@@ -2,15 +2,22 @@
 
 #[cfg(any(test, feature = "testutils"))]
 extern crate std;
-mod abi;
-mod contract;
+
 pub mod error;
-pub mod event;
+pub mod executable;
 mod interface;
-mod storage_types;
-mod token_handler;
 pub mod types;
 
-pub mod executable;
+cfg_if::cfg_if! {
+    if #[cfg(all(feature = "library", not(feature = "testutils")))] {
+        pub use interface::{InterchainTokenServiceClient, InterchainTokenServiceInterface};
+    } else {
+        mod abi;
+        pub mod event;
+        mod storage_types;
+        mod token_handler;
+        mod contract;
 
-pub use contract::{InterchainTokenService, InterchainTokenServiceClient};
+        pub use contract::{InterchainTokenService, InterchainTokenServiceClient};
+    }
+}
