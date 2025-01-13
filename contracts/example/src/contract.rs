@@ -6,7 +6,7 @@ use soroban_sdk::{contract, contractimpl, Address, Bytes, Env, String};
 
 use crate::storage_types::DataKey;
 
-use axelar_gateway::executable::AxelarExecutableInterface;
+use axelar_gateway::executable::{AxelarExecutableInterface, ExecutableError};
 
 #[contract]
 pub struct Example;
@@ -23,10 +23,11 @@ impl AxelarExecutableInterface for Example {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) {
-        let _ = Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload);
+    ) -> Result<(), ExecutableError> {
+        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
 
         event::executed(&env, source_chain, message_id, source_address, payload);
+        Ok(())
     }
 }
 

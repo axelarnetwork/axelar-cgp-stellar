@@ -9,6 +9,7 @@ use soroban_sdk::contracterror;
 #[repr(u32)]
 pub enum ExecutableError {
     NotApproved = 1,
+    ExecutionFailed = 2,
 }
 
 /// Interface for an Axelar Executable app.
@@ -24,7 +25,7 @@ pub trait AxelarExecutableInterface {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    );
+    ) -> Result<(), ExecutableError>;
 
     /// Validate if a gateway has approved a message.
     /// This should be called from an implementation of `execute` before executing custom app logic.

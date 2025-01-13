@@ -29,7 +29,7 @@ fn execute_fails_without_gateway_approval() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")] // ContractError::InsufficientMessageLength
+#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
 fn execute_fails_with_invalid_message() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
@@ -172,7 +172,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
+#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
 fn deploy_interchain_token_message_execute_fails_empty_token_name() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
@@ -218,7 +218,7 @@ fn deploy_interchain_token_message_execute_fails_empty_token_name() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
+#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
 fn deploy_interchain_token_message_execute_fails_empty_token_symbol() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
@@ -314,7 +314,7 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #18)")] // ContractError::TokenAlreadyDeployed
+#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
 fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
