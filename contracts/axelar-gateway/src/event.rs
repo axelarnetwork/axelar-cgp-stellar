@@ -1,10 +1,10 @@
-use crate::types::Message;
-
 use core::fmt::Debug;
 
 use axelar_soroban_std::events::Event;
 use cfg_if::cfg_if;
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
+
+use crate::types::Message;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ContractCalledEvent {

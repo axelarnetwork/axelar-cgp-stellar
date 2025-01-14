@@ -1,3 +1,18 @@
+use axelar_gas_service::AxelarGasServiceClient;
+use axelar_gateway::executable::AxelarExecutableInterface;
+use axelar_gateway::AxelarGatewayMessagingClient;
+use axelar_soroban_std::address::AddressExt;
+use axelar_soroban_std::events::Event;
+use axelar_soroban_std::token::validate_token_metadata;
+use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use axelar_soroban_std::types::Token;
+use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+use interchain_token::InterchainTokenClient;
+use soroban_sdk::token::{self, StellarAssetClient};
+use soroban_sdk::xdr::{FromXdr, ToXdr};
+use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
+use soroban_token_sdk::metadata::TokenMetadata;
+
 use crate::abi::{get_message_type, MessageType as EncodedMessageType};
 use crate::error::ContractError;
 use crate::event::{
@@ -13,19 +28,6 @@ use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
 use crate::{flow_limit, token_handler};
-use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std::token::validate_token_metadata;
-use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
-use axelar_soroban_std::{
-    address::AddressExt, ensure, interfaces, types::Token, Operatable, Ownable, Upgradable,
-};
-use interchain_token::InterchainTokenClient;
-use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::xdr::{FromXdr, ToXdr};
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
-use soroban_token_sdk::metadata::TokenMetadata;
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
