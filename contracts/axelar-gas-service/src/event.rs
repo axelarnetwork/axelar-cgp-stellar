@@ -1,5 +1,5 @@
-use stellar_axelar_soroban_std::types::Token;
 use soroban_sdk::{Address, Bytes, Env, String, Symbol};
+use stellar_axelar_soroban_std::types::Token;
 
 pub fn gas_paid(
     env: &Env,

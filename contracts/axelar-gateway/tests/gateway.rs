@@ -1,3 +1,8 @@
+use soroban_sdk::{
+    bytes,
+    testutils::{Address as _, Events},
+    vec, Address, BytesN, String,
+};
 use stellar_axelar_gateway::error::ContractError;
 use stellar_axelar_gateway::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
@@ -10,11 +15,6 @@ use stellar_axelar_gateway::testutils::{
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_soroban_std::{
     assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
-};
-use soroban_sdk::{
-    bytes,
-    testutils::{Address as _, Events},
-    vec, Address, BytesN, String,
 };
 
 mod utils;

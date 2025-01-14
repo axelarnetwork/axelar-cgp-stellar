@@ -2,9 +2,9 @@ use crate::types::Message;
 
 use core::fmt::Debug;
 
-use stellar_axelar_soroban_std::events::Event;
 use cfg_if::cfg_if;
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
+use stellar_axelar_soroban_std::events::Event;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ContractCalledEvent {
