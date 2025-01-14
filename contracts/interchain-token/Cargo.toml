@@ -14,11 +14,11 @@ axelar-soroban-std = { workspace = true }
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
-paste = { workspace = true }
 
 [dev-dependencies]
 axelar-soroban-std = { workspace = true, features = ["testutils"] }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+paste = { workspace = true }
 
 [features]
 library = [] # Only export the contract interface

@@ -3,13 +3,10 @@ mod utils;
 use interchain_token_service::event::{TrustedChainRemovedEvent, TrustedChainSetEvent};
 use utils::setup_env;
 
-use axelar_soroban_std::{
-    assert_contract_err, assert_auth_err, assert_auth, events,
-};
+use axelar_soroban_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use interchain_token_service::error::ContractError;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, String};
-use paste::paste;
 
 #[test]
 fn set_trusted_address() {

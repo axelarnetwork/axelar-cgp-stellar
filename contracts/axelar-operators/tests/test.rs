@@ -3,15 +3,13 @@ extern crate std;
 
 use axelar_operators::error::ContractError;
 use axelar_soroban_std::{
-    assert_contract_err, assert_auth_err, assert_last_emitted_event,
-    testutils::assert_invocation,
+    assert_auth_err, assert_contract_err, assert_last_emitted_event, testutils::assert_invocation,
 };
 
 use axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use soroban_sdk::{
     contract, contractimpl, symbol_short, testutils::Address as _, Address, Env, Symbol, Val, Vec,
 };
-use paste::paste;
 
 #[contract]
 pub struct TestTarget;

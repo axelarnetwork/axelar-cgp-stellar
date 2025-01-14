@@ -2,7 +2,7 @@ use axelar_gateway::error::ContractError;
 use axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
 use axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 use axelar_gateway::AxelarGateway;
-use axelar_soroban_std::{assert_contract_err, assert_auth};
+use axelar_soroban_std::{assert_auth, assert_contract_err};
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _},
     Address, BytesN, Env, Vec,
@@ -10,7 +10,6 @@ use soroban_sdk::{
 
 mod utils;
 use utils::setup_env;
-use paste::paste;
 
 #[test]
 #[should_panic(expected = "Error(Contract, #13)")] // ContractError::InvalidSigners

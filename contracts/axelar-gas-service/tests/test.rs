@@ -6,7 +6,7 @@ use std::format;
 use axelar_gas_service::error::ContractError;
 use axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use axelar_soroban_std::{
-    assert_contract_err, assert_auth_err, assert_last_emitted_event, types::Token,
+    assert_auth_err, assert_contract_err, assert_last_emitted_event, types::Token,
 };
 use soroban_sdk::Bytes;
 use soroban_sdk::{
@@ -15,7 +15,6 @@ use soroban_sdk::{
     token::{StellarAssetClient, TokenClient},
     Address, Env, String, Symbol,
 };
-use paste::paste;
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();

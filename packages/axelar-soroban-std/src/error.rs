@@ -110,7 +110,7 @@ macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::IntoVal;
 
-        paste! {
+        paste::paste! {
             let call_result = $client
                 .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
                 .[<try_ $method>]($($arg),*);
@@ -133,7 +133,7 @@ macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
 
-        paste! {
+        paste::paste! {
         let call_result = $client
             .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
             .[<try_ $method>]($($arg),*);

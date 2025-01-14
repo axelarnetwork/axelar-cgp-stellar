@@ -4,7 +4,6 @@ mod testdata;
 mod operatable {
     use axelar_soroban_std::{assert_auth, interfaces::OperatableClient};
     use axelar_soroban_std_derive::Operatable;
-    use paste::paste;
 
     use super::*;
 
@@ -45,7 +44,6 @@ mod ownable {
     use axelar_soroban_std_derive::Ownable;
 
     use super::*;
-    use paste::paste;
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -84,7 +82,6 @@ mod upgradable {
     use axelar_soroban_std_derive::{Ownable, Upgradable};
 
     use super::*;
-    use paste::paste;
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

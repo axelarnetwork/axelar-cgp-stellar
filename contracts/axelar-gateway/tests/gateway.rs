@@ -9,14 +9,13 @@ use axelar_gateway::testutils::{
 };
 use axelar_gateway::types::Message;
 use axelar_soroban_std::{
-    assert_contract_err, assert_invocation, assert_auth_err, assert_auth, events,
+    assert_auth, assert_auth_err, assert_contract_err, assert_invocation, events,
 };
 use soroban_sdk::{
     bytes,
     testutils::{Address as _, Events},
     vec, Address, BytesN, String,
 };
-use paste::paste;
 
 mod utils;
 use utils::setup_env;
@@ -334,10 +333,7 @@ fn transfer_operatorship_unauthorized() {
         client.owner(),
         client.transfer_operatorship(&client.owner())
     );
-    assert_auth_err!(
-        not_operator,
-        client.transfer_operatorship(&not_operator)
-    );
+    assert_auth_err!(not_operator, client.transfer_operatorship(&not_operator));
 }
 
 #[test]

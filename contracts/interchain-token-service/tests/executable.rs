@@ -9,7 +9,6 @@ use soroban_sdk::token;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, String};
 use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
-use paste::paste;
 
 mod test {
     use axelar_soroban_std::{events::Event, impl_event_testutils};

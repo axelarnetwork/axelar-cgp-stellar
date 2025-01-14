@@ -1,8 +1,8 @@
 mod utils;
 
 use axelar_soroban_std::address::AddressExt;
-use axelar_soroban_std::assert_contract_err;
 use axelar_soroban_std::assert_auth_err;
+use axelar_soroban_std::assert_contract_err;
 use axelar_soroban_std::events;
 use interchain_token::InterchainTokenClient;
 use interchain_token_service::error::ContractError;
@@ -15,7 +15,6 @@ use soroban_sdk::BytesN;
 use soroban_token_sdk::metadata::TokenMetadata;
 use utils::setup_env;
 use utils::TokenMetadataExt;
-use paste::paste;
 
 #[test]
 fn deploy_interchain_token_succeeds() {
@@ -229,12 +228,6 @@ fn deploy_interchain_token_fails_with_invalid_auth() {
 
     assert_auth_err!(
         user,
-        client.deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &minter,
-        )
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 }

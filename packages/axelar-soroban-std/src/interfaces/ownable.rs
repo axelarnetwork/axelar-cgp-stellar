@@ -71,10 +71,9 @@ impl_event_testutils!(OwnershipTransferredEvent, (Symbol, Address, Address), ())
 mod test {
     use crate::interfaces::testdata::Contract;
     use crate::interfaces::{OwnableClient, OwnershipTransferredEvent};
-    use crate::{assert_auth_err, assert_auth, events};
+    use crate::{assert_auth, assert_auth_err, events};
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, Env};
-    use paste::paste;
 
     fn prepare_client(env: &Env, owner: Option<Address>) -> OwnableClient {
         let operator = Address::generate(env);
