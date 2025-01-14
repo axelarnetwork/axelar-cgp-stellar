@@ -12,23 +12,24 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 alloy-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
+cfg-if = { workspace = true }
+soroban-sdk = { workspace = true, features = ["alloc"] }
+soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-soroban-std = { workspace = true }
-cfg-if = { workspace = true }
 stellar-interchain-token = { workspace = true, features = ["library"] }
-soroban-sdk = { workspace = true, features = ["alloc"] }
-soroban-token-sdk = { workspace = true }
 
 [dev-dependencies]
+goldie = { workspace = true }
+hex = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
-goldie = { workspace = true }
-hex = { workspace = true }
 stellar-interchain-token = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
-soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
+
 
 [features]
 library = []

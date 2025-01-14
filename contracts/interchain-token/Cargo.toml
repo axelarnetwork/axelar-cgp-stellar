@@ -10,14 +10,14 @@ publish = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-stellar-axelar-soroban-std = { workspace = true }
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
+stellar-axelar-soroban-std = { workspace = true }
 
 [dev-dependencies]
-stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 
 [features]
 library = [] # Only export the contract interface

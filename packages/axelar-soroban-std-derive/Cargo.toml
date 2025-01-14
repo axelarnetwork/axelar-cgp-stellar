@@ -16,8 +16,8 @@ soroban-sdk = { workspace = true }
 syn = { version = "2.0", features = ["full"] }
 
 [dev-dependencies]
-stellar-axelar-soroban-std = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-soroban-std = { workspace = true }
 
 [lints]
 workspace = true
