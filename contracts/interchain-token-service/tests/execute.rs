@@ -16,7 +16,7 @@ use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_toke
 use interchain_token::InterchainTokenClient;
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1)")] // ExecutableError::NotApproved
+#[should_panic(expected = "Error(Contract, #22)")] // ContractError::NotApproved
 fn execute_fails_without_gateway_approval() {
     let (env, client, _, _, _) = setup_env();
 
