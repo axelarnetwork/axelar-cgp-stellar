@@ -7,16 +7,16 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+soroban-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-soroban-std = { workspace = true }
-soroban-sdk = { workspace = true }
 
 [dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
-soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true

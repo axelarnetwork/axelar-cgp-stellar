@@ -30,7 +30,6 @@ stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 stellar-interchain-token = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
 
-
 [features]
 library = []
 testutils = ["stellar-axelar-soroban-std/testutils"]
