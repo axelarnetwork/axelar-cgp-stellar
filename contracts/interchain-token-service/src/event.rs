@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use axelar_soroban_std::events::Event;
-use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
+use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TrustedChainSetEvent {
@@ -11,6 +11,13 @@ pub struct TrustedChainSetEvent {
 #[derive(Debug, PartialEq, Eq)]
 pub struct TrustedChainRemovedEvent {
     pub chain: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct FlowLimitSetEvent {
+    pub token_id: BytesN<32>,
+    /// A `None` value implies that flow limit checks have been disabled for this `token_id`
+    pub flow_limit: Option<i128>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -65,10 +72,6 @@ impl Event for TrustedChainSetEvent {
     fn topics(&self, env: &Env) -> impl Topics + Debug {
         (Symbol::new(env, "trusted_chain_set"), self.chain.to_val())
     }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
 }
 
 impl Event for TrustedChainRemovedEvent {
@@ -78,9 +81,15 @@ impl Event for TrustedChainRemovedEvent {
             self.chain.to_val(),
         )
     }
+}
 
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
+impl Event for FlowLimitSetEvent {
+    fn topics(&self, env: &Env) -> impl Topics + Debug {
+        (
+            Symbol::new(env, "flow_limit_set"),
+            self.token_id.to_val(),
+            self.flow_limit,
+        )
     }
 }
 
@@ -95,10 +104,6 @@ impl Event for InterchainTokenDeployedEvent {
             self.decimals,
             self.minter.clone(),
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 
@@ -115,10 +120,6 @@ impl Event for InterchainTokenDeploymentStartedEvent {
             self.minter.clone(),
         )
     }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
 }
 
 impl Event for InterchainTokenIdClaimedEvent {
@@ -129,10 +130,6 @@ impl Event for InterchainTokenIdClaimedEvent {
             self.deployer.to_val(),
             self.salt.to_val(),
         )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
     }
 }
 
@@ -178,6 +175,9 @@ impl_event_testutils!(TrustedChainSetEvent, (Symbol, String), ());
 
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(TrustedChainRemovedEvent, (Symbol, String), ());
+
+#[cfg(any(test, feature = "testutils"))]
+impl_event_testutils!(FlowLimitSetEvent, (Symbol, BytesN<32>, Option<i128>), ());
 
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(

@@ -1,30 +1,38 @@
 use axelar_gas_service::AxelarGasServiceClient;
 use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std::token::validate_token_metadata;
-use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use axelar_soroban_std::{
-    address::AddressExt, ensure, interfaces, types::Token, Ownable, Upgradable,
+    address::AddressExt,
+    ensure,
+    events::Event,
+    interfaces,
+    token::validate_token_metadata,
+    ttl::{extend_instance_ttl, extend_persistent_ttl},
+    types::Token,
+    Operatable, Ownable, Upgradable,
 };
 use interchain_token::InterchainTokenClient;
-use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::xdr::{FromXdr, ToXdr};
-use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{
+    contract, contractimpl, panic_with_error,
+    token::{self, StellarAssetClient},
+    xdr::{FromXdr, ToXdr},
+    Address, Bytes, BytesN, Env, String,
+};
 use soroban_token_sdk::metadata::TokenMetadata;
 
-use crate::abi::{get_message_type, MessageType as EncodedMessageType};
-use crate::error::ContractError;
-use crate::event::{
-    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
-    InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
-    TrustedChainRemovedEvent, TrustedChainSetEvent,
-};
-use crate::executable::InterchainTokenExecutableClient;
-use crate::interface::InterchainTokenServiceInterface;
-use crate::storage_types::{DataKey, TokenIdConfigValue};
-use crate::token_handler;
-use crate::types::{
-    DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
+use crate::{
+    abi::{get_message_type, MessageType as EncodedMessageType},
+    error::ContractError,
+    event::{
+        InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
+        InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent,
+        InterchainTransferSentEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
+    },
+    executable::InterchainTokenExecutableClient,
+    flow_limit::{self, FlowDirection},
+    interface::InterchainTokenServiceInterface,
+    storage_types::{DataKey, TokenIdConfigValue},
+    token_handler,
+    types::{DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType},
 };
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
@@ -33,7 +41,7 @@ const PREFIX_INTERCHAIN_TOKEN_SALT: &str = "interchain-token-salt";
 const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
 
 #[contract]
-#[derive(Ownable, Upgradable)]
+#[derive(Operatable, Ownable, Upgradable)]
 pub struct InterchainTokenService;
 
 #[contractimpl]
@@ -41,6 +49,7 @@ impl InterchainTokenService {
     pub fn __constructor(
         env: Env,
         owner: Address,
+        operator: Address,
         gateway: Address,
         gas_service: Address,
         its_hub_address: String,
@@ -48,6 +57,7 @@ impl InterchainTokenService {
         interchain_token_wasm_hash: BytesN<32>,
     ) {
         interfaces::set_owner(&env, &owner);
+        interfaces::set_operator(&env, &operator);
         env.storage().instance().set(&DataKey::Gateway, &gateway);
         env.storage()
             .instance()
@@ -158,6 +168,28 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         env.crypto()
             .keccak256(&(PREFIX_INTERCHAIN_TOKEN_ID, sender, salt).to_xdr(env))
             .into()
+    }
+
+    fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
+        flow_limit::flow_limit(env, token_id)
+    }
+
+    fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128 {
+        flow_limit::flow_out_amount(env, token_id)
+    }
+
+    fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
+        flow_limit::flow_in_amount(env, token_id)
+    }
+
+    fn set_flow_limit(
+        env: &Env,
+        token_id: BytesN<32>,
+        flow_limit: Option<i128>,
+    ) -> Result<(), ContractError> {
+        Self::operator(env).require_auth();
+
+        flow_limit::set_flow_limit(env, token_id, flow_limit)
     }
 
     /// Computes a 32-byte deployment salt for a canonical token using the provided token address.
@@ -337,6 +369,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             amount,
         )?;
 
+        FlowDirection::Out.add_flow(env, token_id.clone(), amount)?;
+
         InterchainTransferSentEvent {
             token_id: token_id.clone(),
             source_address: caller.clone(),
@@ -503,6 +537,8 @@ impl InterchainTokenService {
 
                 let token_config_value =
                     Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
+
+                FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
 
                 token_handler::give_token(
                     env,

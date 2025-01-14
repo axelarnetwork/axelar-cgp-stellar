@@ -17,6 +17,7 @@ cfg_if::cfg_if! {
         mod storage_types;
         mod token_handler;
         mod contract;
+        mod flow_limit;
 
         pub use contract::{InterchainTokenService, InterchainTokenServiceClient};
     }
