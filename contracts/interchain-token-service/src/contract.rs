@@ -434,6 +434,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 #[contractimpl]
 impl AxelarExecutableInterface for InterchainTokenService {
     type Error = ContractError;
+
     fn gateway(env: &Env) -> Address {
         env.storage()
             .instance()

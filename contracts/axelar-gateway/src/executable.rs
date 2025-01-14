@@ -7,7 +7,7 @@ pub trait NotApprovedError {
     fn not_approved() -> Self;
 }
 
-/// Generates the implementation for the [NotApprovedError] trait for the given error type
+/// Generates the implementation for the [`NotApprovedError`] trait for the given error type
 #[macro_export]
 macro_rules! impl_not_approved_error {
     ($error:ident) => {

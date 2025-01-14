@@ -1,5 +1,3 @@
-#![cfg(feature = "testutils")]
-
 mod utils;
 
 use axelar_gateway::types::Message as GatewayMessage;
