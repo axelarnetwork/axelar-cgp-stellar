@@ -1,8 +1,10 @@
-use soroban_sdk::{contract, contracterror, contractimpl, testutils::Address as _, Address, Env};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
 mod testdata;
 mod operatable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OperatableClient};
+    use axelar_soroban_std::assert_invoke_auth_ok;
+    use axelar_soroban_std::interfaces::OperatableClient;
     use axelar_soroban_std_derive::Operatable;
 
     use super::*;
@@ -40,7 +42,8 @@ mod operatable {
 }
 
 mod ownable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OwnableClient};
+    use axelar_soroban_std::assert_invoke_auth_ok;
+    use axelar_soroban_std::interfaces::OwnableClient;
     use axelar_soroban_std_derive::Ownable;
 
     use super::*;

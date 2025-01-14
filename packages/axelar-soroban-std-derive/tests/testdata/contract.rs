@@ -1,6 +1,7 @@
+use core::fmt::Debug;
+
 use axelar_soroban_std::events::Event;
 use axelar_soroban_std_derive::{Ownable, Upgradable};
-use core::fmt::Debug;
 use soroban_sdk::{
     contract, contracterror, contractimpl, Address, Env, IntoVal, Symbol, Topics, Val,
 };

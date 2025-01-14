@@ -1,11 +1,9 @@
 mod utils;
 
 use axelar_soroban_std::{assert_contract_err, auth_invocation, events};
-use interchain_token_service::{
-    error::ContractError,
-    event::InterchainTokenDeploymentStartedEvent,
-    types::{DeployInterchainToken, HubMessage, Message},
-};
+use interchain_token_service::error::ContractError;
+use interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
+use interchain_token_service::types::{DeployInterchainToken, HubMessage, Message};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;

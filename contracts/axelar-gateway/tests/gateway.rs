@@ -11,11 +11,8 @@ use axelar_gateway::types::Message;
 use axelar_soroban_std::{
     assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
 };
-use soroban_sdk::{
-    bytes,
-    testutils::{Address as _, Events},
-    vec, Address, BytesN, String,
-};
+use soroban_sdk::testutils::{Address as _, Events};
+use soroban_sdk::{bytes, vec, Address, BytesN, String};
 
 mod utils;
 use utils::setup_env;

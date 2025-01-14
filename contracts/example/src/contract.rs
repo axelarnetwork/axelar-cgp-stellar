@@ -1,12 +1,11 @@
-use crate::event;
 use axelar_gas_service::AxelarGasServiceClient;
+use axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
 use axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
 use axelar_soroban_std::types::Token;
 use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env, String};
 
+use crate::event;
 use crate::storage_types::DataKey;
-
-use axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
 
 #[contract]
 pub struct Example;
