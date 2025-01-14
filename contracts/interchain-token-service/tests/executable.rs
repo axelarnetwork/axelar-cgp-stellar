@@ -17,8 +17,8 @@ mod test {
     use axelar_soroban_std::impl_event_testutils;
     use interchain_token_service::executable::InterchainTokenExecutableInterface;
     use soroban_sdk::{
-        contract, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
-        Topics, Val,
+        contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
+        String, Symbol, Topics, Val,
     };
 
     #[contract]
@@ -66,8 +66,15 @@ mod test {
         (Bytes)
     );
 
+    #[contracterror]
+    pub enum ContractError {
+        SomeError = 1,
+    }
+
     #[contractimpl]
     impl InterchainTokenExecutableInterface for ExecutableContract {
+        type Error = ContractError;
+
         fn interchain_token_service(env: &Env) -> Address {
             env.storage()
                 .instance()
@@ -84,8 +91,8 @@ mod test {
             token_id: BytesN<32>,
             token_address: Address,
             amount: i128,
-        ) {
-            Self::validate(env);
+        ) -> Result<(), ContractError> {
+            let _ = Self::validate(env);
 
             env.storage().persistent().set(&DataKey::Message, &payload);
 
@@ -99,6 +106,7 @@ mod test {
                 amount,
             }
             .emit(env);
+            Ok(())
         }
     }
 

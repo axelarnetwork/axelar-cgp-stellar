@@ -10,7 +10,9 @@ use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use interchain_token::InterchainTokenClient;
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::xdr::{FromXdr, ToXdr};
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{
+    contract, contractimpl, vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
+};
 use soroban_token_sdk::metadata::TokenMetadata;
 
 use crate::abi::{get_message_type, MessageType as EncodedMessageType};
@@ -20,7 +22,6 @@ use crate::event::{
     InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
     TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
-use crate::executable::InterchainTokenExecutableClient;
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
 use crate::storage_types::{DataKey, TokenIdConfigValue};
@@ -33,6 +34,7 @@ const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
 const PREFIX_INTERCHAIN_TOKEN_SALT: &str = "interchain-token-salt";
 const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
+const EXECUTE_WITH_TOKEN: &str = "execute_with_interchain_token";
 
 #[contract]
 #[derive(Operatable, Ownable, Upgradable)]
@@ -554,16 +556,23 @@ impl InterchainTokenService {
                 let token_address = token_config_value.token_address;
 
                 if let Some(payload) = data {
-                    let executable =
-                        InterchainTokenExecutableClient::new(env, &destination_address);
-                    executable.execute_with_interchain_token(
-                        &source_chain,
-                        &message_id,
-                        &source_address,
-                        &payload,
-                        &token_id,
-                        &token_address,
-                        &amount,
+                    let call_data = vec![
+                        &env,
+                        source_chain.to_val(),
+                        message_id.to_val(),
+                        source_address.to_val(),
+                        payload.to_val(),
+                        token_id.to_val(),
+                        token_address.to_val(),
+                        amount.into_val(env),
+                    ];
+
+                    // Due to limitations of the soroban-sdk, there is no type-safe client for contract execution.
+                    // The invocation will panic on error, so we can safely cast the return value to `()` and discard it.
+                    env.invoke_contract::<()>(
+                        &destination_address,
+                        &Symbol::new(env, EXECUTE_WITH_TOKEN),
+                        call_data,
                     );
                 }
             }
