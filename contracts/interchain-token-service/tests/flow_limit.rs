@@ -1,7 +1,7 @@
 mod utils;
 
 use axelar_gateway::types::Message as GatewayMessage;
-use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
+use axelar_soroban_std::{assert_auth, assert_contract_err, events, traits::BytesExt};
 use interchain_token_service::{
     error::ContractError,
     event::FlowLimitSetEvent,
@@ -77,9 +77,9 @@ fn set_flow_limit_succeeds() {
 
     assert_eq!(client.flow_limit(&token_id), None);
 
-    assert_invoke_auth_ok!(
+    assert_auth!(
         client.operator(),
-        client.try_set_flow_limit(&token_id, &TEST_FLOW_LIMIT)
+        client.set_flow_limit(&token_id, &TEST_FLOW_LIMIT)
     );
 
     assert_eq!(client.flow_limit(&token_id), TEST_FLOW_LIMIT);
