@@ -1,3 +1,5 @@
+#![cfg(feature = "testutils")]
+
 mod utils;
 
 use axelar_gateway::types::Message as GatewayMessage;
@@ -16,7 +18,7 @@ use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_toke
 use interchain_token::InterchainTokenClient;
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1)")] // ExecutableError::NotApproved
+#[should_panic(expected = "Error(Contract, #22)")] // ContractError::NotApproved
 fn execute_fails_without_gateway_approval() {
     let (env, client, _, _, _) = setup_env();
 
@@ -29,7 +31,7 @@ fn execute_fails_without_gateway_approval() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
+#[should_panic(expected = "Error(Contract, #8)")] // ContractError::InsufficientMessageLength
 fn execute_fails_with_invalid_message() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
@@ -172,7 +174,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
+#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
 fn deploy_interchain_token_message_execute_fails_empty_token_name() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
@@ -218,7 +220,7 @@ fn deploy_interchain_token_message_execute_fails_empty_token_name() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
+#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
 fn deploy_interchain_token_message_execute_fails_empty_token_symbol() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
@@ -314,7 +316,7 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")] // ExecutableError::ExecutionFailed
+#[should_panic(expected = "Error(Contract, #18)")] // ContractError::TokenAlreadyDeployed
 fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);

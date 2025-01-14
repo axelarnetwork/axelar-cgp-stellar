@@ -6,20 +6,20 @@ use crate::event::{
     TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
 use crate::executable::InterchainTokenExecutableClient;
+use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
 use crate::storage_types::{DataKey, TokenIdConfigValue};
-use crate::token_handler;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
+use crate::{flow_limit, token_handler};
 use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::executable::ExecutableError;
 use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
 use axelar_soroban_std::events::Event;
 use axelar_soroban_std::token::validate_token_metadata;
 use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use axelar_soroban_std::{
-    address::AddressExt, ensure, interfaces, types::Token, Ownable, Upgradable,
+    address::AddressExt, ensure, interfaces, types::Token, Operatable, Ownable, Upgradable,
 };
 use interchain_token::InterchainTokenClient;
 use soroban_sdk::token::{self, StellarAssetClient};
@@ -433,6 +433,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
 #[contractimpl]
 impl AxelarExecutableInterface for InterchainTokenService {
+    type Error = ContractError;
     fn gateway(env: &Env) -> Address {
         env.storage()
             .instance()
@@ -446,11 +447,10 @@ impl AxelarExecutableInterface for InterchainTokenService {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) -> Result<(), ExecutableError> {
+    ) -> Result<(), ContractError> {
         Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
 
         Self::execute_message(&env, source_chain, message_id, source_address, payload)
-            .map_err(|_| ExecutableError::ExecutionFailed)
     }
 }
 
