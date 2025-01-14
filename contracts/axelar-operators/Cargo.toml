@@ -10,12 +10,12 @@ publish = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-stellar-axelar-soroban-std = { workspace = true }
 soroban-sdk = { workspace = true }
+stellar-axelar-soroban-std = { workspace = true }
 
 [dev-dependencies]
-stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true
