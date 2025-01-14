@@ -7,12 +7,12 @@ use stellar_axelar_soroban_std::events;
 use stellar_interchain_token::InterchainTokenClient;
 use stellar_interchain_token_service::error::ContractError;
 
-use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
-use stellar_interchain_token_service::types::TokenManagerType;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::Address;
 use soroban_sdk::BytesN;
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
+use stellar_interchain_token_service::types::TokenManagerType;
 use utils::setup_env;
 use utils::TokenMetadataExt;
 

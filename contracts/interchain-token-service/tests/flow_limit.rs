@@ -1,15 +1,17 @@
 mod utils;
 
+use soroban_sdk::testutils::{Address as _, Ledger as _};
+use soroban_sdk::{vec, xdr::ToXdr, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
+use stellar_axelar_soroban_std::{
+    assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt,
+};
 use stellar_interchain_token_service::{
     error::ContractError,
     event::FlowLimitSetEvent,
     types::{HubMessage, InterchainTransfer, Message},
     InterchainTokenServiceClient,
 };
-use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{vec, xdr::ToXdr, Address, Bytes, BytesN, Env, String, Vec};
 use utils::{
     approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
     HUB_CHAIN,

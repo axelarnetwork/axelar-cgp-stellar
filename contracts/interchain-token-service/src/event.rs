@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
-use stellar_axelar_soroban_std::events::Event;
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
+use stellar_axelar_soroban_std::events::Event;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TrustedChainSetEvent {
