@@ -22,4 +22,7 @@ pub enum ContractError {
     InvalidTokenMetaData = 16,
     InvalidTokenId = 17,
     TokenAlreadyDeployed = 18,
+    InvalidFlowLimit = 19,
+    FlowLimitExceeded = 20,
+    FlowAmountOverflow = 21,
 }
