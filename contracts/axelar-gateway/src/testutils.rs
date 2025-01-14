@@ -2,10 +2,10 @@ extern crate std;
 
 use crate::auth::{self, epoch};
 use crate::{AxelarGateway, AxelarGatewayClient};
-use stellar_axelar_soroban_std::{assert_last_emitted_event, assert_ok};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
+use stellar_axelar_soroban_std::{assert_last_emitted_event, assert_ok};
 
 use soroban_sdk::Symbol;
 use soroban_sdk::{testutils::Address as _, Address};

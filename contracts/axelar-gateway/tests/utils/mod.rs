@@ -1,8 +1,8 @@
+use soroban_sdk::Env;
 use stellar_axelar_gateway::{
     testutils::{setup_gateway, TestSignerSet},
     AxelarGatewayClient,
 };
-use soroban_sdk::Env;
 
 pub fn setup_env<'a>(
     previous_signers_retention: u32,

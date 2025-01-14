@@ -1,12 +1,12 @@
+use soroban_sdk::{
+    testutils::{Address as _, BytesN as _},
+    Address, BytesN, Env, Vec,
+};
 use stellar_axelar_gateway::error::ContractError;
 use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
 use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 use stellar_axelar_gateway::AxelarGateway;
 use stellar_axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok};
-use soroban_sdk::{
-    testutils::{Address as _, BytesN as _},
-    Address, BytesN, Env, Vec,
-};
 
 mod utils;
 use utils::setup_env;

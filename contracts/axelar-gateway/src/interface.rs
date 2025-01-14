@@ -3,8 +3,10 @@ use crate::{
     types::{Message, Proof, WeightedSigners},
     AxelarGatewayMessagingInterface,
 };
-use stellar_axelar_soroban_std::interfaces::{OperatableInterface, OwnableInterface, UpgradableInterface};
 use soroban_sdk::{contractclient, BytesN, Env, Vec};
+use stellar_axelar_soroban_std::interfaces::{
+    OperatableInterface, OwnableInterface, UpgradableInterface,
+};
 
 #[contractclient(name = "AxelarGatewayClient")]
 pub trait AxelarGatewayInterface:
