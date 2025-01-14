@@ -52,7 +52,7 @@ impl FlowDirection {
     /// Checks that:
     /// - Flow amount doesn't exceed the flow limit
     /// - Adding flows won't cause overflow
-    /// - Total flow in one direction doesn't exceed flow in opposite direction plus limit
+    /// - Net flow (outgoing minus incoming flow) doesn't exceed the limit
     pub fn add_flow(
         &self,
         env: &Env,
@@ -63,16 +63,18 @@ impl FlowDirection {
             return Ok(());
         };
 
-        let flow_to_add = self.flow(env, token_id.clone());
-        let flow_to_compare = self.reverse_flow(env, token_id.clone());
-
         ensure!(flow_amount <= flow_limit, ContractError::FlowLimitExceeded);
-        let new_flow = flow_to_add
+
+        let new_flow = self
+            .flow(env, token_id.clone())
             .checked_add(flow_amount)
-            .ok_or(ContractError::FlowLimitExceeded)?;
-        let max_allowed = flow_to_compare
+            .ok_or(ContractError::FlowAmountOverflow)?;
+        let max_allowed = self
+            .reverse_flow(env, token_id.clone())
             .checked_add(flow_limit)
-            .ok_or(ContractError::FlowLimitExceeded)?;
+            .ok_or(ContractError::FlowAmountOverflow)?;
+
+        // Equivalent to flow_amount + flow - reverse_flow <= flow_limit
         ensure!(new_flow <= max_allowed, ContractError::FlowLimitExceeded);
 
         self.update_flow(env, token_id.clone(), new_flow);

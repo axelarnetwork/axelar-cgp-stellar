@@ -38,11 +38,11 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// Returns `None` if no limit is set.
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128>;
 
-    /// Retrieves the amount that has flowed out of the contract during the current epoch
+    /// Retrieves the amount that has flowed out of the chain to other chains during the current epoch
     /// for the token associated with the specified token ID.
     fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128;
 
-    /// Retrieves the amount that has flowed into the contract during the current epoch
+    /// Retrieves the amount that has flowed into the chain from other chains during the current epoch
     /// for the token associated with the specified token ID.
     fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128;
 
@@ -53,7 +53,6 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// Setting the limit to 0 effectively freezes the token by preventing any flow.
     ///
     /// # Arguments
-    /// - `env`: Reference to the contract environment.
     /// - `token_id`: Unique identifier of the token.
     /// - `flow_limit`: The new flow limit value. Must be positive if Some.
     ///

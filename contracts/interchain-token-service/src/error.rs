@@ -24,4 +24,5 @@ pub enum ContractError {
     TokenAlreadyDeployed = 18,
     InvalidFlowLimit = 19,
     FlowLimitExceeded = 20,
+    FlowAmountOverflow = 21,
 }

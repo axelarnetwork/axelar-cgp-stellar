@@ -253,7 +253,7 @@ fn add_flow_out_fails_exceeds_flow_limit() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #20)")] // ContractError::FlowLimitExceeded
+#[should_panic(expected = "Error(Contract, #21)")] // ContractError::FlowAmountOverflow
 fn add_flow_fails_on_flow_comparison_overflow() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
