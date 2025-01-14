@@ -1,7 +1,7 @@
 #![no_std]
 
 // Allows using std (and its macros) in test modules
-#[cfg(test)]
+#[cfg(any(test, feature = "testutils"))]
 #[macro_use]
 extern crate std;
 
@@ -24,7 +24,7 @@ cfg_if::cfg_if! {
         pub use interface::{AxelarGatewayClient, AxelarGatewayInterface};
     } else {
         mod auth;
-        mod event;
+        pub mod event;
         mod storage_types;
         mod contract;
 
