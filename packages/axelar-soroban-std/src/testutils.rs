@@ -33,6 +33,7 @@ pub fn assert_invocation<T>(
 }
 
 /// Asserts that the event at `event_index` in the environment's emitted events is the expected event.
+///
 /// If `event_index` is negative, the length of events will be added to it, i.e it'll be indexed from the end.
 pub fn assert_emitted_event<U, V>(
     env: &Env,

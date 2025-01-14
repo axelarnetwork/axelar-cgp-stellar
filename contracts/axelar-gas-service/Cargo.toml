@@ -16,8 +16,8 @@ soroban-sdk = { workspace = true }
 
 [dev-dependencies]
 axelar-soroban-std = { workspace = true, features = ["testutils"] }
-soroban-sdk = { workspace = true, features = ["testutils"] }
 paste = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true

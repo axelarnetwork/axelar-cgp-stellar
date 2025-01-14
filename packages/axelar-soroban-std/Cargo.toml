@@ -18,8 +18,8 @@ soroban-token-sdk = { workspace = true }
 [dev-dependencies]
 axelar-soroban-std-derive = { workspace = true }
 goldie = { workspace = true }
-soroban-sdk = { workspace = true, features = ["testutils"] }
 paste = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [features]
 testutils = ["soroban-sdk/testutils", "hex"]

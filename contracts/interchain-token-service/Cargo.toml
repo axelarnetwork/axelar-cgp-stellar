@@ -20,7 +20,6 @@ interchain-token = { workspace = true, features = ["library"] }
 soroban-sdk = { workspace = true, features = ["alloc"] }
 soroban-token-sdk = { workspace = true }
 
-
 [dev-dependencies]
 axelar-gas-service = { workspace = true, features = ["testutils"] }
 axelar-gateway = { workspace = true, features = ["testutils"] }
@@ -29,8 +28,8 @@ goldie = { workspace = true }
 hex = { workspace = true }
 interchain-token = { workspace = true, features = ["testutils"] }
 interchain-token-service = { workspace = true, features = ["testutils"] }
-soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 paste = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 
 [features]
 library = []
