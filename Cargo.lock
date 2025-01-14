@@ -419,7 +419,6 @@ version = "0.1.0"
 dependencies = [
  "axelar-soroban-std",
  "paste",
- "proc-macro2",
  "quote",
  "soroban-sdk",
  "syn 2.0.87",
