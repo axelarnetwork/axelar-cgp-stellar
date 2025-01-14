@@ -1,7 +1,7 @@
-use stellar_axelar_soroban_std::token::validate_token_metadata;
-use stellar_axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
+use stellar_axelar_soroban_std::token::validate_token_metadata;
+use stellar_axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 
 use crate::error::ContractError;
 use crate::event;
@@ -9,9 +9,9 @@ use crate::storage_types::DataKey;
 
 use crate::interface::InterchainTokenInterface;
 use crate::storage_types::{AllowanceDataKey, AllowanceValue};
+use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
 use stellar_axelar_soroban_std::interfaces::OwnableInterface;
 use stellar_axelar_soroban_std::{ensure, interfaces, Upgradable};
-use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
 
 use soroban_sdk::{
     assert_with_error, contract, contractimpl, panic_with_error, token, Address, BytesN, Env,
