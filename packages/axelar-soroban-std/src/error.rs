@@ -176,4 +176,11 @@ macro_rules! mock_auth {
             },
         }
     }};
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? )
+    ) => {{
+        mock_auth!($env, $caller, $client.$method($($arg),*), &[])
+    }};
 }

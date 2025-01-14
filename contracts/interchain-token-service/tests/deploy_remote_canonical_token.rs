@@ -65,8 +65,7 @@ fn deploy_remote_canonical_token_succeeds() {
     let transfer_token_auth = mock_auth!(
         env,
         spender,
-        gas_token.transfer(spender, gas_service.address, gas_token.amount),
-        &[]
+        gas_token.transfer(spender, gas_service.address, gas_token.amount)
     );
 
     let pay_gas_auth = mock_auth!(
@@ -87,18 +86,12 @@ fn deploy_remote_canonical_token_succeeds() {
     let call_contract_auth = mock_auth!(
         env,
         spender,
-        gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload),
-        &[]
+        gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload)
     );
 
-    env.mock_auths(&[pay_gas_auth, call_contract_auth]);
-
-    let deployed_token_id = client.deploy_remote_canonical_token(
-        &token_address,
-        &destination_chain,
-        &spender,
-        &gas_token,
-    );
+    let deployed_token_id = client
+        .mock_auths(&[pay_gas_auth, call_contract_auth])
+        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
     assert_eq!(expected_id, deployed_token_id);
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
