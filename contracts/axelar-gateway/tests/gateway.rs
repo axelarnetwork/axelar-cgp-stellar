@@ -1,14 +1,14 @@
-use axelar_gateway::error::ContractError;
-use axelar_gateway::event::{
+use stellar_axelar_gateway::error::ContractError;
+use stellar_axelar_gateway::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
 };
 #[cfg(any(test, feature = "testutils"))]
-use axelar_gateway::testutils::{
+use stellar_axelar_gateway::testutils::{
     deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
     generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
-use axelar_gateway::types::Message;
-use axelar_soroban_std::{
+use stellar_axelar_gateway::types::Message;
+use stellar_axelar_soroban_std::{
     assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
 };
 use soroban_sdk::{

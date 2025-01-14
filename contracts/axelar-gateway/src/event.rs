@@ -2,7 +2,7 @@ use crate::types::Message;
 
 use core::fmt::Debug;
 
-use axelar_soroban_std::events::Event;
+use stellar_axelar_soroban_std::events::Event;
 use cfg_if::cfg_if;
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val, Vec};
 
@@ -83,7 +83,7 @@ impl Event for SignersRotatedEvent {
 
 cfg_if! {
     if #[cfg(any(test, feature = "testutils"))] {
-        use axelar_soroban_std::impl_event_testutils;
+        use stellar_axelar_soroban_std::impl_event_testutils;
 
         impl_event_testutils!(
             ContractCalledEvent,

@@ -1,6 +1,6 @@
 use alloy_primitives::{FixedBytes, Uint, U256};
 use alloy_sol_types::{sol, SolValue};
-use axelar_soroban_std::ensure;
+use stellar_axelar_soroban_std::ensure;
 use soroban_sdk::{Bytes, BytesN, Env, String};
 
 // alloc needed for converting to alloy types
@@ -246,7 +246,7 @@ impl From<MessageType> for U256 {
 mod tests {
     use super::*;
     use alloc::vec;
-    use axelar_soroban_std::{assert_ok, traits::BytesExt};
+    use stellar_axelar_soroban_std::{assert_ok, traits::BytesExt};
     use soroban_sdk::{Bytes, BytesN, Env, String};
     use std::vec::Vec;
 

@@ -1,4 +1,4 @@
-use axelar_gateway::{
+use stellar_axelar_gateway::{
     testutils::{setup_gateway, TestSignerSet},
     AxelarGatewayClient,
 };

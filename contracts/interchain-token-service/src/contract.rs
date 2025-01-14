@@ -1,6 +1,4 @@
-use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use axelar_soroban_std::{
+use stellar_axelar_soroban_std::{
     address::AddressExt,
     ensure,
     events::Event,
@@ -10,7 +8,6 @@ use axelar_soroban_std::{
     types::Token,
     Operatable, Ownable, Upgradable,
 };
-use interchain_token::InterchainTokenClient;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{self, StellarAssetClient},
@@ -18,6 +15,9 @@ use soroban_sdk::{
     Address, Bytes, BytesN, Env, String,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gas_service::AxelarGasServiceClient;
+use stellar_axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
+use stellar_interchain_token::InterchainTokenClient;
 
 use crate::{
     abi::{get_message_type, MessageType as EncodedMessageType},

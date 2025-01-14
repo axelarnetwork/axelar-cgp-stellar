@@ -27,7 +27,11 @@ Changes:
 """
 
 [[package]]
-name = "integration-tests"
+name = "example"
+release = false # don't process this package
+
+[[package]]
+name = "upgrader"
 release = false # don't process this package
 
 [changelog]

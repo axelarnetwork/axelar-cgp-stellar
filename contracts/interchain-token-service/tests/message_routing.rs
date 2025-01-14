@@ -1,7 +1,7 @@
 mod utils;
-use axelar_soroban_std::{assert_contract_err, traits::BytesExt};
-use interchain_token_service::error::ContractError;
+use stellar_axelar_soroban_std::{assert_contract_err, traits::BytesExt};
 use soroban_sdk::{testutils::Address as _, xdr::ToXdr, Address, Bytes, String};
+use stellar_interchain_token_service::error::ContractError;
 use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
 
 #[test]

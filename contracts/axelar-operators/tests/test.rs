@@ -1,16 +1,16 @@
 #![cfg(test)]
 extern crate std;
 
-use axelar_operators::error::ContractError;
-use axelar_soroban_std::{
+use stellar_axelar_soroban_std::{
     assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event,
     testutils::assert_invocation,
 };
+use stellar_axelar_operators::error::ContractError;
 
-use axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use soroban_sdk::{
     contract, contractimpl, symbol_short, testutils::Address as _, Address, Env, Symbol, Val, Vec,
 };
+use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 
 #[contract]
 pub struct TestTarget;

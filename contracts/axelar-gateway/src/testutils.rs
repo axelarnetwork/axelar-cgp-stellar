@@ -2,7 +2,7 @@ extern crate std;
 
 use crate::auth::{self, epoch};
 use crate::{AxelarGateway, AxelarGatewayClient};
-use axelar_soroban_std::{assert_last_emitted_event, assert_ok};
+use stellar_axelar_soroban_std::{assert_last_emitted_event, assert_ok};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
@@ -15,7 +15,7 @@ use crate::types::{
     CommandType, Message, Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners,
 };
 
-use axelar_soroban_std::traits::IntoVec;
+use stellar_axelar_soroban_std::traits::IntoVec;
 
 #[derive(Clone, Debug)]
 pub struct TestSignerSet {

@@ -10,7 +10,7 @@ use syn::{
 /// ```rust
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, Address, Env};
-/// use axelar_soroban_std_derive::Operatable;
+/// use stellar_axelar_soroban_std_derive::Operatable;
 ///
 /// #[contract]
 /// #[derive(Operatable)]
@@ -19,7 +19,7 @@ use syn::{
 /// #[contractimpl]
 /// impl Contract {
 ///     pub fn __constructor(env: &Env, owner: Address) {
-///         axelar_soroban_std::interfaces::set_operator(env, &owner);
+///         stellar_axelar_soroban_std::interfaces::set_operator(env, &owner);
 ///     }
 /// }
 /// # }
@@ -30,16 +30,16 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     quote! {
-        use axelar_soroban_std::interfaces::OperatableInterface as _;
+        use stellar_axelar_soroban_std::interfaces::OperatableInterface as _;
 
         #[soroban_sdk::contractimpl]
-        impl axelar_soroban_std::interfaces::OperatableInterface for #name {
+        impl stellar_axelar_soroban_std::interfaces::OperatableInterface for #name {
             fn operator(env: &Env) -> soroban_sdk::Address {
-                axelar_soroban_std::interfaces::operator(env)
+                stellar_axelar_soroban_std::interfaces::operator(env)
             }
 
             fn transfer_operatorship(env: &Env, new_operator: soroban_sdk::Address) {
-                axelar_soroban_std::interfaces::transfer_operatorship::<Self>(env, new_operator);
+                stellar_axelar_soroban_std::interfaces::transfer_operatorship::<Self>(env, new_operator);
             }
         }
     }
@@ -52,7 +52,7 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
 /// ```rust
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, Address, Env};
-/// use axelar_soroban_std_derive::Ownable;
+/// use stellar_axelar_soroban_std_derive::Ownable;
 ///
 /// #[contract]
 /// #[derive(Ownable)]
@@ -61,7 +61,7 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
 /// #[contractimpl]
 /// impl Contract {
 ///     pub fn __constructor(env: &Env, owner: Address) {
-///         axelar_soroban_std::interfaces::set_owner(env, &owner);
+///         stellar_axelar_soroban_std::interfaces::set_owner(env, &owner);
 ///     }
 /// }
 /// # }
@@ -72,16 +72,16 @@ pub fn derive_ownable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     quote! {
-        use axelar_soroban_std::interfaces::OwnableInterface as _;
+        use stellar_axelar_soroban_std::interfaces::OwnableInterface as _;
 
         #[soroban_sdk::contractimpl]
-        impl axelar_soroban_std::interfaces::OwnableInterface for #name {
+        impl stellar_axelar_soroban_std::interfaces::OwnableInterface for #name {
             fn owner(env: &Env) -> soroban_sdk::Address {
-                axelar_soroban_std::interfaces::owner(env)
+                stellar_axelar_soroban_std::interfaces::owner(env)
             }
 
             fn transfer_ownership(env: &Env, new_owner: soroban_sdk::Address) {
-                axelar_soroban_std::interfaces::transfer_ownership::<Self>(env, new_owner);
+                stellar_axelar_soroban_std::interfaces::transfer_ownership::<Self>(env, new_owner);
             }
         }
     }
@@ -129,7 +129,7 @@ impl MigrationArgs {
 /// ```rust
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, contracterror, Address, Env};
-/// use axelar_soroban_std_derive::{Ownable, Upgradable};
+/// use stellar_axelar_soroban_std_derive::{Ownable, Upgradable};
 /// # #[contracterror]
 /// # #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 /// # #[repr(u32)]
@@ -145,7 +145,7 @@ impl MigrationArgs {
 /// #[contractimpl]
 /// impl Contract {
 ///     pub fn __constructor(env: &Env, owner: Address) {
-///         axelar_soroban_std::interfaces::set_owner(env, &owner);
+///         stellar_axelar_soroban_std::interfaces::set_owner(env, &owner);
 ///     }
 /// }
 ///
@@ -195,26 +195,26 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
         .map_or_else(|| quote! { () }, |ty| quote! { #ty });
 
     quote! {
-        use axelar_soroban_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
+        use stellar_axelar_soroban_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
 
         #[soroban_sdk::contractimpl]
-        impl axelar_soroban_std::interfaces::UpgradableInterface for #name {
+        impl stellar_axelar_soroban_std::interfaces::UpgradableInterface for #name {
             fn version(env: &Env) -> soroban_sdk::String {
                 soroban_sdk::String::from_str(env, env!("CARGO_PKG_VERSION"))
             }
 
             fn upgrade(env: &Env, new_wasm_hash: soroban_sdk::BytesN<32>) {
-                axelar_soroban_std::interfaces::upgrade::<Self>(env, new_wasm_hash);
+                stellar_axelar_soroban_std::interfaces::upgrade::<Self>(env, new_wasm_hash);
             }
         }
 
         #[soroban_sdk::contractimpl]
-        impl axelar_soroban_std::interfaces::MigratableInterface for #name {
+        impl stellar_axelar_soroban_std::interfaces::MigratableInterface for #name {
             type MigrationData = #migration_data;
             type Error = ContractError;
 
             fn migrate(env: &Env, migration_data: #migration_data) -> Result<(), ContractError> {
-                axelar_soroban_std::interfaces::migrate::<Self>(env, || Self::run_migration(env, migration_data))
+                stellar_axelar_soroban_std::interfaces::migrate::<Self>(env, || Self::run_migration(env, migration_data))
                     .map_err(|_| ContractError::MigrationNotAllowed)
             }
         }

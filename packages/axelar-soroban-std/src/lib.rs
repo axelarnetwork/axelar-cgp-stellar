@@ -27,4 +27,4 @@ pub mod address;
 pub mod token;
 
 #[cfg(feature = "derive")]
-pub use axelar_soroban_std_derive::*;
+pub use stellar_axelar_soroban_std_derive::*;

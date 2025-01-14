@@ -1,5 +1,5 @@
-use axelar_soroban_std::token::validate_token_metadata;
-use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use stellar_axelar_soroban_std::token::validate_token_metadata;
+use stellar_axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 
@@ -9,8 +9,8 @@ use crate::storage_types::DataKey;
 
 use crate::interface::InterchainTokenInterface;
 use crate::storage_types::{AllowanceDataKey, AllowanceValue};
-use axelar_soroban_std::interfaces::OwnableInterface;
-use axelar_soroban_std::{ensure, interfaces, Upgradable};
+use stellar_axelar_soroban_std::interfaces::OwnableInterface;
+use stellar_axelar_soroban_std::{ensure, interfaces, Upgradable};
 use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
 
 use soroban_sdk::{

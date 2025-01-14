@@ -1,12 +1,12 @@
 use crate::event;
-use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::AxelarGatewayMessagingClient;
-use axelar_soroban_std::types::Token;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, Env, String};
+use stellar_axelar_gas_service::AxelarGasServiceClient;
+use stellar_axelar_gateway::AxelarGatewayMessagingClient;
+use stellar_axelar_soroban_std::types::Token;
 
 use crate::storage_types::DataKey;
 
-use axelar_gateway::executable::AxelarExecutableInterface;
+use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 
 #[contract]
 pub struct Example;

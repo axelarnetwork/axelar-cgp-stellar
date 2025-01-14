@@ -1,4 +1,4 @@
-use axelar_soroban_std::ensure;
+use stellar_axelar_soroban_std::ensure;
 use soroban_sdk::{contractclient, Address, Bytes, Env, String};
 
 use crate::AxelarGatewayMessagingClient;

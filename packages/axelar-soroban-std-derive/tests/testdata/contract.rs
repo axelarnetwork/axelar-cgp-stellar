@@ -1,9 +1,9 @@
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std_derive::{Ownable, Upgradable};
 use core::fmt::Debug;
 use soroban_sdk::{
     contract, contracterror, contractimpl, Address, Env, IntoVal, Symbol, Topics, Val,
 };
+use stellar_axelar_soroban_std::events::Event;
+use stellar_axelar_soroban_std_derive::{Ownable, Upgradable};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -31,7 +31,7 @@ impl Event for MigratedEvent {
 #[contractimpl]
 impl Contract {
     pub fn __constructor(env: &Env, owner: Address) {
-        axelar_soroban_std::interfaces::set_owner(env, &owner);
+        stellar_axelar_soroban_std::interfaces::set_owner(env, &owner);
     }
 }
 

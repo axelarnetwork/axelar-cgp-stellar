@@ -1,10 +1,10 @@
 // this is only needed in this crate itself, any crate that imports this one doesn't have to do this manual import resolution
-use crate as axelar_soroban_std;
+use crate as stellar_axelar_soroban_std;
 
 use crate::interfaces::testdata::contract_trivial_migration::DataKey;
 use crate::interfaces::{operatable, ownable, MigratableInterface};
-use axelar_soroban_std_derive::{Ownable, Upgradable};
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, String};
+use stellar_axelar_soroban_std_derive::{Ownable, Upgradable};
 
 #[derive(Upgradable, Ownable)]
 #[migratable(with_type = MigrationData)]

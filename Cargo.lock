@@ -366,61 +366,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
-name = "axelar-gas-service"
-version = "0.1.0"
-dependencies = [
- "axelar-soroban-std",
- "cfg-if",
- "soroban-sdk",
-]
-
-[[package]]
-name = "axelar-gateway"
-version = "0.1.0"
-dependencies = [
- "axelar-gateway",
- "axelar-soroban-std",
- "cfg-if",
- "ed25519-dalek",
- "goldie",
- "hex",
- "hex-literal",
- "rand",
- "rand_chacha",
- "soroban-sdk",
-]
-
-[[package]]
-name = "axelar-operators"
-version = "0.1.0"
-dependencies = [
- "axelar-soroban-std",
- "soroban-sdk",
-]
-
-[[package]]
-name = "axelar-soroban-std"
-version = "0.1.0"
-dependencies = [
- "axelar-soroban-std-derive",
- "goldie",
- "hex",
- "soroban-sdk",
- "soroban-token-sdk",
-]
-
-[[package]]
-name = "axelar-soroban-std-derive"
-version = "0.1.0"
-dependencies = [
- "axelar-soroban-std",
- "proc-macro2",
- "quote",
- "soroban-sdk",
- "syn 2.0.87",
-]
-
-[[package]]
 name = "base16ct"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -902,10 +847,10 @@ checksum = "b90ca2580b73ab6a1f724b76ca11ab632df820fd6040c336200d2c1df7b3c82c"
 name = "example"
 version = "0.1.0"
 dependencies = [
- "axelar-gas-service",
- "axelar-gateway",
- "axelar-soroban-std",
  "soroban-sdk",
+ "stellar-axelar-gas-service",
+ "stellar-axelar-gateway",
+ "stellar-axelar-soroban-std",
 ]
 
 [[package]]
@@ -1152,34 +1097,6 @@ name = "indexmap-nostd"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e04e2fd2b8188ea827b32ef11de88377086d690286ab35747ef7f9bf3ccb590"
-
-[[package]]
-name = "interchain-token"
-version = "0.1.0"
-dependencies = [
- "axelar-soroban-std",
- "cfg-if",
- "soroban-sdk",
- "soroban-token-sdk",
-]
-
-[[package]]
-name = "interchain-token-service"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "axelar-gas-service",
- "axelar-gateway",
- "axelar-soroban-std",
- "cfg-if",
- "goldie",
- "hex",
- "interchain-token",
- "interchain-token-service",
- "soroban-sdk",
- "soroban-token-sdk",
-]
 
 [[package]]
 name = "itertools"
@@ -2057,6 +1974,89 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "stellar-axelar-gas-service"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "soroban-sdk",
+ "stellar-axelar-soroban-std",
+]
+
+[[package]]
+name = "stellar-axelar-gateway"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "ed25519-dalek",
+ "goldie",
+ "hex",
+ "hex-literal",
+ "rand",
+ "rand_chacha",
+ "soroban-sdk",
+ "stellar-axelar-gateway",
+ "stellar-axelar-soroban-std",
+]
+
+[[package]]
+name = "stellar-axelar-operators"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-axelar-soroban-std",
+]
+
+[[package]]
+name = "stellar-axelar-soroban-std"
+version = "0.1.0"
+dependencies = [
+ "goldie",
+ "hex",
+ "soroban-sdk",
+ "soroban-token-sdk",
+ "stellar-axelar-soroban-std-derive",
+]
+
+[[package]]
+name = "stellar-axelar-soroban-std-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "soroban-sdk",
+ "stellar-axelar-soroban-std",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "stellar-interchain-token"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "soroban-sdk",
+ "soroban-token-sdk",
+ "stellar-axelar-soroban-std",
+]
+
+[[package]]
+name = "stellar-interchain-token-service"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "cfg-if",
+ "goldie",
+ "hex",
+ "soroban-sdk",
+ "soroban-token-sdk",
+ "stellar-axelar-gas-service",
+ "stellar-axelar-gateway",
+ "stellar-axelar-soroban-std",
+ "stellar-interchain-token",
+ "stellar-interchain-token-service",
+]
+
+[[package]]
 name = "stellar-strkey"
 version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2277,8 +2277,8 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 name = "upgrader"
 version = "0.1.0"
 dependencies = [
- "axelar-soroban-std",
  "soroban-sdk",
+ "stellar-axelar-soroban-std",
 ]
 
 [[package]]

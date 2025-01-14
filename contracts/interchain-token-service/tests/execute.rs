@@ -1,19 +1,19 @@
 mod utils;
 
-use axelar_gateway::types::Message as GatewayMessage;
-use axelar_soroban_std::events;
-use interchain_token_service::event::{
+use stellar_axelar_soroban_std::events;
+use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
-use interchain_token_service::types::{
+use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, String};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gateway::types::Message as GatewayMessage;
 use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_token, HUB_CHAIN};
 
-use interchain_token::InterchainTokenClient;
+use stellar_interchain_token::InterchainTokenClient;
 
 #[test]
 #[should_panic(expected = "Error(Contract, #1)")] // ExecutableError::NotApproved

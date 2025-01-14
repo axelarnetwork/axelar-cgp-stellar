@@ -1,7 +1,7 @@
 mod utils;
 
-use axelar_soroban_std::{assert_contract_err, auth_invocation, events};
-use interchain_token_service::{
+use stellar_axelar_soroban_std::{assert_contract_err, auth_invocation, events};
+use stellar_interchain_token_service::{
     error::ContractError,
     event::InterchainTokenDeploymentStartedEvent,
     types::{DeployInterchainToken, HubMessage, Message},

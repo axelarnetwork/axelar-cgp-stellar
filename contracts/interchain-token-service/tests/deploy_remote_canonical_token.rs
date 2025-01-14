@@ -1,14 +1,14 @@
 mod utils;
 
-use axelar_soroban_std::{address::AddressExt, auth_invocation, events};
-use interchain_token_service::{
-    event::InterchainTokenDeploymentStartedEvent,
-    types::{DeployInterchainToken, HubMessage, Message, TokenManagerType},
-};
+use stellar_axelar_soroban_std::{address::AddressExt, auth_invocation, events};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_interchain_token_service::{
+    event::InterchainTokenDeploymentStartedEvent,
+    types::{DeployInterchainToken, HubMessage, Message, TokenManagerType},
+};
 use utils::{setup_env, setup_gas_token};
 
 #[test]

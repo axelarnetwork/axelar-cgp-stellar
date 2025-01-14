@@ -1,7 +1,7 @@
 use crate::error::ContractError;
 use crate::types::{ProofSignature, ProofSigner, WeightedSigner};
-use axelar_soroban_std::ensure;
-use axelar_soroban_std::events::Event;
+use stellar_axelar_soroban_std::ensure;
+use stellar_axelar_soroban_std::events::Event;
 use soroban_sdk::{crypto::Hash, Bytes, BytesN, Env, Vec};
 
 use crate::event::SignersRotatedEvent;

@@ -1,11 +1,11 @@
 #![cfg(test)]
 extern crate std;
 
-use axelar_soroban_std::{
+use stellar_axelar_soroban_std::{
     assert_invoke_auth_err, assert_invoke_auth_ok, assert_last_emitted_event,
 };
 
-use interchain_token::{InterchainToken, InterchainTokenClient};
+use stellar_interchain_token::{InterchainToken, InterchainTokenClient};
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _},
     Address, BytesN, Env, IntoVal as _, Symbol,

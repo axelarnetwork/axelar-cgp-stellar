@@ -7,7 +7,7 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-axelar-soroban-std = { workspace = true }
+stellar-axelar-soroban-std = { workspace = true }
 soroban-sdk = { workspace = true }
 
 [dev-dependencies]

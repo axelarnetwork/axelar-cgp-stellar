@@ -1,14 +1,14 @@
 mod utils;
 
-use axelar_soroban_std::address::AddressExt;
-use axelar_soroban_std::assert_contract_err;
-use axelar_soroban_std::assert_invoke_auth_err;
-use axelar_soroban_std::events;
-use interchain_token::InterchainTokenClient;
-use interchain_token_service::error::ContractError;
+use stellar_axelar_soroban_std::address::AddressExt;
+use stellar_axelar_soroban_std::assert_contract_err;
+use stellar_axelar_soroban_std::assert_invoke_auth_err;
+use stellar_axelar_soroban_std::events;
+use stellar_interchain_token::InterchainTokenClient;
+use stellar_interchain_token_service::error::ContractError;
 
-use interchain_token_service::event::InterchainTokenDeployedEvent;
-use interchain_token_service::types::TokenManagerType;
+use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
+use stellar_interchain_token_service::types::TokenManagerType;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::Address;
 use soroban_sdk::BytesN;

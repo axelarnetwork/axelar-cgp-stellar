@@ -1,8 +1,8 @@
 mod utils;
 
-use axelar_gateway::types::Message as GatewayMessage;
-use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
-use interchain_token_service::{
+use stellar_axelar_gateway::types::Message as GatewayMessage;
+use stellar_axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
+use stellar_interchain_token_service::{
     error::ContractError,
     event::FlowLimitSetEvent,
     types::{HubMessage, InterchainTransfer, Message},

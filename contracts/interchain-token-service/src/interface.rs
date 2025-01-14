@@ -1,5 +1,5 @@
-use axelar_gateway::executable::AxelarExecutableInterface;
-use axelar_soroban_std::types::Token;
+use stellar_axelar_gateway::executable::AxelarExecutableInterface;
+use stellar_axelar_soroban_std::types::Token;
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 
