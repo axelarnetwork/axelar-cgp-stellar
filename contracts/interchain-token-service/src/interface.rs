@@ -34,6 +34,42 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
 
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType;
 
+    /// Retrieves the flow limit for the token associated with the specified token ID.
+    /// Returns `None` if no limit is set.
+    fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128>;
+
+    /// Retrieves the amount that has flowed out of the chain to other chains during the current epoch
+    /// for the token associated with the specified token ID.
+    fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128;
+
+    /// Retrieves the amount that has flowed into the chain from other chains during the current epoch
+    /// for the token associated with the specified token ID.
+    fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128;
+
+    /// Sets or updates the flow limit for a token.
+    ///
+    /// Flow limit controls how many tokens can flow in/out during a single epoch.
+    /// Setting the limit to `None` disables flow limit checks for the token.
+    /// Setting the limit to 0 effectively freezes the token by preventing any flow.
+    ///
+    /// # Arguments
+    /// - `token_id`: Unique identifier of the token.
+    /// - `flow_limit`: The new flow limit value. Must be positive if Some.
+    ///
+    /// # Returns
+    /// - `Result<(), ContractError>`: Ok(()) on success.
+    ///
+    /// # Errors
+    /// - `ContractError::InvalidFlowLimit`: If the provided flow limit is not positive.
+    ///
+    /// # Authorization
+    /// - Must be called by the [`Self::operator`].
+    fn set_flow_limit(
+        env: &Env,
+        token_id: BytesN<32>,
+        flow_limit: Option<i128>,
+    ) -> Result<(), ContractError>;
+
     fn deploy_interchain_token(
         env: &Env,
         deployer: Address,

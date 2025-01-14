@@ -51,7 +51,7 @@ fn execute_fails_with_invalid_message() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(
         &source_chain,
@@ -101,7 +101,7 @@ fn interchain_transfer_message_execute_succeeds() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
@@ -153,7 +153,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
@@ -207,7 +207,7 @@ fn deploy_interchain_token_message_execute_fails_empty_token_name() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(
         &source_chain,
@@ -254,7 +254,7 @@ fn deploy_interchain_token_message_execute_fails_empty_token_symbol() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(
         &source_chain,
@@ -303,7 +303,7 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(
         &source_chain,
@@ -364,7 +364,7 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
         },
     ];
 
-    approve_gateway_messages(&env, gateway_client, signers, messages);
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     client.execute(&source_chain, &first_message_id, &source_address, &payload);
 

@@ -26,6 +26,7 @@ fn setup_its<'a>(
     gas_service: &AxelarGasServiceClient,
 ) -> InterchainTokenServiceClient<'a> {
     let owner = Address::generate(env);
+    let operator = Address::generate(env);
     let its_hub_address = String::from_str(env, "its_hub_address");
     let chain_name = String::from_str(env, "chain_name");
 
@@ -39,6 +40,7 @@ fn setup_its<'a>(
         InterchainTokenService,
         (
             &owner,
+            &operator,
             &gateway.address,
             &gas_service.address,
             its_hub_address,
@@ -117,7 +119,7 @@ pub fn register_chains(env: &Env, client: &InterchainTokenServiceClient) {
 #[allow(dead_code)]
 pub fn approve_gateway_messages(
     env: &Env,
-    gateway_client: AxelarGatewayClient,
+    gateway_client: &AxelarGatewayClient,
     signers: TestSignerSet,
     messages: Vec<Message>,
 ) {
