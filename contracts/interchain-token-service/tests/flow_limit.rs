@@ -3,9 +3,7 @@ mod utils;
 use soroban_sdk::testutils::{Address as _, Ledger as _};
 use soroban_sdk::{vec, xdr::ToXdr, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_std::{
-    assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt,
-};
+use stellar_axelar_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
 use stellar_interchain_token_service::{
     error::ContractError,
     event::FlowLimitSetEvent,

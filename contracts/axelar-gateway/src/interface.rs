@@ -4,9 +4,7 @@ use crate::{
     AxelarGatewayMessagingInterface,
 };
 use soroban_sdk::{contractclient, BytesN, Env, Vec};
-use stellar_axelar_std::interfaces::{
-    OperatableInterface, OwnableInterface, UpgradableInterface,
-};
+use stellar_axelar_std::interfaces::{OperatableInterface, OwnableInterface, UpgradableInterface};
 
 #[contractclient(name = "AxelarGatewayClient")]
 pub trait AxelarGatewayInterface:
