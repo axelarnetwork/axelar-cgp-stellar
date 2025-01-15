@@ -13,15 +13,15 @@ crate-type = ["cdylib", "rlib"]
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
-stellar-axelar-soroban-std = { workspace = true }
+stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [features]
 library = [] # Only export the contract interface
-testutils = ["soroban-sdk/testutils", "stellar-axelar-soroban-std/testutils"]
+testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils"]
 
 [lints]
 workspace = true

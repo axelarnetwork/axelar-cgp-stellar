@@ -6,7 +6,7 @@ use stellar_axelar_gateway::error::ContractError;
 use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
 use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 use stellar_axelar_gateway::AxelarGateway;
-use stellar_axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok};
+use stellar_axelar_std::{assert_contract_err, assert_invoke_auth_ok};
 
 mod utils;
 use utils::setup_env;

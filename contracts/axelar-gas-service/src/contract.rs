@@ -4,9 +4,9 @@ use crate::error::ContractError;
 use crate::event;
 use crate::interface::AxelarGasServiceInterface;
 use crate::storage_types::DataKey;
-use stellar_axelar_soroban_std::ttl::extend_instance_ttl;
-use stellar_axelar_soroban_std::{ensure, interfaces, types::Token};
-use stellar_axelar_soroban_std::{Ownable, Upgradable};
+use stellar_axelar_std::ttl::extend_instance_ttl;
+use stellar_axelar_std::{ensure, interfaces, types::Token};
+use stellar_axelar_std::{Ownable, Upgradable};
 
 #[contract]
 #[derive(Ownable, Upgradable)]

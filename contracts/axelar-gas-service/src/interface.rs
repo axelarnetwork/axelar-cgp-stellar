@@ -1,5 +1,5 @@
 use soroban_sdk::{contractclient, Address, Bytes, Env, String};
-use stellar_axelar_soroban_std::types::Token;
+use stellar_axelar_std::types::Token;
 
 use crate::error::ContractError;
 

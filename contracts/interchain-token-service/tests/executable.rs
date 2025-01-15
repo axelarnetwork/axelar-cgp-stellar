@@ -5,8 +5,8 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_soroban_std::traits::BytesExt;
-use stellar_axelar_soroban_std::{assert_invoke_auth_err, events};
+use stellar_axelar_std::traits::BytesExt;
+use stellar_axelar_std::{assert_invoke_auth_err, events};
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
 use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
 
@@ -16,7 +16,7 @@ mod test {
         contract, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
         Topics, Val,
     };
-    use stellar_axelar_soroban_std::{events::Event, impl_event_testutils};
+    use stellar_axelar_std::{events::Event, impl_event_testutils};
     use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface;
 
     #[contract]

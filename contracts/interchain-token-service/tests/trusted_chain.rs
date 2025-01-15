@@ -5,7 +5,7 @@ use utils::setup_env;
 
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, String};
-use stellar_axelar_soroban_std::{
+use stellar_axelar_std::{
     assert_contract_err, assert_invoke_auth_err, assert_invoke_auth_ok, events,
 };
 use stellar_interchain_token_service::error::ContractError;

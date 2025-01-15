@@ -1,7 +1,7 @@
 mod utils;
 
 use soroban_sdk::{testutils::Address as _, xdr::ToXdr, Address, BytesN};
-use stellar_axelar_soroban_std::{address::AddressExt, assert_contract_err, events};
+use stellar_axelar_std::{address::AddressExt, assert_contract_err, events};
 use stellar_interchain_token_service::{
     error::ContractError, event::InterchainTokenIdClaimedEvent, types::TokenManagerType,
 };

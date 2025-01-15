@@ -5,7 +5,7 @@ use crate::{AxelarGateway, AxelarGatewayClient};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
-use stellar_axelar_soroban_std::{assert_last_emitted_event, assert_ok};
+use stellar_axelar_std::{assert_last_emitted_event, assert_ok};
 
 use soroban_sdk::Symbol;
 use soroban_sdk::{testutils::Address as _, Address};
@@ -15,7 +15,7 @@ use crate::types::{
     CommandType, Message, Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners,
 };
 
-use stellar_axelar_soroban_std::traits::IntoVec;
+use stellar_axelar_std::traits::IntoVec;
 
 #[derive(Clone, Debug)]
 pub struct TestSignerSet {

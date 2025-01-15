@@ -7,7 +7,7 @@ use soroban_sdk::{
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use stellar_axelar_soroban_std::{
+use stellar_axelar_std::{
     address::AddressExt,
     ensure,
     events::Event,

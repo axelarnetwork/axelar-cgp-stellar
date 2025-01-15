@@ -1,5 +1,5 @@
 use soroban_sdk::{contractclient, Address, Bytes, Env, String};
-use stellar_axelar_soroban_std::ensure;
+use stellar_axelar_std::ensure;
 
 use crate::AxelarGatewayMessagingClient;
 use soroban_sdk::contracterror;

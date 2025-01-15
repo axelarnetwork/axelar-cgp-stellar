@@ -17,7 +17,7 @@ soroban-sdk = { workspace = true, features = ["alloc"] }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
-stellar-axelar-soroban-std = { workspace = true }
+stellar-axelar-std = { workspace = true }
 stellar-interchain-token = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
@@ -26,13 +26,13 @@ hex = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
-stellar-axelar-soroban-std = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils"] }
 stellar-interchain-token = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
 
 [features]
 library = []
-testutils = ["stellar-axelar-soroban-std/testutils"]
+testutils = ["stellar-axelar-std/testutils"]
 
 [lints]
 workspace = true

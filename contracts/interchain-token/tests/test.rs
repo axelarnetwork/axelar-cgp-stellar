@@ -1,7 +1,7 @@
 #![cfg(test)]
 extern crate std;
 
-use stellar_axelar_soroban_std::{
+use stellar_axelar_std::{
     assert_invoke_auth_err, assert_invoke_auth_ok, assert_last_emitted_event,
 };
 

@@ -12,7 +12,7 @@ use soroban_sdk::{
 };
 use stellar_axelar_gas_service::error::ContractError;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
-use stellar_axelar_soroban_std::{
+use stellar_axelar_std::{
     assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event, types::Token,
 };
 

@@ -1,5 +1,5 @@
 [package]
-name = "stellar-axelar-soroban-std"
+name = "stellar-axelar-std"
 version = "0.1.0"
 edition = { workspace = true }
 description = "Contract related to Axelar Soroban Std."
@@ -13,16 +13,16 @@ crate-type = ["rlib"]
 hex = { workspace = true, optional = true }
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
-stellar-axelar-soroban-std-derive = { workspace = true, optional = true }
+stellar-axelar-std-derive = { workspace = true, optional = true }
 
 [dev-dependencies]
 goldie = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
-stellar-axelar-soroban-std-derive = { workspace = true }
+stellar-axelar-std-derive = { workspace = true }
 
 [features]
 testutils = ["soroban-sdk/testutils", "hex"]
-derive = ["dep:stellar-axelar-soroban-std-derive"]
+derive = ["dep:stellar-axelar-std-derive"]
 
 [lints]
 workspace = true

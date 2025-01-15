@@ -4,7 +4,7 @@ use crate::{
     AxelarGatewayMessagingInterface,
 };
 use soroban_sdk::{contractclient, BytesN, Env, Vec};
-use stellar_axelar_soroban_std::interfaces::{
+use stellar_axelar_std::interfaces::{
     OperatableInterface, OwnableInterface, UpgradableInterface,
 };
 

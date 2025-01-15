@@ -850,7 +850,7 @@ dependencies = [
  "soroban-sdk",
  "stellar-axelar-gas-service",
  "stellar-axelar-gateway",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
 ]
 
 [[package]]
@@ -1979,7 +1979,7 @@ version = "0.1.0"
 dependencies = [
  "cfg-if",
  "soroban-sdk",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
 ]
 
 [[package]]
@@ -1995,7 +1995,7 @@ dependencies = [
  "rand_chacha",
  "soroban-sdk",
  "stellar-axelar-gateway",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
 ]
 
 [[package]]
@@ -2003,28 +2003,28 @@ name = "stellar-axelar-operators"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
 ]
 
 [[package]]
-name = "stellar-axelar-soroban-std"
+name = "stellar-axelar-std"
 version = "0.1.0"
 dependencies = [
  "goldie",
  "hex",
  "soroban-sdk",
  "soroban-token-sdk",
- "stellar-axelar-soroban-std-derive",
+ "stellar-axelar-std-derive",
 ]
 
 [[package]]
-name = "stellar-axelar-soroban-std-derive"
+name = "stellar-axelar-std-derive"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
  "soroban-sdk",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
  "syn 2.0.87",
 ]
 
@@ -2035,7 +2035,7 @@ dependencies = [
  "cfg-if",
  "soroban-sdk",
  "soroban-token-sdk",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
 ]
 
 [[package]]
@@ -2051,7 +2051,7 @@ dependencies = [
  "soroban-token-sdk",
  "stellar-axelar-gas-service",
  "stellar-axelar-gateway",
- "stellar-axelar-soroban-std",
+ "stellar-axelar-std",
  "stellar-interchain-token",
  "stellar-interchain-token-service",
 ]
@@ -2065,6 +2065,14 @@ dependencies = [
  "crate-git-revision",
  "data-encoding",
  "thiserror",
+]
+
+[[package]]
+name = "stellar-upgrader"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-axelar-std",
 ]
 
 [[package]]
@@ -2272,14 +2280,6 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
-
-[[package]]
-name = "upgrader"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
- "stellar-axelar-soroban-std",
-]
 
 [[package]]
 name = "upon"

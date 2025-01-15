@@ -4,7 +4,7 @@ use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocat
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
-use stellar_axelar_soroban_std::{address::AddressExt, auth_invocation, events};
+use stellar_axelar_std::{address::AddressExt, auth_invocation, events};
 use stellar_interchain_token_service::{
     event::InterchainTokenDeploymentStartedEvent,
     types::{DeployInterchainToken, HubMessage, Message, TokenManagerType},

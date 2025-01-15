@@ -11,7 +11,7 @@ use stellar_axelar_gateway::{
     types::Message,
     AxelarGatewayClient,
 };
-use stellar_axelar_soroban_std::{assert_last_emitted_event, auth_invocation, types::Token};
+use stellar_axelar_std::{assert_last_emitted_event, auth_invocation, types::Token};
 
 fn setup_gateway<'a>(env: &Env) -> (TestSignerSet, AxelarGatewayClient<'a>) {
     let (signers, client) = testutils::setup_gateway(env, 0, 5);

@@ -2,7 +2,7 @@ use crate::event;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, Env, String};
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
-use stellar_axelar_soroban_std::types::Token;
+use stellar_axelar_std::types::Token;
 
 use crate::storage_types::DataKey;
 

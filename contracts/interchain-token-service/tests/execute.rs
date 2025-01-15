@@ -4,7 +4,7 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_soroban_std::events;
+use stellar_axelar_std::events;
 use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };

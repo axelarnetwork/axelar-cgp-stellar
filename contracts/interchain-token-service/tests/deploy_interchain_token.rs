@@ -1,9 +1,9 @@
 mod utils;
 
-use stellar_axelar_soroban_std::address::AddressExt;
-use stellar_axelar_soroban_std::assert_contract_err;
-use stellar_axelar_soroban_std::assert_invoke_auth_err;
-use stellar_axelar_soroban_std::events;
+use stellar_axelar_std::address::AddressExt;
+use stellar_axelar_std::assert_contract_err;
+use stellar_axelar_std::assert_invoke_auth_err;
+use stellar_axelar_std::events;
 use stellar_interchain_token::InterchainTokenClient;
 use stellar_interchain_token_service::error::ContractError;
 

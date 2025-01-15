@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
-use stellar_axelar_soroban_std::events::Event;
+use stellar_axelar_std::events::Event;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TrustedChainSetEvent {
@@ -168,7 +168,7 @@ impl Event for InterchainTransferReceivedEvent {
 }
 
 #[cfg(any(test, feature = "testutils"))]
-use stellar_axelar_soroban_std::impl_event_testutils;
+use stellar_axelar_std::impl_event_testutils;
 
 #[cfg(any(test, feature = "testutils"))]
 impl_event_testutils!(TrustedChainSetEvent, (Symbol, String), ());

@@ -1,5 +1,5 @@
 use soroban_sdk::{BytesN, Env};
-use stellar_axelar_soroban_std::{ensure, events::Event, ttl::extend_persistent_ttl};
+use stellar_axelar_std::{ensure, events::Event, ttl::extend_persistent_ttl};
 
 use crate::{
     error::ContractError,

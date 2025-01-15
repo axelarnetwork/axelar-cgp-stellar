@@ -2,8 +2,8 @@ use crate::error::ContractError;
 use crate::event;
 use crate::storage_types::DataKey;
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, Val, Vec};
-use stellar_axelar_soroban_std::ttl::extend_instance_ttl;
-use stellar_axelar_soroban_std::{ensure, interfaces, Ownable, Upgradable};
+use stellar_axelar_std::ttl::extend_instance_ttl;
+use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 #[contract]
 #[derive(Ownable, Upgradable)]
