@@ -1,19 +1,28 @@
 use axelar_soroban_std::ensure;
-use soroban_sdk::{contractclient, Address, Bytes, Env, String};
+use soroban_sdk::{Address, Bytes, Env, String};
 
 use crate::AxelarGatewayMessagingClient;
-use soroban_sdk::contracterror;
 
-#[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-#[repr(u32)]
-pub enum ExecutableError {
-    NotApproved = 1,
+pub trait NotApprovedError {
+    fn not_approved() -> Self;
+}
+
+/// Generates the implementation for the [`NotApprovedError`] trait for the given error type
+#[macro_export]
+macro_rules! impl_not_approved_error {
+    ($error:ident) => {
+        impl NotApprovedError for $error {
+            fn not_approved() -> Self {
+                Self::NotApproved
+            }
+        }
+    };
 }
 
 /// Interface for an Axelar Executable app.
-#[contractclient(name = "AxelarExecutableClient")]
 pub trait AxelarExecutableInterface {
+    type Error: Into<soroban_sdk::Error> + NotApprovedError;
+
     /// Return the trusted gateway contract id.
     fn gateway(env: &Env) -> Address;
 
@@ -24,7 +33,7 @@ pub trait AxelarExecutableInterface {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    );
+    ) -> Result<(), <Self as AxelarExecutableInterface>::Error>;
 
     /// Validate if a gateway has approved a message.
     /// This should be called from an implementation of `execute` before executing custom app logic.
@@ -35,7 +44,7 @@ pub trait AxelarExecutableInterface {
         message_id: &String,
         source_address: &String,
         payload: &Bytes,
-    ) -> Result<(), ExecutableError> {
+    ) -> Result<(), <Self as AxelarExecutableInterface>::Error> {
         let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
 
         // Validate that the message was approved by the gateway
@@ -47,7 +56,7 @@ pub trait AxelarExecutableInterface {
                 source_address,
                 &env.crypto().keccak256(payload).into(),
             ),
-            ExecutableError::NotApproved
+            Self::Error::not_approved()
         );
 
         Ok(())

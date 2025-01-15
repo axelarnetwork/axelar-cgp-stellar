@@ -1,9 +1,11 @@
+use core::fmt::Debug;
+
+use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
+
 use crate::events::Event;
 #[cfg(any(test, feature = "testutils"))]
 use crate::impl_event_testutils;
 use crate::interfaces::storage;
-use core::fmt::Debug;
-use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
 
 #[contractclient(name = "OperatableClient")]
 pub trait OperatableInterface {
@@ -69,11 +71,12 @@ impl_event_testutils!(OperatorshipTransferredEvent, (Symbol, Address, Address), 
 
 #[cfg(test)]
 mod test {
+    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::{Address, Env};
+
     use crate::interfaces::testdata::Contract;
     use crate::interfaces::{OperatableClient, OperatorshipTransferredEvent};
     use crate::{assert_invoke_auth_err, assert_invoke_auth_ok, events};
-    use soroban_sdk::testutils::Address as _;
-    use soroban_sdk::{Address, Env};
 
     fn prepare_client(env: &Env, operator: Option<Address>) -> OperatableClient {
         let owner = Address::generate(env);

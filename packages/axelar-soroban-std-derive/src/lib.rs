@@ -1,8 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{
-    parse::Parse, parse::ParseStream, parse_macro_input, DeriveInput, Error, Ident, Token, Type,
-};
+use syn::parse::{Parse, ParseStream};
+use syn::{parse_macro_input, DeriveInput, Error, Ident, Token, Type};
 
 /// Implements the Operatable interface for a Soroban contract.
 ///

@@ -1,3 +1,5 @@
+use axelar_gateway::executable::NotApprovedError;
+use axelar_gateway::impl_not_approved_error;
 use soroban_sdk::contracterror;
 
 #[contracterror]
@@ -25,4 +27,7 @@ pub enum ContractError {
     InvalidFlowLimit = 19,
     FlowLimitExceeded = 20,
     FlowAmountOverflow = 21,
+    NotApproved = 22,
 }
+
+impl_not_approved_error!(ContractError);

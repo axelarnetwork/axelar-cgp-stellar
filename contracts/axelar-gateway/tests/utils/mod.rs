@@ -1,7 +1,5 @@
-use axelar_gateway::{
-    testutils::{setup_gateway, TestSignerSet},
-    AxelarGatewayClient,
-};
+use axelar_gateway::testutils::{setup_gateway, TestSignerSet};
+use axelar_gateway::AxelarGatewayClient;
 use soroban_sdk::Env;
 
 pub fn setup_env<'a>(

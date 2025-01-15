@@ -244,11 +244,14 @@ impl From<MessageType> for U256 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use alloc::vec;
-    use axelar_soroban_std::{assert_ok, traits::BytesExt};
-    use soroban_sdk::{Bytes, BytesN, Env, String};
     use std::vec::Vec;
+
+    use axelar_soroban_std::assert_ok;
+    use axelar_soroban_std::traits::BytesExt;
+    use soroban_sdk::{Bytes, BytesN, Env, String};
+
+    use super::*;
 
     #[test]
     fn soroban_str_to_std_string() {

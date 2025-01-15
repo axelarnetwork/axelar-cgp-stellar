@@ -3,7 +3,8 @@ use axelar_soroban_std::types::Token;
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 
-use crate::{error::ContractError, types::TokenManagerType};
+use crate::error::ContractError;
+use crate::types::TokenManagerType;
 
 #[allow(dead_code)]
 #[contractclient(name = "InterchainTokenServiceClient")]

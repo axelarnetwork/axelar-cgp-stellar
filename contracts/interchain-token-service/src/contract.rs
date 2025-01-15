@@ -1,39 +1,33 @@
 use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::{executable::AxelarExecutableInterface, AxelarGatewayMessagingClient};
-use axelar_soroban_std::{
-    address::AddressExt,
-    ensure,
-    events::Event,
-    interfaces,
-    token::validate_token_metadata,
-    ttl::{extend_instance_ttl, extend_persistent_ttl},
-    types::Token,
-    Operatable, Ownable, Upgradable,
-};
+use axelar_gateway::executable::AxelarExecutableInterface;
+use axelar_gateway::AxelarGatewayMessagingClient;
+use axelar_soroban_std::address::AddressExt;
+use axelar_soroban_std::events::Event;
+use axelar_soroban_std::token::validate_token_metadata;
+use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use axelar_soroban_std::types::Token;
+use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use interchain_token::InterchainTokenClient;
-use soroban_sdk::{
-    contract, contractimpl, panic_with_error,
-    token::{self, StellarAssetClient},
-    xdr::{FromXdr, ToXdr},
-    Address, Bytes, BytesN, Env, String,
-};
+use soroban_sdk::token::{self, StellarAssetClient};
+use soroban_sdk::xdr::{FromXdr, ToXdr};
+use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 
-use crate::{
-    abi::{get_message_type, MessageType as EncodedMessageType},
-    error::ContractError,
-    event::{
-        InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
-        InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent,
-        InterchainTransferSentEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
-    },
-    executable::InterchainTokenExecutableClient,
-    flow_limit::{self, FlowDirection},
-    interface::InterchainTokenServiceInterface,
-    storage_types::{DataKey, TokenIdConfigValue},
-    token_handler,
-    types::{DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType},
+use crate::abi::{get_message_type, MessageType as EncodedMessageType};
+use crate::error::ContractError;
+use crate::event::{
+    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
+    InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
+    TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
+use crate::executable::InterchainTokenExecutableClient;
+use crate::flow_limit::FlowDirection;
+use crate::interface::InterchainTokenServiceInterface;
+use crate::storage_types::{DataKey, TokenIdConfigValue};
+use crate::types::{
+    DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
+};
+use crate::{flow_limit, token_handler};
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
@@ -441,6 +435,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
 #[contractimpl]
 impl AxelarExecutableInterface for InterchainTokenService {
+    type Error = ContractError;
+
     fn gateway(env: &Env) -> Address {
         env.storage()
             .instance()
@@ -454,12 +450,10 @@ impl AxelarExecutableInterface for InterchainTokenService {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) {
-        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)
-            .unwrap_or_else(|err| panic_with_error!(env, err));
+    ) -> Result<(), ContractError> {
+        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
 
         Self::execute_message(&env, source_chain, message_id, source_address, payload)
-            .unwrap_or_else(|err| panic_with_error!(env, err));
     }
 }
 

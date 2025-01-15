@@ -1,6 +1,6 @@
 use core::fmt::Debug;
-use soroban_sdk::{Env, IntoVal, Topics, Val, Vec};
 
+use soroban_sdk::{Env, IntoVal, Topics, Val, Vec};
 #[cfg(any(test, feature = "testutils"))]
 pub use testutils::*;
 
@@ -19,9 +19,10 @@ pub trait Event: Debug + PartialEq {
 
 #[cfg(any(test, feature = "testutils"))]
 mod testutils {
-    use crate::events::Event;
     use soroban_sdk::testutils::Events;
     use soroban_sdk::{Address, Env, Val, Vec};
+
+    use crate::events::Event;
 
     pub trait EventTestutils: Event {
         fn matches(&self, env: &Env, event: &(Address, Vec<Val>, Val)) -> bool;
@@ -105,12 +106,14 @@ mod testutils {
 
 #[cfg(test)]
 mod test {
-    use crate::events::{Event, EventTestutils};
-    use crate::{events, impl_event_testutils};
     use core::fmt::Debug;
+
     use soroban_sdk::testutils::Events;
     use soroban_sdk::xdr::Int32;
     use soroban_sdk::{contract, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
+
+    use crate::events::{Event, EventTestutils};
+    use crate::{events, impl_event_testutils};
 
     #[derive(Debug, PartialEq, Eq)]
     struct TestEvent {
