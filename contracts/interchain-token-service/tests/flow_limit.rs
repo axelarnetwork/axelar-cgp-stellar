@@ -1,6 +1,8 @@
 mod utils;
 
+use axelar_gateway::testutils::TestSignerSet;
 use axelar_gateway::types::Message as GatewayMessage;
+use axelar_gateway::AxelarGatewayClient;
 use axelar_soroban_std::traits::BytesExt;
 use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events};
 use interchain_token_service::error::ContractError;
