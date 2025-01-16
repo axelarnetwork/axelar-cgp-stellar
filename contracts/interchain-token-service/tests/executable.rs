@@ -2,6 +2,7 @@ mod utils;
 
 use axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use axelar_gateway::types::Message as GatewayMessage;
+use axelar_soroban_std::testutils::address_to_bytes;
 use axelar_soroban_std::traits::BytesExt;
 use axelar_soroban_std::{assert_invoke_auth_err, events};
 use interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
@@ -131,13 +132,14 @@ fn interchain_transfer_execute_succeeds() {
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
+    let destination_address = address_to_bytes(&env, &executable_id);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: String::from_str(&env, HUB_CHAIN),
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,
-            destination_address: executable_id.clone().to_xdr(&env),
+            destination_address,
             amount,
             data: Some(data.clone()),
         }),
@@ -181,7 +183,7 @@ fn executable_fails_if_not_executed_from_its() {
     let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
 
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_xdr(&env);
+    let source_address = address_to_bytes(&env, &Address::generate(&env));
     let amount = 1000;
     let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_address = Address::generate(&env);

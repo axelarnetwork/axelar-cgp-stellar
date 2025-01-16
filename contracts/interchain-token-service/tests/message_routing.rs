@@ -1,7 +1,8 @@
 mod utils;
+use axelar_soroban_std::testutils::address_to_bytes;
 use axelar_soroban_std::{assert_contract_err, traits::BytesExt};
 use interchain_token_service::error::ContractError;
-use soroban_sdk::{testutils::Address as _, xdr::ToXdr, Address, Bytes, String};
+use soroban_sdk::{testutils::Address as _, Address, Bytes, String};
 use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
 
 #[test]
@@ -42,7 +43,7 @@ fn send_to_untrusted_chain_fails() {
             &sender,
             &token_id,
             &String::from_str(&env, "untrusted_chain"),
-            &Address::generate(&env).to_xdr(&env),
+            &address_to_bytes(&env, &Address::generate(&env)),
             &amount,
             &None,
             &gas_token,

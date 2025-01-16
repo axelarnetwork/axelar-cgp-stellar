@@ -14,7 +14,7 @@ use interchain_token::InterchainTokenClient;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{self, StellarAssetClient},
-    xdr::{FromXdr, ToXdr},
+    xdr::ToXdr,
     Address, Bytes, BytesN, Env, String,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -532,9 +532,7 @@ impl InterchainTokenService {
                 amount,
                 data,
             }) => {
-                let destination_address = Address::from_xdr(env, &destination_address)
-                    .map_err(|_| ContractError::InvalidDestinationAddress)?;
-
+                let destination_address = Address::from_string_bytes(&destination_address);
                 let token_config_value =
                     Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
 
@@ -597,10 +595,7 @@ impl InterchainTokenService {
                 );
 
                 // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
-                let minter = minter
-                    .map(|m| Address::from_xdr(env, &m))
-                    .transpose()
-                    .map_err(|_| ContractError::InvalidMinter)?;
+                let minter = minter.map(|m| Address::from_string_bytes(&m));
 
                 let deployed_address = Self::deploy_interchain_token_contract(
                     env,

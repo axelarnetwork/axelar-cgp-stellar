@@ -2,6 +2,7 @@ mod utils;
 
 use axelar_gateway::types::Message as GatewayMessage;
 use axelar_soroban_std::events;
+use axelar_soroban_std::testutils::address_to_bytes;
 use interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
@@ -67,7 +68,7 @@ fn interchain_transfer_message_execute_succeeds() {
     register_chains(&env, &client);
 
     let sender = Address::generate(&env).to_xdr(&env);
-    let recipient = Address::generate(&env).to_xdr(&env);
+    let recipient = address_to_bytes(&env, &Address::generate(&env));
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 
@@ -116,7 +117,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
     register_chains(&env, &client);
 
     let sender = Address::generate(&env);
-    let sender_bytes = sender.clone().to_xdr(&env);
+    let sender_bytes = address_to_bytes(&env, &sender);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 
@@ -319,7 +320,7 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = address_to_bytes(&env, &Address::generate(&env));
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 

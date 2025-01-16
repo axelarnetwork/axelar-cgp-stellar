@@ -1,6 +1,7 @@
 mod utils;
 
 use axelar_gateway::types::Message as GatewayMessage;
+use axelar_soroban_std::testutils::address_to_bytes;
 use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok, events, traits::BytesExt};
 use interchain_token_service::{
     error::ContractError,
@@ -9,7 +10,7 @@ use interchain_token_service::{
     InterchainTokenServiceClient,
 };
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{vec, xdr::ToXdr, Address, Bytes, BytesN, Env, String, Vec};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Vec};
 use utils::{
     approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
     HUB_CHAIN,
@@ -36,8 +37,8 @@ fn create_interchain_transfer_message(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> (String, String, String, Bytes, Vec<GatewayMessage>) {
-    let sender = Address::generate(env).to_xdr(env);
-    let recipient = Address::generate(env).to_xdr(env);
+    let sender = address_to_bytes(env, &Address::generate(env));
+    let recipient = address_to_bytes(env, &Address::generate(env));
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(env).to_string();
 

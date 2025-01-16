@@ -3,7 +3,7 @@ extern crate std;
 
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, Events},
-    vec, Address, Env, IntoVal, Symbol, Val, Vec,
+    vec, Address, Bytes, Env, IntoVal, Symbol, Val, Vec,
 };
 
 /// Asserts invocation auth of a contract from a single caller.
@@ -33,6 +33,7 @@ pub fn assert_invocation<T>(
 }
 
 /// Asserts that the event at `event_index` in the environment's emitted events is the expected event.
+///
 /// If `event_index` is negative, the length of events will be added to it, i.e it'll be indexed from the end.
 pub fn assert_emitted_event<U, V>(
     env: &Env,
@@ -69,6 +70,15 @@ where
     V: IntoVal<Env, Val>,
 {
     assert_emitted_event(env, -1, contract_id, topics, data);
+}
+
+// Converts Stellar address (soroban_sdk::Address) to soroban_sdk::Bytes
+pub fn address_to_bytes(env: &Env, address: &Address) -> Bytes {
+    let address_str = address.to_string();
+    let mut str_bytes = [0u8; 56];
+    address_str.copy_into_slice(&mut str_bytes);
+    let address_bytes: Bytes = Bytes::from_slice(env, &str_bytes);
+    address_bytes
 }
 
 /// Helper macro for building and verifying authorization chains in Soroban contract tests.
