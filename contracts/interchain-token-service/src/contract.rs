@@ -1,17 +1,17 @@
-use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::executable::AxelarExecutableInterface;
-use axelar_gateway::AxelarGatewayMessagingClient;
-use axelar_soroban_std::address::AddressExt;
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std::token::validate_token_metadata;
-use axelar_soroban_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
-use axelar_soroban_std::types::Token;
-use axelar_soroban_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
-use interchain_token::InterchainTokenClient;
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::xdr::{FromXdr, ToXdr};
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gas_service::AxelarGasServiceClient;
+use stellar_axelar_gateway::executable::AxelarExecutableInterface;
+use stellar_axelar_gateway::AxelarGatewayMessagingClient;
+use stellar_axelar_std::address::AddressExt;
+use stellar_axelar_std::events::Event;
+use stellar_axelar_std::token::validate_token_metadata;
+use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+use stellar_interchain_token::InterchainTokenClient;
 
 use crate::abi::{get_message_type, MessageType as EncodedMessageType};
 use crate::error::ContractError;

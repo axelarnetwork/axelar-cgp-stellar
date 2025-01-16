@@ -3,8 +3,9 @@ use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
 mod testdata;
 mod operatable {
-    use axelar_soroban_std::{assert_auth, interfaces::OperatableClient};
-    use axelar_soroban_std_derive::Operatable;
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std::interfaces::OperatableClient;
+    use stellar_axelar_std_derive::Operatable;
 
     use super::*;
 
@@ -22,7 +23,7 @@ mod operatable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, operator: Address) {
-            axelar_soroban_std::interfaces::set_operator(env, &operator);
+            stellar_axelar_std::interfaces::set_operator(env, &operator);
         }
     }
 
@@ -41,8 +42,9 @@ mod operatable {
 }
 
 mod ownable {
-    use axelar_soroban_std::{assert_auth, interfaces::OwnableClient};
-    use axelar_soroban_std_derive::Ownable;
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std::interfaces::OwnableClient;
+    use stellar_axelar_std_derive::Ownable;
 
     use super::*;
 
@@ -60,7 +62,7 @@ mod ownable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, owner: Address) {
-            axelar_soroban_std::interfaces::set_owner(env, &owner);
+            stellar_axelar_std::interfaces::set_owner(env, &owner);
         }
     }
 
@@ -79,8 +81,8 @@ mod ownable {
 }
 
 mod upgradable {
-    use axelar_soroban_std::assert_auth;
-    use axelar_soroban_std_derive::{Ownable, Upgradable};
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     use super::*;
 
@@ -98,7 +100,7 @@ mod upgradable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, owner: Address) {
-            axelar_soroban_std::interfaces::set_owner(env, &owner);
+            stellar_axelar_std::interfaces::set_owner(env, &owner);
         }
     }
 

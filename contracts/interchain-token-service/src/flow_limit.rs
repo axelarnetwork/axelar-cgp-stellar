@@ -1,7 +1,7 @@
-use axelar_soroban_std::ensure;
-use axelar_soroban_std::events::Event;
-use axelar_soroban_std::ttl::extend_persistent_ttl;
 use soroban_sdk::{BytesN, Env};
+use stellar_axelar_std::ensure;
+use stellar_axelar_std::events::Event;
+use stellar_axelar_std::ttl::extend_persistent_ttl;
 
 use crate::error::ContractError;
 use crate::event::FlowLimitSetEvent;

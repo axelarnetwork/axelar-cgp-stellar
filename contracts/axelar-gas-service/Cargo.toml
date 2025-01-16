@@ -1,5 +1,5 @@
 [package]
-name = "axelar-gas-service"
+name = "stellar-axelar-gas-service"
 version = "0.1.0"
 edition = { workspace = true }
 description = "Contract related to Axelar Gas Service."
@@ -10,14 +10,14 @@ publish = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-axelar-soroban-std = { workspace = true }
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
+stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
-axelar-soroban-std = { workspace = true, features = ["testutils"] }
 paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true

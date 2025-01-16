@@ -1,14 +1,14 @@
 mod utils;
 
-use axelar_soroban_std::address::AddressExt;
-use axelar_soroban_std::{assert_auth_err, assert_contract_err, events};
-use interchain_token::InterchainTokenClient;
-use interchain_token_service::error::ContractError;
-use interchain_token_service::event::InterchainTokenDeployedEvent;
-use interchain_token_service::types::TokenManagerType;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_std::address::AddressExt;
+use stellar_axelar_std::{assert_auth_err, assert_contract_err, events};
+use stellar_interchain_token::InterchainTokenClient;
+use stellar_interchain_token_service::error::ContractError;
+use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
+use stellar_interchain_token_service::types::TokenManagerType;
 use utils::{setup_env, TokenMetadataExt};
 
 #[test]

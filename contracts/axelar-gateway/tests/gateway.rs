@@ -1,18 +1,18 @@
-use axelar_gateway::error::ContractError;
-use axelar_gateway::event::{
+use soroban_sdk::testutils::{Address as _, Events};
+use soroban_sdk::{bytes, vec, Address, BytesN, String};
+use stellar_axelar_gateway::error::ContractError;
+use stellar_axelar_gateway::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
 };
 #[cfg(any(test, feature = "testutils"))]
-use axelar_gateway::testutils::{
+use stellar_axelar_gateway::testutils::{
     deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
     generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
-use axelar_gateway::types::Message;
-use axelar_soroban_std::{
+use stellar_axelar_gateway::types::Message;
+use stellar_axelar_std::{
     assert_auth, assert_auth_err, assert_contract_err, assert_invocation, events,
 };
-use soroban_sdk::testutils::{Address as _, Events};
-use soroban_sdk::{bytes, vec, Address, BytesN, String};
 
 mod utils;
 use utils::setup_env;
