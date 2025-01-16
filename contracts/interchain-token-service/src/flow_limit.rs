@@ -104,9 +104,15 @@ pub fn set_flow_limit(
         ensure!(limit >= 0, ContractError::InvalidFlowLimit);
     }
 
-    env.storage()
-        .persistent()
-        .set(&DataKey::FlowLimit(token_id.clone()), &flow_limit);
+    if let Some(limit) = flow_limit {
+        env.storage()
+            .persistent()
+            .set(&DataKey::FlowLimit(token_id.clone()), &limit);
+    } else {
+        env.storage()
+            .persistent()
+            .remove(&DataKey::FlowLimit(token_id.clone()));
+    }
 
     FlowLimitSetEvent {
         token_id,
