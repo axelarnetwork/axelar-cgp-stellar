@@ -9,6 +9,7 @@ rust-version = "1.81.0"
 [workspace.dependencies]
 soroban-sdk = { version = "22.0.2" }
 soroban-token-sdk = { version = "22.0.2" }
+proc-macro2 = "1.0"
 cfg-if = { version = "1.0" }
 stellar-axelar-std = { version = "^0.1.0", path = "packages/axelar-std", features = ["derive"] }
 stellar-axelar-std-derive = { version = "^0.1.0", path = "packages/axelar-std-derive" }
