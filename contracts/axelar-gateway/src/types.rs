@@ -1,4 +1,5 @@
-use soroban_sdk::{contracttype, xdr::ToXdr, Address, BytesN, Env, String, Vec};
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{contracttype, Address, BytesN, Env, String, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -95,9 +96,11 @@ impl Proof {
 
 #[cfg(test)]
 mod test {
-    use crate::types::{CommandType, Message, WeightedSigner, WeightedSigners};
     use hex_literal::hex;
-    use soroban_sdk::{xdr::ToXdr, Address, BytesN, Env, String, Vec};
+    use soroban_sdk::xdr::ToXdr;
+    use soroban_sdk::{Address, BytesN, Env, String, Vec};
+
+    use crate::types::{CommandType, Message, WeightedSigner, WeightedSigners};
 
     #[test]
     fn weighted_signers_hash() {

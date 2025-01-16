@@ -5,14 +5,16 @@ use axelar_gateway::types::Message as GatewayMessage;
 use axelar_soroban_std::traits::BytesExt;
 use axelar_soroban_std::{assert_auth_err, events};
 use interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
-use soroban_sdk::token;
+use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, String};
+use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
 use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
 
 mod test {
-    use axelar_soroban_std::{events::Event, impl_event_testutils};
     use core::fmt::Debug;
+
+    use axelar_soroban_std::events::Event;
+    use axelar_soroban_std::impl_event_testutils;
     use interchain_token_service::executable::InterchainTokenExecutableInterface;
     use soroban_sdk::{
         contract, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,

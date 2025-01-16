@@ -1,9 +1,10 @@
-use crate::error::ContractError;
 use axelar_soroban_std::ensure;
 use axelar_soroban_std::interfaces::UpgradableClient;
 use soroban_sdk::{
     contract, contractimpl, symbol_short, Address, BytesN, Env, String, Symbol, Val,
 };
+
+use crate::error::ContractError;
 
 const MIGRATE: Symbol = symbol_short!("migrate");
 

@@ -1,12 +1,14 @@
+use core::fmt::Debug;
+
+use soroban_sdk::{
+    contractclient, symbol_short, BytesN, Env, FromVal, IntoVal, String, Topics, Val,
+};
+
 use crate::ensure;
 use crate::events::Event;
 #[cfg(any(test, feature = "testutils"))]
 use crate::impl_event_testutils;
 use crate::interfaces::{storage, OwnableInterface};
-use core::fmt::Debug;
-use soroban_sdk::{
-    contractclient, symbol_short, BytesN, Env, FromVal, IntoVal, String, Topics, Val,
-};
 
 #[contractclient(name = "UpgradableClient")]
 pub trait UpgradableInterface: OwnableInterface {
@@ -106,13 +108,14 @@ pub enum MigrationError {
 
 #[cfg(test)]
 mod test {
-    use crate::interfaces::upgradable::UpgradedEvent;
     use crate::{assert_auth, assert_auth_err, events};
 
-    use crate::interfaces::testdata::{ContractClient, ContractNonTrivialClient, MigrationData};
-    use crate::interfaces::{testdata, upgradable};
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, BytesN, Env, String};
+
+    use crate::interfaces::testdata::{ContractClient, ContractNonTrivialClient, MigrationData};
+    use crate::interfaces::upgradable::UpgradedEvent;
+    use crate::interfaces::{testdata, upgradable};
 
     const WASM: &[u8] = include_bytes!("testdata/contract_trivial_migration.wasm");
     const WASM_NON_TRIVIAL: &[u8] = include_bytes!("testdata/contract_non_trivial_migration.wasm");

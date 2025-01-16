@@ -1,4 +1,5 @@
-use soroban_sdk::{contract, contracterror, contractimpl, testutils::Address as _, Address, Env};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
 mod testdata;
 mod operatable {

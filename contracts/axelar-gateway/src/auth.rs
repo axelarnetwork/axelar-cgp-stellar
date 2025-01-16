@@ -1,12 +1,12 @@
-use crate::error::ContractError;
-use crate::types::{ProofSignature, ProofSigner, WeightedSigner};
 use axelar_soroban_std::ensure;
 use axelar_soroban_std::events::Event;
-use soroban_sdk::{crypto::Hash, Bytes, BytesN, Env, Vec};
+use soroban_sdk::crypto::Hash;
+use soroban_sdk::{Bytes, BytesN, Env, Vec};
 
+use crate::error::ContractError;
 use crate::event::SignersRotatedEvent;
 use crate::storage_types::DataKey;
-use crate::types::{Proof, WeightedSigners};
+use crate::types::{Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 
 pub fn initialize_auth(
     env: Env,

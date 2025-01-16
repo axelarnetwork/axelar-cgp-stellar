@@ -9,7 +9,8 @@ use interchain_token_service::{
     InterchainTokenServiceClient,
 };
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{vec, xdr::ToXdr, Address, Bytes, BytesN, Env, String, Vec};
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Vec};
 use utils::{
     approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
     HUB_CHAIN,

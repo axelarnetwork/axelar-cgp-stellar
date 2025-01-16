@@ -1,20 +1,15 @@
 mod utils;
 
 use axelar_soroban_std::address::AddressExt;
-use axelar_soroban_std::assert_auth_err;
-use axelar_soroban_std::assert_contract_err;
-use axelar_soroban_std::events;
+use axelar_soroban_std::{assert_auth_err, assert_contract_err, events};
 use interchain_token::InterchainTokenClient;
 use interchain_token_service::error::ContractError;
-
 use interchain_token_service::event::InterchainTokenDeployedEvent;
 use interchain_token_service::types::TokenManagerType;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::Address;
-use soroban_sdk::BytesN;
+use soroban_sdk::{Address, BytesN};
 use soroban_token_sdk::metadata::TokenMetadata;
-use utils::setup_env;
-use utils::TokenMetadataExt;
+use utils::{setup_env, TokenMetadataExt};
 
 #[test]
 fn deploy_interchain_token_succeeds() {

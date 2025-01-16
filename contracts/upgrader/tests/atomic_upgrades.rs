@@ -1,8 +1,7 @@
 mod utils;
 
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::Address;
-use soroban_sdk::{BytesN, Env, String};
+use soroban_sdk::{Address, BytesN, Env, String};
 use upgrader::{Upgrader, UpgraderClient};
 use utils::{DataKey, DummyContract, DummyContractClient};
 
