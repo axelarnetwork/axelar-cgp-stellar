@@ -36,13 +36,13 @@ struct ApprovedMessage {
 
 const EPOCH_TIME: u64 = 6 * 60 * 60;
 
-fn dummy_flow_limit() -> i128 {
+const fn dummy_flow_limit() -> i128 {
     1000
 }
 
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
-    let destination_chain = String::from_str(&env, "ethereum");
-    let destination_address = Bytes::from_hex(&env, "4F4495243837681061C4743b74B3eEdf548D56A5");
+    let destination_chain = String::from_str(env, "ethereum");
+    let destination_address = Bytes::from_hex(env, "4F4495243837681061C4743b74B3eEdf548D56A5");
     let data = None;
 
     (destination_chain, destination_address, data)
@@ -118,7 +118,7 @@ fn approve_its_transfer(
         },
     ];
 
-    approve_gateway_messages(&env, &gateway.client, gateway.signers.clone(), messages);
+    approve_gateway_messages(env, &gateway.client, gateway.signers.clone(), messages);
 
     ApprovedMessage {
         source_chain,
