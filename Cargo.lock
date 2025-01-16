@@ -1978,6 +1978,7 @@ name = "stellar-axelar-gas-service"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "paste",
  "soroban-sdk",
  "stellar-axelar-std",
 ]
@@ -1991,6 +1992,7 @@ dependencies = [
  "goldie",
  "hex",
  "hex-literal",
+ "paste",
  "rand",
  "rand_chacha",
  "soroban-sdk",
@@ -2002,6 +2004,7 @@ dependencies = [
 name = "stellar-axelar-operators"
 version = "0.1.0"
 dependencies = [
+ "paste",
  "soroban-sdk",
  "stellar-axelar-std",
 ]
@@ -2012,6 +2015,7 @@ version = "0.1.0"
 dependencies = [
  "goldie",
  "hex",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-std-derive",
@@ -2021,6 +2025,7 @@ dependencies = [
 name = "stellar-axelar-std-derive"
 version = "0.1.0"
 dependencies = [
+ "paste",
  "quote",
  "soroban-sdk",
  "stellar-axelar-std",
@@ -2032,6 +2037,7 @@ name = "stellar-interchain-token"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-std",
@@ -2046,6 +2052,7 @@ dependencies = [
  "cfg-if",
  "goldie",
  "hex",
+ "paste",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-gas-service",

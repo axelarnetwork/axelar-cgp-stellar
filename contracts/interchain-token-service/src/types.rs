@@ -48,6 +48,7 @@ pub enum HubMessage {
 }
 
 /// The type of token manager used for the tokenId.
+///
 /// Only the variants supported by Stellar ITS are defined here.
 /// The variant values need to match the [ITS spec](https://github.com/axelarnetwork/interchain-token-service/blob/v2.0.0/contracts/interfaces/ITokenManagerType.sol#L9).
 #[contracttype]
