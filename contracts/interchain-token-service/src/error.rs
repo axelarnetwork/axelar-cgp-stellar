@@ -1,6 +1,6 @@
-use axelar_gateway::executable::NotApprovedError;
-use axelar_gateway::impl_not_approved_error;
 use soroban_sdk::contracterror;
+use stellar_axelar_gateway::executable::NotApprovedError;
+use stellar_axelar_gateway::impl_not_approved_error;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

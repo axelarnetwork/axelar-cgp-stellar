@@ -1,10 +1,10 @@
 mod utils;
 
-use axelar_soroban_std::events;
-use axelar_soroban_std::traits::BytesExt;
-use interchain_token_service::event::InterchainTransferSentEvent;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Bytes, String};
+use stellar_axelar_std::events;
+use stellar_axelar_std::traits::BytesExt;
+use stellar_interchain_token_service::event::InterchainTransferSentEvent;
 use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
 
 #[test]
