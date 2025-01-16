@@ -1,14 +1,17 @@
 [package]
-name = "upgrader"
+name = "stellar-upgrader"
 version = "0.1.0"
 edition = { workspace = true }
+description = "Contract related to Upgrader."
+license = "MIT"
+publish = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-axelar-soroban-std = { workspace = true }
 soroban-sdk = { workspace = true }
+stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

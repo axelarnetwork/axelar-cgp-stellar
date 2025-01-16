@@ -1,25 +1,25 @@
 mod utils;
 
-use axelar_gateway::testutils::{generate_proof, get_approve_hash};
-use axelar_gateway::types::Message as GatewayMessage;
-use axelar_soroban_std::traits::BytesExt;
-use axelar_soroban_std::{assert_invoke_auth_err, events};
-use interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
+use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
+use stellar_axelar_gateway::types::Message as GatewayMessage;
+use stellar_axelar_std::traits::BytesExt;
+use stellar_axelar_std::{assert_invoke_auth_err, events};
+use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
 use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
 
 mod test {
     use core::fmt::Debug;
 
-    use axelar_soroban_std::events::Event;
-    use axelar_soroban_std::impl_event_testutils;
-    use interchain_token_service::executable::InterchainTokenExecutableInterface;
     use soroban_sdk::{
         contract, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
         Topics, Val,
     };
+    use stellar_axelar_std::events::Event;
+    use stellar_axelar_std::impl_event_testutils;
+    use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface;
 
     #[contract]
     pub struct ExecutableContract;

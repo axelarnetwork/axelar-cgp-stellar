@@ -2,7 +2,7 @@ mod utils;
 
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, BytesN, Env, String};
-use upgrader::{Upgrader, UpgraderClient};
+use stellar_upgrader::{Upgrader, UpgraderClient};
 use utils::{DataKey, DummyContract, DummyContractClient};
 
 const WASM_AFTER_UPGRADE: &[u8] = include_bytes!("testdata/dummy.wasm");

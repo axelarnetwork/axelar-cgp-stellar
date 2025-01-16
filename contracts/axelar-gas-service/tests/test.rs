@@ -3,13 +3,13 @@ extern crate std;
 
 use std::format;
 
-use axelar_gas_service::error::ContractError;
-use axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
-use axelar_soroban_std::types::Token;
-use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{bytes, Address, Bytes, Env, String, Symbol};
+use stellar_axelar_gas_service::error::ContractError;
+use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();

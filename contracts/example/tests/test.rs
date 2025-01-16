@@ -1,16 +1,16 @@
 #![cfg(test)]
 extern crate std;
 
-use axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
-use axelar_gateway::testutils::{self, generate_proof, get_approve_hash, TestSignerSet};
-use axelar_gateway::types::Message;
-use axelar_gateway::AxelarGatewayClient;
-use axelar_soroban_std::types::Token;
-use axelar_soroban_std::{assert_last_emitted_event, auth_invocation};
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _};
 use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
+use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_gateway::testutils::{self, generate_proof, get_approve_hash, TestSignerSet};
+use stellar_axelar_gateway::types::Message;
+use stellar_axelar_gateway::AxelarGatewayClient;
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{assert_last_emitted_event, auth_invocation};
 
 fn setup_gateway<'a>(env: &Env) -> (TestSignerSet, AxelarGatewayClient<'a>) {
     let (signers, client) = testutils::setup_gateway(env, 0, 5);
