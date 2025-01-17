@@ -138,12 +138,15 @@ macro_rules! assert_some {
 #[macro_export]
 macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
-        use soroban_sdk::IntoVal;
-
         // Paste is used to concatenate the method name with the `try_` prefix
         paste::paste! {
         let result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
             .[<try_ $method>]($($arg),*);
         }
 
@@ -179,11 +182,16 @@ macro_rules! assert_auth {
 #[macro_export]
 macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
-        use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
+        use soroban_sdk::xdr::{ScError, ScErrorCode, ScVal};
 
         paste::paste! {
         let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
             .[<try_ $method>]($($arg),*);
         }
         match call_result {
@@ -201,15 +209,29 @@ macro_rules! assert_auth_err {
 
 #[macro_export]
 macro_rules! mock_auth {
-    ($caller:expr, $client:ident, $method:ident, $($arg:expr),*) => {
-        &[soroban_sdk::testutils::MockAuth {
-                address: &$caller,
-                invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                    contract: &$client.address,
-                    fn_name: &stringify!($method),
-                    args: ($($arg.clone(),)*).into_val(&$client.env),
-                    sub_invokes: &[],
-                },
-            }]
-    };
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
+        $sub_invokes:expr
+    ) => {{
+        use soroban_sdk::IntoVal;
+
+        soroban_sdk::testutils::MockAuth {
+            address: &$caller,
+            invoke: &soroban_sdk::testutils::MockAuthInvoke {
+                contract: &$client.address,
+                fn_name: &stringify!($method).replace("try_", ""),
+                args: ($($arg.clone(),)*).into_val(&$env),
+                sub_invokes: $sub_invokes,
+            },
+        }
+    }};
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? )
+    ) => {{
+        mock_auth!($env, $caller, $client.$method($($arg),*), &[])
+    }};
 }
