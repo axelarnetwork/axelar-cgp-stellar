@@ -164,6 +164,25 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .into()
     }
 
+    fn canonical_token_deploy_salt(env: &Env, token_address: Address) -> BytesN<32> {
+        let chain_name_hash = Self::chain_name_hash(env);
+        env.crypto()
+            .keccak256(&(PREFIX_CANONICAL_TOKEN_SALT, chain_name_hash, token_address).to_xdr(env))
+            .into()
+    }
+
+    fn token_address(env: &Env, token_id: BytesN<32>) -> Address {
+        Self::token_id_config(env, token_id)
+            .expect("token id config not found")
+            .token_address
+    }
+
+    fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType {
+        Self::token_id_config(env, token_id)
+            .expect("token id config not found")
+            .token_manager_type
+    }
+
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
         flow_limit::flow_limit(env, token_id)
     }
@@ -184,40 +203,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::operator(env).require_auth();
 
         flow_limit::set_flow_limit(env, token_id, flow_limit)
-    }
-
-    /// Computes a 32-byte deployment salt for a canonical token using the provided token address.
-    ///
-    /// The salt is derived by hashing a combination of a prefix, the chain name hash,
-    /// and the token address. This ensures uniqueness and consistency for the deployment
-    /// of canonical tokens across chains.
-    ///
-    /// # Parameters
-    /// - `env`: A reference to the current environment, used for accessing chain-specific
-    ///   utilities such as cryptographic functions.
-    /// - `token_address`: The address of the token for which the deployment salt is being generated.
-    ///
-    /// # Returns
-    /// - A `BytesN<32>` value representing the computed deployment salt.
-    fn canonical_token_deploy_salt(env: &Env, token_address: Address) -> BytesN<32> {
-        let chain_name_hash = Self::chain_name_hash(env);
-        env.crypto()
-            .keccak256(&(PREFIX_CANONICAL_TOKEN_SALT, chain_name_hash, token_address).to_xdr(env))
-            .into()
-    }
-
-    /// Retrieves the address of the token associated with the specified token ID.
-    fn token_address(env: &Env, token_id: BytesN<32>) -> Address {
-        Self::token_id_config(env, token_id)
-            .expect("token id config not found")
-            .token_address
-    }
-
-    /// Retrieves the type of the token manager type associated with the specified token ID.
-    fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType {
-        Self::token_id_config(env, token_id)
-            .expect("token id config not found")
-            .token_manager_type
     }
 
     fn deploy_interchain_token(
@@ -274,26 +259,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Ok(token_id)
     }
 
-    /// Deploys an interchain token to a remote chain.
-    ///
-    /// This function initiates the deployment of an interchain token to a specified
-    /// destination chain. It validates the token metadata, emits a deployment event,
-    /// and triggers the necessary cross-chain call.
-    ///
-    /// # Arguments
-    /// - `env`: Reference to the contract environment.
-    /// - `caller`: Address of the caller initiating the deployment. The caller must authenticate.
-    /// - `salt`: A 32-byte unique salt used for token deployment.
-    /// - `destination_chain`: The name of the destination chain where the token will be deployed.
-    /// - `gas_token`: The token used to pay for the gas cost of the cross-chain call.
-    ///
-    /// # Returns
-    /// - `Result<BytesN<32>, ContractError>`: On success, returns the token ID (`BytesN<32>`).
-    ///   On failure, returns a `ContractError`.
-    ///
-    /// # Errors
-    /// - `ContractError::InvalidTokenId`: If the token ID does not exist in the persistent storage.
-    /// - Any error propagated from `pay_gas_and_call_contract`.
     fn deploy_remote_interchain_token(
         env: &Env,
         caller: Address,
@@ -308,25 +273,39 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::deploy_remote_token(env, caller, deploy_salt, destination_chain, gas_token)
     }
 
-    /// Deploys a remote canonical token on a specified destination chain.
-    ///
-    /// This function computes a deployment salt and uses it to deploy a canonical
-    /// representation of a token on the remote chain. It retrieves the token metadata
-    /// from the token address and ensures the metadata is valid before initiating
-    /// the deployment.
-    ///
-    /// # Arguments
-    /// * `env` - Reference to the environment object.
-    /// * `token_address` - The address of the token to be deployed.
-    /// * `destination_chain` - The name of the destination chain where the token will be deployed.
-    /// * `spender` - The spender of the cross-chain gas.
-    /// * `gas_token` - The token used to pay for gas during the deployment.
-    ///
-    /// # Returns
-    /// Returns the token ID of the deployed token on the remote chain, or an error if the deployment fails.
-    ///
-    /// # Errors
-    /// Returns `ContractError` if the deployment fails or if token metadata is invalid.
+    fn register_canonical_token(
+        env: &Env,
+        token_address: Address,
+    ) -> Result<BytesN<32>, ContractError> {
+        let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
+        let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
+
+        ensure!(
+            !env.storage()
+                .persistent()
+                .has(&DataKey::TokenIdConfigKey(token_id.clone())),
+            ContractError::TokenAlreadyRegistered
+        );
+
+        InterchainTokenIdClaimedEvent {
+            token_id: token_id.clone(),
+            deployer: Address::zero(env),
+            salt: deploy_salt,
+        }
+        .emit(env);
+
+        Self::set_token_id_config(
+            env,
+            token_id.clone(),
+            TokenIdConfigValue {
+                token_address,
+                token_manager_type: TokenManagerType::LockUnlock,
+            },
+        );
+
+        Ok(token_id)
+    }
+
     fn deploy_remote_canonical_token(
         env: &Env,
         token_address: Address,
@@ -395,50 +374,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::pay_gas_and_call_contract(env, caller, destination_chain, message, gas_token)?;
 
         Ok(())
-    }
-
-    /// Registers a canonical token as an interchain token.
-    ///
-    /// # Arguments
-    /// * `env` - A reference to the environment in which the function operates.
-    /// * `token_address` - The address of the canonical token.
-    ///
-    /// # Returns
-    /// * `Result<BytesN<32>, ContractError>` - The token ID assigned to this canonical token if successful.
-    ///
-    /// # Errors
-    /// * `ContractError::TokenAlreadyRegistered` - If the token ID is already registered.
-    fn register_canonical_token(
-        env: &Env,
-        token_address: Address,
-    ) -> Result<BytesN<32>, ContractError> {
-        let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
-        let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
-
-        ensure!(
-            !env.storage()
-                .persistent()
-                .has(&DataKey::TokenIdConfigKey(token_id.clone())),
-            ContractError::TokenAlreadyRegistered
-        );
-
-        InterchainTokenIdClaimedEvent {
-            token_id: token_id.clone(),
-            deployer: Address::zero(env),
-            salt: deploy_salt,
-        }
-        .emit(env);
-
-        Self::set_token_id_config(
-            env,
-            token_id.clone(),
-            TokenIdConfigValue {
-                token_address,
-                token_manager_type: TokenManagerType::LockUnlock,
-            },
-        );
-
-        Ok(token_id)
     }
 }
 
