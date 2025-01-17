@@ -76,7 +76,7 @@ mod test {
 
     use crate::interfaces::testdata::Contract;
     use crate::interfaces::{OwnableClient, OwnershipTransferredEvent};
-    use crate::{assert_invoke_auth_err, assert_invoke_auth_ok, events};
+    use crate::{assert_auth, assert_auth_err, events};
 
     fn prepare_client(env: &Env, owner: Option<Address>) -> OwnableClient {
         let operator = Address::generate(env);
@@ -108,7 +108,7 @@ mod test {
         let client = prepare_client(&env, Some(owner));
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_err!(new_owner, client.try_transfer_ownership(&new_owner));
+        assert_auth_err!(new_owner, client.transfer_ownership(&new_owner));
     }
 
     #[test]
@@ -120,7 +120,7 @@ mod test {
         assert_eq!(client.owner(), owner);
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_ok!(owner, client.try_transfer_ownership(&new_owner));
+        assert_auth!(owner, client.transfer_ownership(&new_owner));
 
         goldie::assert!(events::fmt_last_emitted_event::<OwnershipTransferredEvent>(
             &env

@@ -106,13 +106,16 @@ macro_rules! assert_some {
 }
 
 #[macro_export]
-macro_rules! assert_invoke_auth_ok {
+macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::IntoVal;
 
+        // Paste is used to concatenate the method name with the `try_` prefix
+        paste::paste! {
         let call_result = $client
             .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
+            .[<try_ $method>]($($arg),*);
+        }
 
         match call_result {
             Ok(outer) => {
@@ -127,14 +130,15 @@ macro_rules! assert_invoke_auth_ok {
 }
 
 #[macro_export]
-macro_rules! assert_invoke_auth_err {
+macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
 
+        paste::paste! {
         let call_result = $client
             .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
-
+            .[<try_ $method>]($($arg),*);
+        }
         match call_result {
             Err(_) => {
                 let val = ScVal::Error(ScError::Context(ScErrorCode::InvalidAction));
@@ -155,7 +159,7 @@ macro_rules! mock_auth {
                 address: &$caller,
                 invoke: &soroban_sdk::testutils::MockAuthInvoke {
                     contract: &$client.address,
-                    fn_name: &stringify!($method).replace("try_", ""),
+                    fn_name: &stringify!($method),
                     args: ($($arg.clone(),)*).into_val(&$client.env),
                     sub_invokes: &[],
                 },

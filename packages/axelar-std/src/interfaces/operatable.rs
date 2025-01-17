@@ -76,7 +76,7 @@ mod test {
 
     use crate::interfaces::testdata::Contract;
     use crate::interfaces::{OperatableClient, OperatorshipTransferredEvent};
-    use crate::{assert_invoke_auth_err, assert_invoke_auth_ok, events};
+    use crate::{assert_auth, assert_auth_err, events};
 
     fn prepare_client(env: &Env, operator: Option<Address>) -> OperatableClient {
         let owner = Address::generate(env);
@@ -108,10 +108,7 @@ mod test {
         let client = prepare_client(&env, Some(operator));
 
         let new_operator = Address::generate(&env);
-        assert_invoke_auth_err!(
-            new_operator,
-            client.try_transfer_operatorship(&new_operator)
-        );
+        assert_auth_err!(new_operator, client.transfer_operatorship(&new_operator));
     }
 
     #[test]
@@ -123,7 +120,7 @@ mod test {
         assert_eq!(client.operator(), operator);
 
         let new_operator = Address::generate(&env);
-        assert_invoke_auth_ok!(operator, client.try_transfer_operatorship(&new_operator));
+        assert_auth!(operator, client.transfer_operatorship(&new_operator));
 
         goldie::assert!(events::fmt_last_emitted_event::<OperatorshipTransferredEvent>(&env));
 

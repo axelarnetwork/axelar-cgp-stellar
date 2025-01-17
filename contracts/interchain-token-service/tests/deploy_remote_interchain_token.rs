@@ -141,3 +141,23 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
         ContractError::InvalidTokenId
     );
 }
+
+#[test]
+fn deploy_remote_token_fails_local_deployment() {
+    let (env, client, _, _, _) = setup_env();
+
+    let spender = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &spender);
+    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+    let destination_chain = client.chain_name();
+
+    assert_contract_err!(
+        client.mock_all_auths().try_deploy_remote_interchain_token(
+            &spender,
+            &salt,
+            &destination_chain,
+            &gas_token
+        ),
+        ContractError::InvalidDestinationChain
+    );
+}
