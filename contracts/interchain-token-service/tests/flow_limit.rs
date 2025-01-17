@@ -36,8 +36,8 @@ fn create_interchain_transfer_message(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> (String, String, String, Bytes, Vec<GatewayMessage>) {
-    let sender = Address::generate(env).to_bytes(&env);
-    let recipient = Address::generate(env).to_bytes(&env);
+    let sender = Address::generate(env).to_bytes(env);
+    let recipient = Address::generate(env).to_bytes(env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(env).to_string();
 

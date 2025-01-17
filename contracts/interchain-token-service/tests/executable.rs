@@ -134,7 +134,7 @@ fn interchain_transfer_execute_succeeds() {
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
-    let destination_address = executable_id.clone().to_bytes(&env);
+    let destination_address = executable_id.to_bytes(&env);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: String::from_str(&env, HUB_CHAIN),
