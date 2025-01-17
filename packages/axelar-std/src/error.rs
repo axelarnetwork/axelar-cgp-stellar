@@ -138,6 +138,8 @@ macro_rules! assert_some {
 #[macro_export]
 macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
+        use soroban_sdk::IntoVal;
+
         // Paste is used to concatenate the method name with the `try_` prefix
         paste::paste! {
         let result = $client
