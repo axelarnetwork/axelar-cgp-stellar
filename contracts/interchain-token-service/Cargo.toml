@@ -23,6 +23,7 @@ stellar-interchain-token = { workspace = true, features = ["library"] }
 [dev-dependencies]
 goldie = { workspace = true }
 hex = { workspace = true }
+paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }

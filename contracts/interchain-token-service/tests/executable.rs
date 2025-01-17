@@ -6,7 +6,7 @@ use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::traits::BytesExt;
-use stellar_axelar_std::{assert_invoke_auth_err, events};
+use stellar_axelar_std::{assert_auth_err, events};
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
 use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
 
@@ -190,9 +190,9 @@ fn executable_fails_if_not_executed_from_its() {
     let message_id = String::from_str(&env, "test");
     let payload = Bytes::from_hex(&env, "dead");
 
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         Address::generate(&env),
-        executable_client.try_execute_with_interchain_token(
+        executable_client.execute_with_interchain_token(
             &source_chain,
             &message_id,
             &source_address,
