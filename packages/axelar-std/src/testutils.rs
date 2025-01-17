@@ -70,15 +70,6 @@ where
     assert_emitted_event(env, -1, contract_id, topics, data);
 }
 
-// Converts Stellar address (soroban_sdk::Address) to soroban_sdk::Bytes
-pub fn address_to_bytes(env: &Env, address: &Address) -> Bytes {
-    let address_str = address.to_string();
-    let mut str_bytes = [0u8; 56];
-    address_str.copy_into_slice(&mut str_bytes);
-    let address_bytes: Bytes = Bytes::from_slice(env, &str_bytes);
-    address_bytes
-}
-
 /// Helper macro for building and verifying authorization chains in Soroban contract tests.
 ///
 /// Used to verify that contract calls require the correct sequence of authorizations.

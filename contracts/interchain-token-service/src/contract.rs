@@ -365,7 +365,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let message = Message::InterchainTransfer(InterchainTransfer {
             token_id,
-            source_address: caller.clone().to_xdr(env),
+            source_address: caller.clone().to_bytes(&env),
             destination_address,
             amount,
             data,
@@ -532,7 +532,7 @@ impl InterchainTokenService {
                     ContractError::InvalidTokenMetaData
                 );
 
-                // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
+                // Note: convert from Option<Bytes> to Option<Address> type
                 let minter = minter.map(|m| Address::from_string_bytes(&m));
 
                 let deployed_address = Self::deploy_interchain_token_contract(

@@ -3,7 +3,7 @@ mod utils;
 use soroban_sdk::testutils::{Address as _, Ledger as _};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_std::testutils::address_to_bytes;
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
@@ -36,8 +36,8 @@ fn create_interchain_transfer_message(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> (String, String, String, Bytes, Vec<GatewayMessage>) {
-    let sender = address_to_bytes(env, &Address::generate(env));
-    let recipient = address_to_bytes(env, &Address::generate(env));
+    let sender = Address::generate(env).to_bytes(&env);
+    let recipient = Address::generate(env).to_bytes(&env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(env).to_string();
 
