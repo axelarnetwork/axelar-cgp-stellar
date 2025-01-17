@@ -1,7 +1,8 @@
 mod utils;
 
-use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
+use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env, String};
+use stellar_axelar_std::mock_auth;
 use stellar_upgrader::{Upgrader, UpgraderClient};
 use utils::{DataKey, DummyContract, DummyContractClient};
 
@@ -23,22 +24,12 @@ fn upgrade_and_migrate_are_atomic() {
     let original_version: String = dummy_client.version();
     assert_eq!(original_version, String::from_str(&env, "0.1.0"));
 
-    let (upgrade_auth, migrate_auth) =
-        build_invocation_auths(&env, &contract_address, &hash_after_upgrade, &expected_data);
+    let upgrader = UpgraderClient::new(&env, &upgrader_address);
 
-    // add the owner to the set of authenticated addresses
-    env.mock_auths(&[
-        MockAuth {
-            address: &owner,
-            invoke: &upgrade_auth,
-        },
-        MockAuth {
-            address: &owner,
-            invoke: &migrate_auth,
-        },
-    ]);
+    let upgrade_auth = mock_auth!(env, owner, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(env, owner, dummy_client.migrate(expected_data));
 
-    UpgraderClient::new(&env, &upgrader_address).upgrade(
+    upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(
         &contract_address,
         &expected_version,
         &hash_after_upgrade,
@@ -69,24 +60,17 @@ fn upgrade_fails_if_caller_is_authenticated_but_not_owner() {
         ..
     } = setup_contracts_and_call_args();
 
-    let (upgrade_auth, migrate_auth) =
-        build_invocation_auths(&env, &contract_address, &hash_after_upgrade, &expected_data);
+    let dummy_client = DummyContractClient::new(&env, &contract_address);
+    let upgrader = UpgraderClient::new(&env, &upgrader_address);
 
     // add the caller to the set of authenticated addresses
     let caller = Address::generate(&env);
-    env.mock_auths(&[
-        MockAuth {
-            address: &caller,
-            invoke: &upgrade_auth,
-        },
-        MockAuth {
-            address: &caller,
-            invoke: &migrate_auth,
-        },
-    ]);
+
+    let upgrade_auth = mock_auth!(env, caller, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(env, caller, dummy_client.migrate(expected_data));
 
     // should panic: caller is authenticated, but not the owner
-    UpgraderClient::new(&env, &upgrader_address).upgrade(
+    upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(
         &contract_address,
         &expected_version,
         &hash_after_upgrade,
@@ -106,24 +90,17 @@ fn upgrade_fails_if_correct_owner_is_not_authenticated_for_full_invocation_tree(
         expected_data,
         expected_version,
     } = setup_contracts_and_call_args();
+    let dummy_client = DummyContractClient::new(&env, &contract_address);
+    let upgrader = UpgraderClient::new(&env, &upgrader_address);
 
-    let (upgrade_auth, migrate_auth) =
-        build_invocation_auths(&env, &contract_address, &hash_after_upgrade, &expected_data);
+    // add the caller to the set of authenticated addresses
+    let caller = Address::generate(&env);
+
+    let upgrade_auth = mock_auth!(env, owner, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(env, caller, dummy_client.migrate(expected_data));
 
     // only add the owner to the set of authenticated addresses for the upgrade function, and the caller for the migrate function
-    let caller = Address::generate(&env);
-    env.mock_auths(&[
-        MockAuth {
-            address: &owner,
-            invoke: &upgrade_auth,
-        },
-        MockAuth {
-            address: &caller,
-            invoke: &migrate_auth,
-        },
-    ]);
-
-    UpgraderClient::new(&env, &upgrader_address).upgrade(
+    upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(
         &contract_address,
         &expected_version,
         &hash_after_upgrade,
@@ -183,25 +160,4 @@ fn setup_contracts_and_call_args() -> TestFixture {
         expected_data,
         expected_version,
     }
-}
-
-fn build_invocation_auths<'a>(
-    env: &Env,
-    contract_address: &'a Address,
-    hash_after_upgrade: &'a BytesN<32>,
-    expected_data: &'a String,
-) -> (MockAuthInvoke<'a>, MockAuthInvoke<'a>) {
-    let upgrade = MockAuthInvoke {
-        contract: contract_address,
-        fn_name: "upgrade",
-        args: soroban_sdk::vec![&env, hash_after_upgrade.to_val()],
-        sub_invokes: &[],
-    };
-    let migrate = MockAuthInvoke {
-        contract: contract_address,
-        fn_name: "migrate",
-        args: soroban_sdk::vec![&env, expected_data.to_val()],
-        sub_invokes: &[],
-    };
-    (upgrade, migrate)
 }
