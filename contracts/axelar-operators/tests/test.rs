@@ -2,29 +2,38 @@
 extern crate std;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, Val, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, symbol_short, Address, Env, Symbol, Val, Vec,
+};
 use stellar_axelar_operators::error::ContractError;
 use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
-use stellar_axelar_std::testutils::assert_invocation;
-use stellar_axelar_std::{assert_auth_err, assert_contract_err, assert_last_emitted_event};
+use stellar_axelar_std::{assert_auth, assert_contract_err, assert_last_emitted_event};
 
 #[contract]
 pub struct TestTarget;
 
+#[contracterror]
+pub enum TestTargetError {
+    TestError = 1,
+}
+
 #[contractimpl]
 impl TestTarget {
-    pub fn method(env: Env) {
+    pub fn method(env: &Env) {
         env.events().publish((symbol_short!("executed"),), ());
     }
 
-    pub fn failing(_env: Env) {
+    pub fn failing(_env: &Env) {
         panic!("This method should fail");
+    }
+
+    pub const fn failing_with_error(_env: &Env) -> Result<Val, TestTargetError> {
+        Err(TestTargetError::TestError)
     }
 }
 
 fn setup_env<'a>() -> (Env, AxelarOperatorsClient<'a>, Address) {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user = Address::generate(&env);
     let contract_id = env.register(AxelarOperators, (&user,));
@@ -46,25 +55,13 @@ fn register_operators() {
 }
 
 #[test]
-fn add_operator() {
+fn add_operator_succeeds() {
     let (env, client, _) = setup_env();
-
-    let owner = client.owner();
     let operator = Address::generate(&env);
 
-    let is_operator_initial = client.is_operator(&operator);
-    assert!(!is_operator_initial);
+    assert!(!client.is_operator(&operator));
 
-    // set operator as an operator
-    client.add_operator(&operator);
-
-    assert_invocation(
-        &env,
-        &owner,
-        &client.address,
-        "add_operator",
-        (operator.clone(),),
-    );
+    assert_auth!(client.owner(), client.add_operator(&operator));
 
     assert_last_emitted_event(
         &env,
@@ -73,52 +70,32 @@ fn add_operator() {
         (),
     );
 
-    let is_operator_final = client.is_operator(&operator);
-    assert!(is_operator_final);
+    assert!(client.is_operator(&operator));
 }
 
 #[test]
-fn fail_add_operator_duplicate() {
+fn add_operator_fails_when_already_added() {
     let (env, client, _) = setup_env();
-
     let operator = Address::generate(&env);
 
-    let is_operator_initial = client.is_operator(&operator);
-    assert!(!is_operator_initial);
+    client.mock_all_auths().add_operator(&operator);
 
-    // set operator as an operator
-    client.add_operator(&operator);
-
-    // set existing operator as an operator, should panic
     assert_contract_err!(
-        client.try_add_operator(&operator),
+        client.mock_all_auths().try_add_operator(&operator),
         ContractError::OperatorAlreadyAdded
     );
 }
 
 #[test]
-fn remove_operator() {
+fn remove_operator_succeeds() {
     let (env, client, _) = setup_env();
-
-    let owner = client.owner();
     let operator = Address::generate(&env);
 
-    // set operator as an operator
-    client.add_operator(&operator);
+    assert_auth!(client.owner(), client.add_operator(&operator));
 
-    let is_operator_initial = client.is_operator(&operator);
-    assert!(is_operator_initial);
+    assert!(client.is_operator(&operator));
 
-    // remove operator as an operator
-    client.remove_operator(&operator);
-
-    assert_invocation(
-        &env,
-        &owner,
-        &client.address,
-        "remove_operator",
-        (operator.clone(),),
-    );
+    assert_auth!(client.owner(), client.remove_operator(&operator));
 
     assert_last_emitted_event(
         &env,
@@ -127,57 +104,46 @@ fn remove_operator() {
         (),
     );
 
-    let is_operator_final = client.is_operator(&operator);
-    assert!(!is_operator_final);
+    assert!(!client.is_operator(&operator));
 }
 
 #[test]
-fn fail_remove_operator_non_existant() {
+fn remove_operator_fails_when_not_an_operator() {
     let (env, client, _) = setup_env();
-
     let operator = Address::generate(&env);
-    let is_operator_initial = client.is_operator(&operator);
-    assert!(!is_operator_initial);
 
-    // remove operator that is not an operator, should panic
     assert_contract_err!(
-        client.try_remove_operator(&operator),
+        client.mock_all_auths().try_remove_operator(&operator),
         ContractError::NotAnOperator
     );
 }
 
 #[test]
-fn execute() {
+fn execute_succeeds() {
     let (env, client, target) = setup_env();
-
     let operator = Address::generate(&env);
 
-    // set operator as an operator
-    client.add_operator(&operator);
+    client.mock_all_auths().add_operator(&operator);
 
-    // call execute as an operator
-    client.execute(
-        &operator,
-        &target,
-        &symbol_short!("method"),
-        &Vec::new(&env),
+    assert_auth!(
+        operator,
+        client.execute(
+            &operator,
+            &target,
+            &symbol_short!("method"),
+            &Vec::<Val>::new(&env),
+        )
     );
 
     assert_last_emitted_event(&env, &target, (symbol_short!("executed"),), ());
 }
 
 #[test]
-fn fail_execute_not_operator() {
+fn execute_fails_when_not_an_operator() {
     let (env, client, _) = setup_env();
 
-    let operator = Address::generate(&env);
-
-    // set operator as an operator
-    client.add_operator(&operator);
-
-    // call execute with a non-operator, should panic
     assert_contract_err!(
-        client.try_execute(
+        client.mock_all_auths().try_execute(
             &client.owner(),
             &client.address,
             &symbol_short!("method"),
@@ -188,22 +154,33 @@ fn fail_execute_not_operator() {
 }
 
 #[test]
-fn fail_execute_when_target_panics() {
+#[should_panic]
+fn execute_fails_when_target_panics() {
     let (env, client, target) = setup_env();
-
     let operator = Address::generate(&env);
 
-    // set operator as an operator
-    client.add_operator(&operator);
+    client.mock_all_auths().add_operator(&operator);
 
-    // call execute as an operator
-    assert_auth_err!(
-        operator,
-        client.execute(
-            &operator,
-            &target,
-            &symbol_short!("failing"),
-            &Vec::<Val>::new(&env),
-        )
+    client.mock_all_auths().execute(
+        &operator,
+        &target,
+        &Symbol::new(&env, "failing"),
+        &Vec::<Val>::new(&env),
+    );
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #1)")]
+fn execute_fails_when_target_returns_error() {
+    let (env, client, target) = setup_env();
+    let operator = Address::generate(&env);
+
+    client.mock_all_auths().add_operator(&operator);
+
+    client.mock_all_auths().execute(
+        &operator,
+        &target,
+        &Symbol::new(&env, "failing_with_error"),
+        &Vec::<Val>::new(&env),
     );
 }
