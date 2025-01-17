@@ -50,7 +50,7 @@ where
 /// See the example package for usage in gas payment and cross-chain message verification scenarios.
 ///
 /// # Example
-/// ```rust,ignore
+/// ```rust,no_compile
 /// // Create authorization for a token transfer
 /// let transfer_auth = auth_invocation!(
 ///     &env,
