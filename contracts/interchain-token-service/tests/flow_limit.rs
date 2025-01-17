@@ -5,7 +5,7 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::traits::BytesExt;
-use stellar_axelar_std::{assert_contract_err, assert_invoke_auth_ok, events};
+use stellar_axelar_std::{assert_auth, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::FlowLimitSetEvent;
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
@@ -77,9 +77,9 @@ fn set_flow_limit_succeeds() {
 
     assert_eq!(client.flow_limit(&token_id), None);
 
-    assert_invoke_auth_ok!(
+    assert_auth!(
         client.operator(),
-        client.try_set_flow_limit(&token_id, &TEST_FLOW_LIMIT)
+        client.set_flow_limit(&token_id, &TEST_FLOW_LIMIT)
     );
 
     assert_eq!(client.flow_limit(&token_id), TEST_FLOW_LIMIT);

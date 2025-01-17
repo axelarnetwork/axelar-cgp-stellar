@@ -235,14 +235,6 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 /// use soroban_sdk::{Address, contract, contractimpl, Env, String};
 ///
 /// #[derive(Debug, PartialEq, IntoEvent)]
-/// pub struct ApproveEvent {
-///     pub owner: Address,
-///     pub spender: Address,
-///     #[data]
-///     pub amount: String,
-/// }
-///
-/// #[derive(Debug, PartialEq, IntoEvent)]
 /// #[event_name("transfer")]
 /// pub struct TransferEvent {
 ///     pub from: Address,
@@ -252,38 +244,21 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[contract]
-/// pub struct TokenContract;
+/// pub struct Token;
 ///
 /// #[contractimpl]
-/// impl TokenContract {
-///     pub fn approve(env: &Env, spender: Address, amount: String) {
-///         // ... approval logic ...
-///
-///         let event = ApproveEvent {
-///             owner: env.current_contract_address(),
-///             spender,
-///             amount,
-///         };
-///         // Generates event with:
-///         // - Topics: ["approve", contract_address, spender]
-///         // - Data: [amount]
-///         env.events().publish(event.topics(env), event.data(env));
-///     }
-///
+/// impl Token {
 ///     pub fn transfer(env: &Env, to: Address, amount: String) {
 ///         // ... transfer logic ...
-///
-///         let event = TransferEvent {
-///             from: env.current_contract_address(),
-///             to,
-///             amount,
-///         };
 ///
 ///         // Generates event with:
 ///         // - Topics: ["transfer", contract_address, to]
 ///         // - Data: [amount]
-///
-///         env.events().publish(event.topics(env), event.data(env));
+///         TransferEvent {
+///             from: env.current_contract_address(),
+///             to,
+///             amount,
+///         }.emit(env);
 ///     }
 /// }
 /// }
@@ -293,17 +268,17 @@ pub fn derive_into_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let event_impl = derive_event_impl(&input);
+
     #[cfg(any(test, feature = "testutils"))]
-    let test_impl = derive_test_impl(&input);
+    let event_impl = {
+        let event_test_impl = derive_event_testutils_impl(&input);
+        quote! {
+            #event_impl
+            #event_test_impl
+        }
+    };
 
-    #[cfg(not(any(test, feature = "testutils")))]
-    let test_impl = quote! {};
-
-    quote! {
-        #event_impl
-        #test_impl
-    }
-    .into()
+    event_impl.into()
 }
 
 fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
@@ -332,7 +307,7 @@ fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     }
 }
 #[cfg(any(test, feature = "testutils"))]
-fn derive_test_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
+fn derive_event_testutils_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let ((_, topic_types), (_, data_types)) = event_struct_fields(input);
     event_testutils(name, topic_types, data_types)
@@ -412,9 +387,11 @@ fn event_name_snake_case(input: &DeriveInput) -> String {
         })
 }
 
-fn event_struct_fields(
-    input: &DeriveInput,
-) -> ((Vec<&Ident>, Vec<&Type>), (Vec<&Ident>, Vec<&Type>)) {
+type EventIdent<'a> = Vec<&'a Ident>;
+type EventType<'a> = Vec<&'a Type>;
+type EventStructFields<'a> = (EventIdent<'a>, EventType<'a>);
+
+fn event_struct_fields(input: &DeriveInput) -> (EventStructFields, EventStructFields) {
     let syn::Data::Struct(data_struct) = &input.data else {
         panic!("IntoEvent can only be derived for structs");
     };
