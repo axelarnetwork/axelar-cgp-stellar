@@ -15,7 +15,7 @@ mod test {
 
     use axelar_soroban_std::events::Event;
     use axelar_soroban_std::{impl_event_testutils, Executable};
-    use interchain_token_service::executable::CustomExecutableInterface;
+    use interchain_token_service::executable::CustomExecutable;
     use soroban_sdk::{
         contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
         String, Symbol, Topics, Val,
@@ -72,7 +72,7 @@ mod test {
         SomeError = 1,
     }
 
-    impl CustomExecutableInterface for ExecutableContract {
+    impl CustomExecutable for ExecutableContract {
         type Error = ContractError;
 
         fn interchain_token_service(env: &Env) -> Address {

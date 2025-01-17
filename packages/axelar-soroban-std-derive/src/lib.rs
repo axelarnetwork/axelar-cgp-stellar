@@ -257,8 +257,8 @@ fn executable(name: &Ident) -> TokenStream2 {
                 token_address: Address,
                 amount: i128,
             ) -> Result<(), soroban_sdk::Error> {
-                    <Self as interchain_token_service::executable::CustomExecutableInterface>::interchain_token_service(env).require_auth();
-                    <Self as interchain_token_service::executable::CustomExecutableInterface>::execute(
+                    <Self as interchain_token_service::executable::CustomExecutable>::interchain_token_service(env).require_auth();
+                    <Self as interchain_token_service::executable::CustomExecutable>::execute(
                         env,
                         source_chain,
                         message_id,

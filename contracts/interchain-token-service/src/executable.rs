@@ -7,7 +7,7 @@
 
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 
-pub trait CustomExecutableInterface {
+pub trait CustomExecutable {
     type Error: Into<soroban_sdk::Error>;
     fn interchain_token_service(env: &Env) -> Address;
     fn execute(
@@ -28,9 +28,8 @@ pub trait DeriveOnly {}
 
 /// Interface for an Interchain Token Executable app. Use the [axelar_soroban_std::Executable] derive macro to implement this interface.
 #[contractclient(name = "InterchainTokenExecutableClient")]
-pub trait InterchainTokenExecutableInterface: CustomExecutableInterface + DeriveOnly {
+pub trait InterchainTokenExecutableInterface: CustomExecutable + DeriveOnly {
     /// Execute a cross-chain message with the given payload and token.
-    /// [`validate`] must be called first in the implementation of [`execute_with_interchain_token`].
     fn execute_with_interchain_token(
         env: &Env,
         source_chain: String,
