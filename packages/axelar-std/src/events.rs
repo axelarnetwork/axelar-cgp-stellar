@@ -4,7 +4,7 @@ use soroban_sdk::{Env, IntoVal, Topics, Val, Vec};
 #[cfg(any(test, feature = "testutils"))]
 pub use testutils::*;
 
-pub trait Event: Debug + PartialEq {
+pub trait Event: Debug + PartialEq + Sized {
     fn topics(&self, env: &Env) -> impl Topics + Debug;
 
     /// A default empty tuple/vector is used for event data, since majority of events only use topics.
@@ -12,7 +12,7 @@ pub trait Event: Debug + PartialEq {
         Vec::<Val>::new(env)
     }
 
-    fn emit(&self, env: &Env) {
+    fn emit(self, env: &Env) {
         env.events().publish(self.topics(env), self.data(env));
     }
 }
@@ -25,7 +25,7 @@ mod testutils {
     use crate::events::Event;
 
     pub trait EventTestutils: Event {
-        fn matches(&self, env: &Env, event: &(Address, Vec<Val>, Val)) -> bool;
+        fn matches(self, env: &Env, event: &(Address, Vec<Val>, Val)) -> bool;
 
         fn standardized_fmt(
             env: &Env,
@@ -61,7 +61,7 @@ mod testutils {
     macro_rules! impl_event_testutils {
         ($event_type:ty, ($($topic_type:ty),*), ($($data_type:ty),*)) => {
             impl $crate::events::EventTestutils for $event_type {
-                fn matches(&self, env: &soroban_sdk::Env, event: &(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> bool {
+                fn matches(self, env: &soroban_sdk::Env, event: &(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> bool {
                     use soroban_sdk::IntoVal;
 
                     Self::standardized_fmt(env, event) == Self::standardized_fmt(env, &(event.0.clone(), self.topics(env).into_val(env), self.data(env).into_val(env)))
@@ -115,7 +115,7 @@ mod test {
     use crate::events::{Event, EventTestutils};
     use crate::{events, impl_event_testutils};
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone)]
     struct TestEvent {
         topic1: Symbol,
         topic2: String,
@@ -152,7 +152,7 @@ mod test {
 
         let contract = env.register(Contract, ());
         env.as_contract(&contract, || {
-            expected.emit(&env);
+            expected.clone().emit(&env);
         });
 
         assert!(expected.matches(&env, &env.events().all().last().unwrap()));
