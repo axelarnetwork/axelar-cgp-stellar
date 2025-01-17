@@ -29,17 +29,17 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
 
     /// Sets the specified chain as trusted for cross-chain messaging.
     /// # Authorization
-    /// - Must be called by the [`Self::operator`].
+    /// - Must be called by [`Self::owner`].
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Removes the specified chain from trusted chains.
     /// # Authorization
-    /// - Must be called by the [`Self::operator`].
+    /// - Must be called by the [`Self::owner`].
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Computes a 32-byte deployment salt for a new interchain token.
     ///
-    /// The deployment salt is derived uniquely for the given chain, deployer, and salt combination..
+    /// The deployment salt is derived uniquely for the given chain, deployer, and salt combination.
     ///
     /// # Parameters
     /// - `deployer`: The address of the token deployer.
@@ -100,14 +100,11 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - `token_id`: Unique identifier of the token.
     /// - `flow_limit`: The new flow limit value. Must be positive if Some.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
     /// - `ContractError::InvalidFlowLimit`: If the provided flow limit is not positive.
     ///
     /// # Authorization
-    /// - Must be called by the [`Self::operator`].
+    /// - Must be called by [`Self::operator`].
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
@@ -119,7 +116,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// caller can also specify an optional minter address for the interchain token.
     ///
     /// # Arguments
-    /// - `caller`: Address of the caller initiating the deployment. The caller must authenticate.
+    /// - `caller`: Address of the caller initiating the deployment.
     /// - `salt`: A 32-byte unique salt used for token deployment.
     /// - `token_metadata`: Metadata for the new token (name, symbol, decimals).
     /// - `initial_supply`: Initial amount to mint to caller, if greater than 0.
@@ -130,6 +127,9 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     ///
     /// # Errors
     /// - `ContractError::InvalidMinter`: If the minter address is invalid.
+    ///
+    /// # Authorization
+    /// - The caller must authenticate.
     fn deploy_interchain_token(
         env: &Env,
         deployer: Address,
@@ -142,7 +142,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// Initiates the deployment of an interchain token to a specified destination chain.
     ///
     /// # Arguments
-    /// - `caller`: Address of the caller initiating the deployment. The caller must authenticate.
+    /// - `caller`: Address of the caller initiating the deployment.
     /// - `salt`: A 32-byte unique salt used for token deployment.
     /// - `destination_chain`: The name of the destination chain where the token will be deployed.
     /// - `gas_token`: The token used to pay for the gas cost of the cross-chain call.
@@ -153,6 +153,9 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// # Errors
     /// - `ContractError::InvalidTokenId`: If the token ID does not exist in the persistent storage.
     /// - Any error propagated from `pay_gas_and_call_contract`.
+    ///
+    /// # Authorization
+    /// - The caller must authenticate.
     fn deploy_remote_interchain_token(
         env: &Env,
         caller: Address,
@@ -186,15 +189,15 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// * `spender` - The spender of the cross-chain gas.
     /// * `gas_token` - The token used to pay for gas during the deployment.
     ///
-    /// # Authorization
-    /// - Gas Service requires authorization for spender.
-    ///
     /// # Returns
     /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
     /// - `ContractError::InvalidTokenId`: If the token ID does not exist in the persistent storage.
     /// - Any error propagated from `pay_gas_and_call_contract`.
+    ///
+    /// # Authorization
+    /// - Gas Service requires authorization for spender.
     fn deploy_remote_canonical_token(
         env: &Env,
         token_address: Address,
@@ -213,7 +216,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// `data` to allow arbitrary processing of the transferred tokens.
     ///
     /// # Arguments
-    /// - `caller`: The address initiating the transfer. The caller must authenticate.
+    /// - `caller`: The address initiating the transfer.
     /// - `token_id`: The unique identifier of the token being transferred.
     /// - `destination_chain`: The chain to which tokens will be transferred.
     /// - `destination_address`: The recipient address on the destination chain.
@@ -228,6 +231,9 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - `ContractError::InvalidAmount`: If amount is not greater than 0.
     /// - `ContractError::FlowLimitExceeded`: If transfer would exceed flow limits.
     /// - Any error propagated from `pay_gas_and_call_contract`.
+    ///
+    /// # Authorization
+    /// - The caller must authenticate.
     fn interchain_transfer(
         env: &Env,
         caller: Address,
