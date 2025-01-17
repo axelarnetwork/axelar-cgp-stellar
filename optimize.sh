@@ -32,7 +32,7 @@ for wasm_file in "$release_folder"/*.wasm; do
     case "$base_name" in
         "${prefix}"*optimized*)
             # Remove the prefix from the filename
-            new_base_name="${base_name#${prefix}}"
+            new_base_name="${base_name#"${prefix}"}"
             mv "$wasm_file" "$release_folder/$new_base_name"
             ;;
     esac
