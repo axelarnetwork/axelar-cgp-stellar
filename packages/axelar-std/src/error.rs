@@ -113,7 +113,7 @@ macro_rules! assert_some {
 ///
 /// # Example
 ///
-/// ```rust,no_compile
+/// ```rust,ignore
 /// # use soroban_sdk::{Address, Env, contract, contractimpl};
 /// # use soroban_sdk::testutils::Address as _;
 /// # use stellar_axelar_std::assert_auth;
