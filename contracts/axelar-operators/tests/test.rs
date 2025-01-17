@@ -6,7 +6,7 @@ use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, Va
 use stellar_axelar_operators::error::ContractError;
 use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use stellar_axelar_std::testutils::assert_invocation;
-use stellar_axelar_std::{assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event};
+use stellar_axelar_std::{assert_auth_err, assert_contract_err, assert_last_emitted_event};
 
 #[contract]
 pub struct TestTarget;
@@ -197,9 +197,9 @@ fn fail_execute_when_target_panics() {
     client.add_operator(&operator);
 
     // call execute as an operator
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         operator,
-        client.try_execute(
+        client.execute(
             &operator,
             &target,
             &symbol_short!("failing"),
