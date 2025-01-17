@@ -15,16 +15,25 @@ fi
 
 # Optimize WASM files
 for wasm_file in "$release_folder"/*.wasm; do
-    if [[ "$wasm_file" != *"optimized"* ]]; then
-        stellar contract optimize --wasm "$wasm_file"
-    fi
+    case "$wasm_file" in
+        *optimized*)
+            # Skip already optimized files
+            continue
+            ;;
+        *)
+            stellar contract optimize --wasm "$wasm_file"
+            ;;
+    esac
 done
 
-# Check and rename if the file starts with prefix and contains "optimized" in the middle
+# Rename files that start with the prefix and contain "optimized"
 for wasm_file in "$release_folder"/*.wasm; do
     base_name=$(basename "$wasm_file")
-    if [[ "$base_name" == ${prefix}* && "$base_name" == *optimized* ]]; then
-        new_base_name="${base_name#${prefix}}"
-        mv "$wasm_file" "$release_folder/$new_base_name"
-    fi
+    case "$base_name" in
+        "${prefix}"*optimized*)
+            # Remove the prefix from the filename
+            new_base_name="${base_name#${prefix}}"
+            mv "$wasm_file" "$release_folder/$new_base_name"
+            ;;
+    esac
 done
