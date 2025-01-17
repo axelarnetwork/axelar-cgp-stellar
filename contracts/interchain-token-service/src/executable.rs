@@ -37,10 +37,10 @@ pub trait CustomExecutable {
 
 /// Interface for an Interchain Token Executable app. Use the [axelar_soroban_std::Executable] derive macro to implement this interface.
 ///
-/// DO NOT IMPLEMENT THIS MANUALLY!
+/// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]
 pub trait InterchainTokenExecutableInterface:
-    CustomExecutable + axelar_soroban_std::interfaces::DeriveOnly
+    CustomExecutable + stellar_axelar_std::interfaces::DeriveOnly
 {
     /// Execute a cross-chain message with the given payload and token.
     fn execute_with_interchain_token(

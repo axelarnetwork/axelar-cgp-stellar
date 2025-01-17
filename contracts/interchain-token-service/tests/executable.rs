@@ -18,8 +18,10 @@ mod test {
         String, Symbol, Topics, Val,
     };
     use stellar_axelar_std::events::Event;
-    use stellar_axelar_std::impl_event_testutils;
-    use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface;
+    use stellar_axelar_std::{ensure, impl_event_testutils, Executable};
+    use stellar_interchain_token_service::executable::{
+        CustomExecutable, InterchainTokenExecutableInterface,
+    };
 
     #[contract]
     #[derive(Executable)]
@@ -106,6 +108,7 @@ mod test {
                 amount,
             }
             .emit(env);
+
             Ok(())
         }
     }
