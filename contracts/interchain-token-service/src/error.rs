@@ -28,6 +28,7 @@ pub enum ContractError {
     FlowLimitExceeded = 20,
     FlowAmountOverflow = 21,
     NotApproved = 22,
+    InvalidDestinationChain = 23,
 }
 
 impl_not_approved_error!(ContractError);
