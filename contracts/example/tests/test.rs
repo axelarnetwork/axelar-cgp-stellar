@@ -14,10 +14,9 @@ use stellar_axelar_gateway::testutils::{
 };
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
-use stellar_axelar_std::auth_invocation;
-use stellar_axelar_std::events;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{auth_invocation, events};
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
 const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
@@ -208,9 +207,9 @@ fn gmp_example() {
         source_app.send(
             &user,
             destination_chain.clone(),
-            destination_address.clone(),
+            destination_address,
             payload.clone(),
-            gas_token.clone()
+            gas_token
         ),
         pay_gas_auth
     );
@@ -272,7 +271,7 @@ fn gmp_example() {
     let received_amount: i128 = 500;
     let received_payload: Bytes = BytesN::<20>::random(&env).into();
 
-    let source_address_bytes = Bytes::from_slice(&env, &source_address.to_string().as_bytes());
+    let source_address_bytes = Bytes::from_slice(&env, source_address.to_string().as_bytes());
 
     // Execute token receive message
     destination_app.execute_with_interchain_token(

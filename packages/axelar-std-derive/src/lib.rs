@@ -427,20 +427,6 @@ fn event_name_snake_case(input: &DeriveInput) -> String {
         })
 }
 
-struct DataAttr;
-
-impl Parse for DataAttr {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        if !input.is_empty() {
-            return Err(Error::new(
-                input.span(),
-                "data attribute takes no arguments",
-            ));
-        }
-        Ok(DataAttr)
-    }
-}
-
 fn event_struct_fields(
     input: &DeriveInput,
 ) -> ((Vec<&Ident>, Vec<&Type>), (Vec<&Ident>, Vec<&Type>)) {

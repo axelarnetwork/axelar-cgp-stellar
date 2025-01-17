@@ -10,23 +10,23 @@ crate-type = ["cdylib", "rlib"]
 testutils = []
 
 [dependencies]
-stellar-interchain-token-service = { workspace = true, features = ["library"] }
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-std = { workspace = true }
 stellar-axelar-std-derive = { workspace = true }
+stellar-interchain-token-service = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
 goldie = { workspace = true }
-stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
 stellar-axelar-std-derive = { workspace = true, features = ["testutils"] }
+stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true
