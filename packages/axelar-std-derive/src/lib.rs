@@ -1,5 +1,6 @@
 use heck::ToSnakeCase;
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{parse_macro_input, DeriveInput, Error, Ident, LitStr, Token, Type};
@@ -29,6 +30,10 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
+    operatable(name).into()
+}
+
+fn operatable(name: &Ident) -> TokenStream2 {
     quote! {
         use stellar_axelar_std::interfaces::OperatableInterface as _;
 
@@ -43,7 +48,6 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
             }
         }
     }
-    .into()
 }
 
 /// Implements the Ownable interface for a Soroban contract.
@@ -71,6 +75,10 @@ pub fn derive_ownable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
+    ownable(name).into()
+}
+
+fn ownable(name: &Ident) -> TokenStream2 {
     quote! {
         use stellar_axelar_std::interfaces::OwnableInterface as _;
 
@@ -85,7 +93,6 @@ pub fn derive_ownable(input: TokenStream) -> TokenStream {
             }
         }
     }
-    .into()
 }
 
 #[derive(Debug, Default)]
@@ -170,6 +177,10 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
         .unwrap_or_else(|e| panic!("{}", e))
         .unwrap_or_else(MigrationArgs::default);
 
+    upgradable(name, args).into()
+}
+
+fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
     syn::parse_str::<Type>("ContractError").unwrap_or_else(|_| {
         panic!(
             "{}",
@@ -218,7 +229,7 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
                     .map_err(|_| ContractError::MigrationNotAllowed)
             }
         }
-    }.into()
+    }
 }
 
 /// Implements the Event and EventTestUtils traits for a Soroban contract event.
@@ -416,4 +427,46 @@ fn event_struct_fields(input: &DeriveInput) -> (EventStructFields, EventStructFi
     }
 
     ((topic_idents, topic_types), (data_idents, data_types))
+}
+
+#[proc_macro_derive(Executable)]
+pub fn derive_executable(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    executable(name).into()
+}
+
+fn executable(name: &Ident) -> TokenStream2 {
+    quote! {
+        use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface as _;
+
+        impl stellar_axelar_std::interfaces::DeriveOnly for #name {}
+
+        #[contractimpl]
+        impl stellar_interchain_token_service::executable::InterchainTokenExecutableInterface for #name {
+            fn execute_with_interchain_token(
+                env: &Env,
+                source_chain: String,
+                message_id: String,
+                source_address: Bytes,
+                payload: Bytes,
+                token_id: BytesN<32>,
+                token_address: Address,
+                amount: i128,
+            ) -> Result<(), soroban_sdk::Error> {
+                    <Self as stellar_interchain_token_service::executable::CustomExecutable>::interchain_token_service(env).require_auth();
+                    <Self as stellar_interchain_token_service::executable::CustomExecutable>::execute(
+                        env,
+                        source_chain,
+                        message_id,
+                        source_address,
+                        payload,
+                        token_id,
+                        token_address,
+                        amount,
+                    ).map_err(|error| error.into())
+            }
+        }
+    }
 }
