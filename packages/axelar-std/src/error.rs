@@ -168,8 +168,6 @@ macro_rules! mock_auth {
         $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
         $sub_invokes:expr
     ) => {{
-        use soroban_sdk::IntoVal;
-
         soroban_sdk::testutils::MockAuth {
             address: &$caller,
             invoke: &soroban_sdk::testutils::MockAuthInvoke {
