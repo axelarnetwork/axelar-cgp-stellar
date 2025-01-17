@@ -16,7 +16,6 @@ rand = { version = "0.8.5", optional = true }
 rand_chacha = "0.3"
 soroban-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
-stellar-axelar-std-derive = { workspace = true }
 
 [dev-dependencies]
 ed25519-dalek = { version = "^2.1" }

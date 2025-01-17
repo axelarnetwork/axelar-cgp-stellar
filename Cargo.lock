@@ -1996,7 +1996,6 @@ dependencies = [
  "soroban-sdk",
  "stellar-axelar-gateway",
  "stellar-axelar-std",
- "stellar-axelar-std-derive",
 ]
 
 [[package]]
