@@ -1,3 +1,6 @@
+#![cfg(test)]
+extern crate std;
+
 use soroban_sdk::{Address, Bytes, BytesN, String};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::IntoEvent;

@@ -47,6 +47,7 @@ impl AxelarExecutableInterface for Example {
             payload,
         }
         .emit(&env);
+
         Ok(())
     }
 }
@@ -88,7 +89,7 @@ impl InterchainTokenExecutableInterface for Example {
 #[contractimpl]
 impl Example {
     pub fn __constructor(
-        env: Env,
+        env: &Env,
         gateway: Address,
         gas_service: Address,
         interchain_token_service: Address,
@@ -107,7 +108,7 @@ impl Example {
     }
 
     pub fn send(
-        env: Env,
+        env: &Env,
         caller: Address,
         destination_chain: String,
         destination_address: String,
@@ -138,7 +139,7 @@ impl Example {
     }
 
     pub fn send_token(
-        env: Env,
+        env: &Env,
         caller: Address,
         token_id: BytesN<32>,
         destination_chain: String,
