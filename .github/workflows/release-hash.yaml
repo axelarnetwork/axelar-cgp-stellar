@@ -1,0 +1,55 @@
+# takes the latest commit hash on main and uploads the artefacts to CF storage
+name: Release
+on:
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  define-matrix:
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+
+    outputs:
+      releases: ${{ steps.prepare-matrix.outputs.releases }}
+
+    steps:
+      - name: Prepare JSON output to be a matrix GHA format
+        id: prepare-matrix
+        run: |
+          # -J for json, -d for directories, -L 1 for depth of 1
+          export NAMES=$(tree -J -d -L 1 contracts | jq -c '.[0].contents | map(.name)')
+          echo "releases=$NAMES" >> $GITHUB_OUTPUT
+
+  # Publishes a release in case the release isn't published
+  build-and-upload:
+    name: Publish releases
+
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    needs: define-matrix
+
+    strategy:
+      matrix:
+        releases: ${{ fromJson(needs.define-matrix.outputs.releases) }}
+
+    uses: ./.github/workflows/reusable-build-upload.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      package-name: "${{ matrix.releases.package_name }}"
+      package-version: "${{ github.sha }}"
+
+      # CF Bucket related variables
+      cf-bucket-name: "${{ vars.CF_BUCKET_NAME }}"
+
+      # The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)
+      cf-config-bucket-root-key: "${{ vars.CF_BUCKET_ROOT_KEY }}"
+
+      # we just want to upload to CF, do not run a github release
+      github-release: "false"
+
+    secrets:
+      github-token: "${{ secrets.PAT_TOKEN }}"
+      cf-endpoint-url: "${{ secrets.CF_ENDPOINT_URL }}"
+      cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
+      cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}

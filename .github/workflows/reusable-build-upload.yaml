@@ -33,6 +33,12 @@ on:
         required: true
         type: string
 
+      github-release:
+        description: "Whether to upload the build as a github release"
+        required: false
+        default: "true"
+        type: boolean
+
     secrets:
       github-token:
         description: "The github token to use to do the tag updates"
@@ -176,6 +182,7 @@ jobs:
       # https://github.com/orgs/community/discussions/26263#discussioncomment-3251069
       - name: Update the GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        if: ${{ inputs.github-release == 'true' }}
         with:
           tag_name: ${{ inputs.package-git-tag }} # This uses the tag from the push
           files: |
