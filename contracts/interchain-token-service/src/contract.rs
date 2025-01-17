@@ -353,10 +353,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         gas_token: Token,
     ) -> Result<(), ContractError> {
         ensure!(amount > 0, ContractError::InvalidAmount);
+
         ensure!(
             !destination_address.is_empty(),
             ContractError::InvalidDestinationAddress
         );
+
+        if let Some(ref data) = data {
+            ensure!(!data.is_empty(), ContractError::InvalidData);
+        }
 
         caller.require_auth();
 

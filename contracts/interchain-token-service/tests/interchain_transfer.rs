@@ -121,3 +121,31 @@ fn interchain_transfer_fails_on_empty_destination_address() {
         ContractError::InvalidDestinationAddress
     );
 }
+
+#[test]
+fn interchain_transfer_fails_on_empty_data() {
+    let (env, client, _, _, _) = setup_env();
+    register_chains(&env, &client);
+
+    let sender: Address = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &sender);
+    let amount = 1000;
+    let token_id = setup_its_token(&env, &client, &sender, amount);
+
+    let destination_chain = client.its_hub_chain_name();
+    let destination_address = Bytes::from_hex(&env, "4F4495243837681061C4743b74B3eEdf548D56A5");
+    let empty_data = Some(Bytes::new(&env));
+
+    assert_contract_err!(
+        client.mock_all_auths().try_interchain_transfer(
+            &sender,
+            &token_id,
+            &destination_chain,
+            &destination_address,
+            &amount,
+            &empty_data,
+            &gas_token
+        ),
+        ContractError::InvalidData
+    );
+}
