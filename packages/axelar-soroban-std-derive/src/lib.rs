@@ -243,7 +243,7 @@ fn executable(name: &Ident) -> TokenStream2 {
     quote! {
         use interchain_token_service::executable::InterchainTokenExecutableInterface as _;
 
-        impl interchain_token_service::executable::DeriveOnly for #name {}
+        impl axelar_soroban_std::interfaces::DeriveOnly for #name {}
 
         #[contractimpl]
         impl interchain_token_service::executable::InterchainTokenExecutableInterface for #name {

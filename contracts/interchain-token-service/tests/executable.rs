@@ -14,7 +14,7 @@ mod test {
     use core::fmt::Debug;
 
     use axelar_soroban_std::events::Event;
-    use axelar_soroban_std::{impl_event_testutils, Executable};
+    use axelar_soroban_std::{ensure, impl_event_testutils, Executable};
     use interchain_token_service::executable::CustomExecutable;
     use soroban_sdk::{
         contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
@@ -69,7 +69,7 @@ mod test {
 
     #[contracterror]
     pub enum ContractError {
-        SomeError = 1,
+        PayloadLenOne = 1,
     }
 
     impl CustomExecutable for ExecutableContract {
@@ -92,6 +92,8 @@ mod test {
             token_address: Address,
             amount: i128,
         ) -> Result<(), ContractError> {
+            ensure!(payload.len() != 1, ContractError::PayloadLenOne);
+
             env.storage().persistent().set(&DataKey::Message, &payload);
 
             ExecutedEvent {
@@ -208,4 +210,54 @@ fn executable_fails_if_not_executed_from_its() {
             &amount,
         )
     );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #1)")] // ContractError::PayloadLenOne
+fn interchain_transfer_execute_fails_if_payload_is_len_one() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+    register_chains(&env, &client);
+
+    let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
+
+    let sender = Address::generate(&env).to_xdr(&env);
+    let source_chain = client.its_hub_chain_name();
+    let source_address = Address::generate(&env).to_string();
+
+    let amount = 1000;
+    let deployer = Address::generate(&env);
+    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let data_with_len_1 = Bytes::from_slice(&env, &[1]);
+
+    let msg = HubMessage::ReceiveFromHub {
+        source_chain: String::from_str(&env, HUB_CHAIN),
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address: executable_id.to_xdr(&env),
+            amount,
+            data: Some(data_with_len_1),
+        }),
+    };
+    let payload = msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let message_id = String::from_str(&env, "test");
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+    let data_hash = get_approve_hash(&env, messages.clone());
+    let proof = generate_proof(&env, data_hash, signers);
+
+    gateway_client.approve_messages(&messages, &proof);
+
+    client.execute(&source_chain, &message_id, &source_address, &payload);
 }

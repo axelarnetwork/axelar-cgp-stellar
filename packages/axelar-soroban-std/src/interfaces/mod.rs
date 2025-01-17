@@ -8,6 +8,11 @@ pub use operatable::*;
 pub use ownable::*;
 pub use upgradable::*;
 
+/// Marker trait for interfaces that should not be implemented by using .
+/// DO NOT IMPLEMENT THIS MANUALLY!
+#[doc(hidden)]
+pub trait DeriveOnly {}
+
 /// This submodule encapsulates data keys for the separate interfaces. These keys break naming conventions on purpose.
 /// If a contract implements a contract type that would result in a collision with a key defined here,
 /// the linter will complain about it. So as long as contracts follow regular naming conventions,
