@@ -1,11 +1,15 @@
-use axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
-use axelar_gateway::testutils::{generate_proof, get_approve_hash, setup_gateway, TestSignerSet};
-use axelar_gateway::{types::Message, AxelarGatewayClient};
-use axelar_soroban_std::types::Token;
-use interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
-use soroban_sdk::{testutils::Address as _, token::StellarAssetClient, Address, Env, String, Vec};
-use soroban_sdk::{BytesN, IntoVal};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::token::StellarAssetClient;
+use soroban_sdk::{Address, BytesN, Env, IntoVal, String, Vec};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_gateway::testutils::{
+    generate_proof, get_approve_hash, setup_gateway, TestSignerSet,
+};
+use stellar_axelar_gateway::types::Message;
+use stellar_axelar_gateway::AxelarGatewayClient;
+use stellar_axelar_std::types::Token;
+use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
 pub const HUB_CHAIN: &str = "axelar";
 

@@ -1,20 +1,17 @@
-use axelar_gateway::error::ContractError;
-use axelar_gateway::event::{
+use soroban_sdk::testutils::{Address as _, Events};
+use soroban_sdk::{bytes, vec, Address, BytesN, String};
+use stellar_axelar_gateway::error::ContractError;
+use stellar_axelar_gateway::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
 };
 #[cfg(any(test, feature = "testutils"))]
-use axelar_gateway::testutils::{
+use stellar_axelar_gateway::testutils::{
     deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
     generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
-use axelar_gateway::types::Message;
-use axelar_soroban_std::{
-    assert_contract_err, assert_invocation, assert_invoke_auth_err, assert_invoke_auth_ok, events,
-};
-use soroban_sdk::{
-    bytes,
-    testutils::{Address as _, Events},
-    vec, Address, BytesN, String,
+use stellar_axelar_gateway::types::Message;
+use stellar_axelar_std::{
+    assert_auth, assert_auth_err, assert_contract_err, assert_invocation, events,
 };
 
 mod utils;
@@ -32,9 +29,9 @@ fn call_contract() {
     let destination_address = String::from_str(&env, DESTINATION_ADDRESS);
     let payload = bytes!(&env, 0x1234);
 
-    assert_invoke_auth_ok!(
+    assert_auth!(
         user,
-        client.try_call_contract(&user, &destination_chain, &destination_address, &payload)
+        client.call_contract(&user, &destination_chain, &destination_address, &payload)
     );
 
     assert_invocation(
@@ -65,9 +62,9 @@ fn validate_message() {
 
     let prev_event_count = env.events().all().len();
 
-    let approved = assert_invoke_auth_ok!(
+    let approved = assert_auth!(
         contract_address,
-        client.try_validate_message(
+        client.validate_message(
             &contract_address,
             &source_chain,
             &message_id,
@@ -141,9 +138,9 @@ fn execute_approved_message() {
     let proof = generate_proof(&env, data_hash, signers);
     client.approve_messages(&messages, &proof);
 
-    let approved = assert_invoke_auth_ok!(
+    let approved = assert_auth!(
         contract_address,
-        client.try_validate_message(
+        client.validate_message(
             &contract_address,
             &source_chain,
             &message_id,
@@ -273,9 +270,9 @@ fn rotate_signers_bypass_rotation_delay() {
     let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
 
-    assert_invoke_auth_ok!(
+    assert_auth!(
         client.operator(),
-        client.try_rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
+        client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
     );
 
     goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
@@ -291,15 +288,15 @@ fn rotate_signers_bypass_rotation_delay_unauthorized() {
     let proof = generate_proof(&env, data_hash, signers);
     let bypass_rotation_delay = true;
 
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         client.owner(),
-        client.try_rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
+        client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
     );
 
     let not_operator = Address::generate(&env);
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         not_operator,
-        client.try_rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
+        client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
     );
 }
 
@@ -329,14 +326,11 @@ fn transfer_operatorship_unauthorized() {
     let (env, _, client) = setup_env(1, randint(1, 10));
     let not_operator = Address::generate(&env);
 
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         client.owner(),
-        client.try_transfer_operatorship(&client.owner())
+        client.transfer_operatorship(&client.owner())
     );
-    assert_invoke_auth_err!(
-        not_operator,
-        client.try_transfer_operatorship(&not_operator)
-    );
+    assert_auth_err!(not_operator, client.transfer_operatorship(&not_operator));
 }
 
 #[test]
@@ -345,10 +339,10 @@ fn transfer_ownership_unauthorized() {
 
     let new_owner = Address::generate(&env);
 
-    assert_invoke_auth_err!(new_owner, client.try_transfer_ownership(&new_owner));
-    assert_invoke_auth_err!(
+    assert_auth_err!(new_owner, client.transfer_ownership(&new_owner));
+    assert_auth_err!(
         client.operator(),
-        client.try_transfer_ownership(&client.operator())
+        client.transfer_ownership(&client.operator())
     );
 }
 
@@ -437,6 +431,6 @@ fn upgrade_unauthorized() {
     let not_owner = Address::generate(&env);
     let new_wasm_hash = BytesN::<32>::from_array(&env, &[0; 32]);
 
-    assert_invoke_auth_err!(not_owner, client.try_upgrade(&new_wasm_hash));
-    assert_invoke_auth_err!(client.operator(), client.try_upgrade(&new_wasm_hash));
+    assert_auth_err!(not_owner, client.upgrade(&new_wasm_hash));
+    assert_auth_err!(client.operator(), client.upgrade(&new_wasm_hash));
 }

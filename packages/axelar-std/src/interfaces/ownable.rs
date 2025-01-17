@@ -1,9 +1,11 @@
+use core::fmt::Debug;
+
+use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
+
 use crate::events::Event;
 #[cfg(any(test, feature = "testutils"))]
 use crate::impl_event_testutils;
 use crate::interfaces::storage;
-use core::fmt::Debug;
-use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
 
 #[contractclient(name = "OwnableClient")]
 pub trait OwnableInterface {
@@ -69,11 +71,12 @@ impl_event_testutils!(OwnershipTransferredEvent, (Symbol, Address, Address), ())
 
 #[cfg(test)]
 mod test {
-    use crate::interfaces::testdata::Contract;
-    use crate::interfaces::{OwnableClient, OwnershipTransferredEvent};
-    use crate::{assert_invoke_auth_err, assert_invoke_auth_ok, events};
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, Env};
+
+    use crate::interfaces::testdata::Contract;
+    use crate::interfaces::{OwnableClient, OwnershipTransferredEvent};
+    use crate::{assert_auth, assert_auth_err, events};
 
     fn prepare_client(env: &Env, owner: Option<Address>) -> OwnableClient {
         let operator = Address::generate(env);
@@ -105,7 +108,7 @@ mod test {
         let client = prepare_client(&env, Some(owner));
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_err!(new_owner, client.try_transfer_ownership(&new_owner));
+        assert_auth_err!(new_owner, client.transfer_ownership(&new_owner));
     }
 
     #[test]
@@ -117,7 +120,7 @@ mod test {
         assert_eq!(client.owner(), owner);
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_ok!(owner, client.try_transfer_ownership(&new_owner));
+        assert_auth!(owner, client.transfer_ownership(&new_owner));
 
         goldie::assert!(events::fmt_last_emitted_event::<OwnershipTransferredEvent>(
             &env

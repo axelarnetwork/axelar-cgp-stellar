@@ -1,8 +1,5 @@
-use soroban_sdk::{
-    contractclient,
-    token::{self, StellarAssetInterface},
-    Address, BytesN, Env,
-};
+use soroban_sdk::token::{self, StellarAssetInterface};
+use soroban_sdk::{contractclient, Address, BytesN, Env};
 
 use crate::error::ContractError;
 

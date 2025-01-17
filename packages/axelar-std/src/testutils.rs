@@ -1,10 +1,8 @@
 #![cfg(any(test, feature = "testutils"))]
 extern crate std;
 
-use soroban_sdk::{
-    testutils::{AuthorizedFunction, AuthorizedInvocation, Events},
-    vec, Address, Bytes, Env, IntoVal, Symbol, Val, Vec,
-};
+use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation, Events};
+use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Symbol, Val, Vec};
 
 /// Asserts invocation auth of a contract from a single caller.
 pub fn assert_invocation<T>(

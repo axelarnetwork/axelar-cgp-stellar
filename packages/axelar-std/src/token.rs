@@ -1,6 +1,7 @@
-use crate::ensure;
 use soroban_sdk::contracterror;
 use soroban_token_sdk::metadata::TokenMetadata;
+
+use crate::ensure;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

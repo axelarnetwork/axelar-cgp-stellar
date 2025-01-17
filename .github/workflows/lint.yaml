@@ -18,11 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Rust nightly toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rustfmt
+
+      - name: Run cargo fmt
+        run: cargo fmt --all -- --check
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.81.0
-          components: rustfmt, clippy
+          components: clippy
 
       - name: Rust Cache
         uses: useblacksmith/rust-cache@v3
@@ -33,9 +42,6 @@ jobs:
         uses: baptiste0928/cargo-install@v2
         with:
           crate: cargo-sort
-
-      - name: Run cargo fmt
-        run: cargo fmt --all -- --check
 
       - name: Run cargo sort
         run: cargo-sort --workspace --check --check-format

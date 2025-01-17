@@ -1,9 +1,11 @@
-use soroban_sdk::{contract, contracterror, contractimpl, testutils::Address as _, Address, Env};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
 mod testdata;
 mod operatable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OperatableClient};
-    use axelar_soroban_std_derive::Operatable;
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std::interfaces::OperatableClient;
+    use stellar_axelar_std_derive::Operatable;
 
     use super::*;
 
@@ -21,7 +23,7 @@ mod operatable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, operator: Address) {
-            axelar_soroban_std::interfaces::set_operator(env, &operator);
+            stellar_axelar_std::interfaces::set_operator(env, &operator);
         }
     }
 
@@ -34,14 +36,15 @@ mod operatable {
         assert_eq!(operator, client.operator());
 
         let new_operator = Address::generate(&env);
-        assert_invoke_auth_ok!(operator, client.try_transfer_operatorship(&new_operator));
+        assert_auth!(operator, client.transfer_operatorship(&new_operator));
         assert_eq!(new_operator, client.operator());
     }
 }
 
 mod ownable {
-    use axelar_soroban_std::{assert_invoke_auth_ok, interfaces::OwnableClient};
-    use axelar_soroban_std_derive::Ownable;
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std::interfaces::OwnableClient;
+    use stellar_axelar_std_derive::Ownable;
 
     use super::*;
 
@@ -59,7 +62,7 @@ mod ownable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, owner: Address) {
-            axelar_soroban_std::interfaces::set_owner(env, &owner);
+            stellar_axelar_std::interfaces::set_owner(env, &owner);
         }
     }
 
@@ -72,14 +75,14 @@ mod ownable {
         assert_eq!(owner, client.owner());
 
         let new_owner = Address::generate(&env);
-        assert_invoke_auth_ok!(owner, client.try_transfer_ownership(&new_owner));
+        assert_auth!(owner, client.transfer_ownership(&new_owner));
         assert_eq!(new_owner, client.owner());
     }
 }
 
 mod upgradable {
-    use axelar_soroban_std::assert_invoke_auth_ok;
-    use axelar_soroban_std_derive::{Ownable, Upgradable};
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     use super::*;
 
@@ -97,7 +100,7 @@ mod upgradable {
     #[contractimpl]
     impl Contract {
         pub fn __constructor(env: &Env, owner: Address) {
-            axelar_soroban_std::interfaces::set_owner(env, &owner);
+            stellar_axelar_std::interfaces::set_owner(env, &owner);
         }
     }
 
@@ -125,9 +128,9 @@ mod upgradable {
         let client = ContractClient::new(env, &contract_id);
         let new_wasm_hash = env.deployer().upload_contract_wasm(UPGRADED_WASM);
 
-        assert_invoke_auth_ok!(owner, client.try_upgrade(&new_wasm_hash));
+        assert_auth!(owner, client.upgrade(&new_wasm_hash));
 
         let client = testdata::ContractClient::new(env, &contract_id);
-        assert_invoke_auth_ok!(owner, client.try_migrate(&()));
+        assert_auth!(owner, client.migrate(&()));
     }
 }

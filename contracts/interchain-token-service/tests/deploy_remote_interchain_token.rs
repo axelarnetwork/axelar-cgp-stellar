@@ -1,14 +1,12 @@
 mod utils;
 
-use axelar_soroban_std::{assert_contract_err, auth_invocation, events};
-use interchain_token_service::{
-    error::ContractError,
-    event::InterchainTokenDeploymentStartedEvent,
-    types::{DeployInterchainToken, HubMessage, Message},
-};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
+use stellar_interchain_token_service::error::ContractError;
+use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
+use stellar_interchain_token_service::types::{DeployInterchainToken, HubMessage, Message};
 use utils::{setup_env, setup_gas_token, TokenMetadataExt};
 
 #[test]
@@ -141,5 +139,25 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     assert_contract_err!(
         client.try_deploy_remote_interchain_token(&spender, &salt, &destination_chain, &gas_token),
         ContractError::InvalidTokenId
+    );
+}
+
+#[test]
+fn deploy_remote_token_fails_local_deployment() {
+    let (env, client, _, _, _) = setup_env();
+
+    let spender = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &spender);
+    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+    let destination_chain = client.chain_name();
+
+    assert_contract_err!(
+        client.mock_all_auths().try_deploy_remote_interchain_token(
+            &spender,
+            &salt,
+            &destination_chain,
+            &gas_token
+        ),
+        ContractError::InvalidDestinationChain
     );
 }
