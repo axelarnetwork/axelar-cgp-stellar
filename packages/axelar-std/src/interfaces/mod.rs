@@ -9,7 +9,8 @@ pub use ownable::*;
 pub use upgradable::*;
 
 /// Marker trait for interfaces that should not be implemented by using .
-/// DO NOT IMPLEMENT THIS MANUALLY!
+///
+/// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[doc(hidden)]
 pub trait DeriveOnly {}
 
