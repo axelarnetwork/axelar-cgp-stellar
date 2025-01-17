@@ -1,36 +1,38 @@
 [workspace]
 resolver = "2"
-members = ["contracts/*", "integration-tests", "packages/*"]
+members = ["contracts/*", "packages/*"]
 
 [workspace.package]
 edition = "2021"
 rust-version = "1.81.0"
 
 [workspace.dependencies]
-soroban-sdk = { version = "22.0.0-rc.3" }
-soroban-token-sdk = { version = "22.0.0-rc.3" }
+soroban-sdk = { version = "22.0.2" }
+soroban-token-sdk = { version = "22.0.2" }
+proc-macro2 = { version = "1.0" }
 cfg-if = { version = "1.0" }
-axelar-soroban-std = { version = "^0.1.0", path = "packages/axelar-soroban-std" }
-axelar-gas-service = { version = "^0.1.0", path = "contracts/axelar-gas-service" }
-axelar-gateway = { version = "^0.1.0", path = "contracts/axelar-gateway" }
-axelar-operators = { version = "^0.1.0", path = "contracts/axelar-operators" }
-interchain-token = { version = "^0.1.0", path = "contracts/interchain-token" }
-interchain-token-service = { version = "^0.1.0", path = "contracts/interchain-token-service" }
-alloy-primitives = { version = "0.7.6", default-features = false, features = [
+stellar-axelar-std = { version = "^0.1.0", path = "packages/axelar-std", features = ["derive"] }
+stellar-axelar-std-derive = { version = "^0.1.0", path = "packages/axelar-std-derive" }
+stellar-axelar-gas-service = { version = "^0.1.0", path = "contracts/axelar-gas-service" }
+stellar-axelar-gateway = { version = "^0.1.0", path = "contracts/axelar-gateway" }
+stellar-axelar-operators = { version = "^0.1.0", path = "contracts/axelar-operators" }
+stellar-interchain-token = { version = "^0.1.0", path = "contracts/interchain-token" }
+stellar-interchain-token-service = { version = "^0.1.0", path = "contracts/interchain-token-service" }
+alloy-primitives = { version = "0.8.14", default-features = false, features = [
     "std",
 ] }
-alloy-sol-types = { version = "0.7.6", default-features = false, features = [
+alloy-sol-types = { version = "0.8.14", default-features = false, features = [
     "std",
 ] }
 goldie = "0.5.0"
+hex = { version = "0.4" }
+paste = "1.0"
 
 [workspace.lints.clippy]
 nursery = { level = "warn", priority = -1 }
 too_many_arguments = "allow"
 
 [workspace.lints.rust]
-warnings = "deny"
-deprecated = "allow"
 
 [profile.release]
 opt-level = "z"

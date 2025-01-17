@@ -1,0 +1,3 @@
+contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON)
+topics: (Symbol(trusted_chain_set), String(chain))
+data: ()

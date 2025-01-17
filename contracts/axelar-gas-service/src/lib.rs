@@ -13,8 +13,8 @@ cfg_if::cfg_if! {
     } else {
         mod event;
         mod storage_types;
+        mod contract;
 
-        pub mod contract;
         pub use contract::{AxelarGasService, AxelarGasServiceClient};
     }
 }

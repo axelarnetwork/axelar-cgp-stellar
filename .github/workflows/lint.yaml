@@ -1,9 +1,10 @@
-name: Linting
+name: Lint
 
 on:
   pull_request:
   push:
     branches:
+      - main
       - releases/**
 
 concurrency:
@@ -17,15 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust nightly toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
-          toolchain: 1.81.0
-          override: true
-          components: rustfmt, clippy
+          toolchain: nightly
+          components: rustfmt
 
-      - name: Cache build artifacts
+      - name: Run cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.81.0
+          components: clippy
+
+      - name: Rust Cache
         uses: useblacksmith/rust-cache@v3
         with:
           shared-key: "cache"
@@ -35,23 +43,17 @@ jobs:
         with:
           crate: cargo-sort
 
-      - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
       - name: Run cargo sort
-        uses: actions-rs/cargo@v1
-        with:
-          command: sort
-          args: --workspace --check --check-format
+        run: cargo-sort --workspace --check --check-format
 
-      - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
+      - name: Run cargo clippy (no features)
+        run: cargo clippy --workspace --no-default-features --allow-dirty --fix -- -D warnings
 
-      - name: Check Diff
-        # fails if any changes not committed
+      - name: Run cargo clippy (all features)
+        run: cargo clippy --workspace --all-features --allow-dirty --fix -- -D warnings
+
+      - name: Run cargo doc
+        run: cargo doc --no-deps --workspace
+
+      - name: Check for uncommitted changes
         run: git diff --exit-code

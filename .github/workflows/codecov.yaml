@@ -20,12 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: 1.81.0
-          override: true
 
       - name: Install libclang-dev
         run: sudo apt-get install libclang-dev
@@ -41,7 +39,6 @@ jobs:
       - name: Generate code coverage
         run: cargo llvm-cov --workspace --lcov --output-path lcov.info
         env:
-          RUSTFLAGS: --cfg tracing_unstable
           RUST_BACKTRACE: 1
 
       - name: Upload coverage to Codecov

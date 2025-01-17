@@ -3,19 +3,13 @@ extern crate std;
 
 use std::format;
 
-use axelar_gas_service::contract::{AxelarGasService, AxelarGasServiceClient};
-use axelar_gas_service::error::ContractError;
-use axelar_soroban_std::{
-    assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event, types::Token,
-};
-use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
-use soroban_sdk::Bytes;
-use soroban_sdk::{
-    bytes,
-    testutils::Address as _,
-    token::{StellarAssetClient, TokenClient},
-    Address, Env, String, Symbol,
-};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::token::{StellarAssetClient, TokenClient};
+use soroban_sdk::{bytes, Address, Bytes, Env, String, Symbol};
+use stellar_axelar_gas_service::error::ContractError;
+use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{assert_auth_err, assert_contract_err, assert_last_emitted_event};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();
@@ -307,7 +301,7 @@ fn fail_collect_fees_unauthorized() {
 
     StellarAssetClient::new(&env, &token.address).mint(&contract_id, &supply);
 
-    assert_invoke_auth_err!(user, client.try_collect_fees(&user, &token));
+    assert_auth_err!(user, client.collect_fees(&user, &token));
 }
 
 #[test]
@@ -357,7 +351,7 @@ fn fail_refund_unauthorized() {
     let message_id = message_id(&env);
     let user: Address = Address::generate(&env);
 
-    assert_invoke_auth_err!(user, client.try_refund(&message_id, &receiver, &token));
+    assert_auth_err!(user, client.refund(&message_id, &receiver, &token));
 }
 
 #[test]

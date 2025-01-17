@@ -18,23 +18,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: 1.81.0
-          override: true
 
-      - name: Cache build artifacts
+      - name: Rust Cache
         uses: useblacksmith/rust-cache@v3
         with:
           shared-key: "cache"
 
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --locked
+        run: cargo test --locked
         env:
-          RUSTFLAGS: --cfg tracing_unstable
           RUST_BACKTRACE: 1

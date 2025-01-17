@@ -3,7 +3,7 @@
 mod event;
 mod storage_types;
 
-pub mod contract;
+mod contract;
 pub mod error;
 
-pub use contract::AxelarOperatorsClient;
+pub use contract::{AxelarOperators, AxelarOperatorsClient};

@@ -1,7 +1,7 @@
 #![no_std]
 
 // Allows using std (and its macros) in test modules
-#[cfg(test)]
+#[cfg(any(test, feature = "testutils"))]
 #[macro_use]
 extern crate std;
 
@@ -16,7 +16,7 @@ mod interface;
 #[cfg(all(target_family = "wasm", feature = "testutils"))]
 compile_error!("'testutils' feature is not supported on 'wasm' target");
 
-#[cfg(feature = "testutils")]
+#[cfg(any(test, feature = "testutils"))]
 pub mod testutils;
 
 cfg_if::cfg_if! {
@@ -24,10 +24,10 @@ cfg_if::cfg_if! {
         pub use interface::{AxelarGatewayClient, AxelarGatewayInterface};
     } else {
         mod auth;
-        mod event;
+        pub mod event;
         mod storage_types;
+        mod contract;
 
-        pub mod contract;
         pub use contract::{AxelarGateway, AxelarGatewayClient};
     }
 }

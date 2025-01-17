@@ -1,52 +1,20 @@
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
+use stellar_axelar_std::events::Event;
+use stellar_axelar_std::ttl::extend_instance_ttl;
+use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+
+use crate::auth;
 use crate::error::ContractError;
+use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
 use crate::interface::AxelarGatewayInterface;
 use crate::messaging_interface::AxelarGatewayMessagingInterface;
 use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
-use crate::{auth, event};
-use axelar_soroban_std::interfaces::{
-    migrate, MigratableInterface, OwnableInterface, UpgradableInterface,
-};
-use axelar_soroban_std::ttl::{INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
-use axelar_soroban_std::{ensure, interfaces};
-use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
-
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[contract]
+#[derive(Ownable, Upgradable, Operatable)]
 pub struct AxelarGateway;
-
-#[contractimpl]
-impl MigratableInterface for AxelarGateway {
-    type MigrationData = ();
-    type Error = ContractError;
-
-    fn migrate(env: &Env, migration_data: ()) -> Result<(), ContractError> {
-        migrate::<Self>(env, || Self::run_migration(env, migration_data))
-            .map_err(|_| ContractError::MigrationNotAllowed)
-    }
-}
-
-#[contractimpl]
-impl UpgradableInterface for AxelarGateway {
-    fn version(env: &Env) -> String {
-        String::from_str(env, CONTRACT_VERSION)
-    }
-
-    // boilerplate necessary for the contractimpl macro to include function in the generated client
-    fn upgrade(env: &Env, new_wasm_hash: BytesN<32>) {
-        interfaces::upgrade::<Self>(env, new_wasm_hash);
-    }
-}
-
-#[contractimpl]
-impl OwnableInterface for AxelarGateway {
-    // boilerplate necessary for the contractimpl macro to include function in the generated client
-    fn owner(env: &Env) -> Address {
-        interfaces::owner(env)
-    }
-}
 
 #[contractimpl]
 impl AxelarGateway {
@@ -61,7 +29,7 @@ impl AxelarGateway {
         initial_signers: Vec<WeightedSigners>,
     ) -> Result<(), ContractError> {
         interfaces::set_owner(&env, &owner);
-        env.storage().instance().set(&DataKey::Operator, &operator);
+        interfaces::set_operator(&env, &operator);
 
         auth::initialize_auth(
             env,
@@ -69,9 +37,7 @@ impl AxelarGateway {
             minimum_rotation_delay,
             previous_signers_retention,
             initial_signers,
-        )?;
-
-        Ok(())
+        )
     }
 }
 
@@ -88,14 +54,14 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 
         let payload_hash = env.crypto().keccak256(&payload).into();
 
-        event::call_contract(
-            &env,
+        ContractCalledEvent {
             caller,
             destination_chain,
             destination_address,
             payload,
             payload_hash,
-        );
+        }
+        .emit(&env);
     }
 
     fn is_message_approved(
@@ -157,7 +123,7 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
                 &MessageApprovalValue::Executed,
             );
 
-            event::execute_message(&env, message);
+            MessageExecutedEvent { message }.emit(&env);
 
             return true;
         }
@@ -165,6 +131,7 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
         false
     }
 }
+
 #[contractimpl]
 impl AxelarGatewayInterface for AxelarGateway {
     fn approve_messages(
@@ -198,10 +165,10 @@ impl AxelarGatewayInterface for AxelarGateway {
                 &Self::message_approval_hash(&env, message.clone()),
             );
 
-            event::approve_message(&env, message);
+            MessageApprovedEvent { message }.emit(&env);
         }
 
-        Self::extend_instance_ttl(&env);
+        extend_instance_ttl(&env);
 
         Ok(())
     }
@@ -229,35 +196,8 @@ impl AxelarGatewayInterface for AxelarGateway {
         Ok(())
     }
 
-    fn transfer_operatorship(env: Env, new_operator: Address) {
-        let operator: Address = Self::operator(&env);
-        operator.require_auth();
-
-        env.storage()
-            .instance()
-            .set(&DataKey::Operator, &new_operator);
-
-        event::transfer_operatorship(&env, operator, new_operator);
-    }
-
-    fn operator(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::Operator)
-            .expect("operator not found")
-    }
-
     fn epoch(env: &Env) -> u64 {
         auth::epoch(env)
-    }
-
-    fn transfer_ownership(env: Env, new_owner: Address) {
-        let owner: Address = Self::owner(&env);
-        owner.require_auth();
-
-        interfaces::set_owner(&env, &new_owner);
-
-        event::transfer_ownership(&env, owner, new_owner);
     }
 
     fn epoch_by_signers_hash(env: &Env, signers_hash: BytesN<32>) -> Result<u64, ContractError> {
@@ -266,6 +206,14 @@ impl AxelarGatewayInterface for AxelarGateway {
 
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError> {
         auth::signers_hash_by_epoch(env, epoch)
+    }
+
+    fn validate_proof(
+        env: &Env,
+        data_hash: BytesN<32>,
+        proof: Proof,
+    ) -> Result<bool, ContractError> {
+        auth::validate_proof(env, &data_hash, proof)
     }
 }
 
@@ -294,12 +242,6 @@ impl AxelarGateway {
 
     fn message_approval_hash(env: &Env, message: Message) -> MessageApprovalValue {
         MessageApprovalValue::Approved(env.crypto().keccak256(&message.to_xdr(env)).into())
-    }
-
-    fn extend_instance_ttl(env: &Env) {
-        env.storage()
-            .instance()
-            .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
     }
 
     // Modify this function to add migration logic

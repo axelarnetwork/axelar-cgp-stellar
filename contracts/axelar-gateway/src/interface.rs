@@ -1,13 +1,14 @@
-use crate::{
-    error::ContractError,
-    types::{Message, Proof, WeightedSigners},
-    AxelarGatewayMessagingInterface,
-};
-use axelar_soroban_std::interfaces::UpgradableInterface;
-use soroban_sdk::{contractclient, Address, BytesN, Env, Vec};
+use soroban_sdk::{contractclient, BytesN, Env, Vec};
+use stellar_axelar_std::interfaces::{OperatableInterface, OwnableInterface, UpgradableInterface};
+
+use crate::error::ContractError;
+use crate::types::{Message, Proof, WeightedSigners};
+use crate::AxelarGatewayMessagingInterface;
 
 #[contractclient(name = "AxelarGatewayClient")]
-pub trait AxelarGatewayInterface: AxelarGatewayMessagingInterface + UpgradableInterface {
+pub trait AxelarGatewayInterface:
+    AxelarGatewayMessagingInterface + UpgradableInterface + OwnableInterface + OperatableInterface
+{
     /// Approves a collection of messages.
     fn approve_messages(
         env: Env,
@@ -23,21 +24,19 @@ pub trait AxelarGatewayInterface: AxelarGatewayMessagingInterface + UpgradableIn
         bypass_rotation_delay: bool,
     ) -> Result<(), ContractError>;
 
-    /// Transfers operatorship of the gateway to a new address.
-    fn transfer_operatorship(env: Env, new_operator: Address);
-
-    /// Returns the operator address of the gateway.
-    fn operator(env: &Env) -> Address;
-
     /// Returns the epoch of the gateway.
     fn epoch(env: &Env) -> u64;
-
-    /// Transfers ownership of the gateway to a new address.
-    fn transfer_ownership(env: Env, new_owner: Address);
 
     /// Returns the epoch by signers hash.
     fn epoch_by_signers_hash(env: &Env, signers_hash: BytesN<32>) -> Result<u64, ContractError>;
 
     /// Returns the signers hash by epoch.
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError>;
+
+    /// Validate the `proof` for `data_hash` created by the signers. Returns a boolean indicating if the proof was created by the latest signers.
+    fn validate_proof(
+        env: &Env,
+        data_hash: BytesN<32>,
+        proof: Proof,
+    ) -> Result<bool, ContractError>;
 }

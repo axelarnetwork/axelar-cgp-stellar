@@ -21,5 +21,4 @@ pub enum DataKey {
     Balance(Address),
     Minter(Address),
     TokenId,
-    InterchainTokenService,
 }

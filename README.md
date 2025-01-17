@@ -4,6 +4,10 @@ This repo implements Axelar's [cross-chain gateway protocol](https://github.com/
 
 > Check configuration for CLI and Identity before deployment: https://developers.stellar.org/docs/build/smart-contracts/getting-started/setup
 
+## Docs
+
+Rustdocs for this workspace can be found [here](https://axelarnetwork.github.io/axelar-cgp-soroban/).
+
 ## Install
 
 Install Soroban CLI
@@ -16,6 +20,14 @@ cargo install --locked stellar-cli --features opt
 
 ```bash
 cargo build
+```
+
+## Build wasm
+
+```bash
+cargo wasm
+
+# OR
 
 stellar contract build
 ```

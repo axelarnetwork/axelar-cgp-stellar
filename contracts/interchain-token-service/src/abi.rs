@@ -1,24 +1,16 @@
 use alloy_primitives::{FixedBytes, Uint, U256};
 use alloy_sol_types::{sol, SolValue};
-use axelar_soroban_std::ensure;
-use soroban_sdk::{contracterror, Bytes, BytesN, Env, String};
+use soroban_sdk::{Bytes, BytesN, Env, String};
+use stellar_axelar_std::ensure;
 
+// alloc needed for converting to alloy types
+use crate::abi::alloc::{string::String as StdString, vec};
+use crate::error::ContractError;
 use crate::types::{self, HubMessage, Message};
 extern crate alloc;
-use crate::abi::alloc::{string::String as StdString, vec};
-
-#[contracterror]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[repr(u32)]
-pub enum MessageError {
-    InsufficientMessageLength = 0,
-    InvalidMessageType = 1,
-    AbiDecodeFailed = 2,
-    InvalidAmount = 3,
-    InvalidUtf8 = 4,
-}
 
 sol! {
+    #[derive(PartialEq, Eq)]
     enum MessageType {
         InterchainTransfer,
         DeployInterchainToken,
@@ -59,7 +51,7 @@ sol! {
 }
 
 impl Message {
-    pub fn abi_encode(self, env: &Env) -> Result<Bytes, MessageError> {
+    pub fn abi_encode(self, env: &Env) -> Result<Bytes, ContractError> {
         let msg = match self {
             Self::InterchainTransfer(types::InterchainTransfer {
                 token_id,
@@ -95,18 +87,15 @@ impl Message {
         Ok(Bytes::from_slice(env, &msg))
     }
 
-    pub fn abi_decode(env: &Env, payload: &Bytes) -> Result<Self, MessageError> {
-        ensure!(payload.len() >= 32, MessageError::InsufficientMessageLength);
-
+    pub fn abi_decode(env: &Env, payload: &Bytes) -> Result<Self, ContractError> {
         let payload = payload.to_alloc_vec();
 
-        let message_type = MessageType::abi_decode(&payload[0..32], true)
-            .map_err(|_| MessageError::InvalidMessageType)?;
+        let message_type = get_message_type(&payload)?;
 
         match message_type {
             MessageType::InterchainTransfer => {
                 let decoded = InterchainTransfer::abi_decode_params(&payload, true)
-                    .map_err(|_| MessageError::AbiDecodeFailed)?;
+                    .map_err(|_| ContractError::AbiDecodeFailed)?;
 
                 Ok(Self::InterchainTransfer(types::InterchainTransfer {
                     token_id: BytesN::from_array(env, &decoded.tokenId.into()),
@@ -121,7 +110,7 @@ impl Message {
             }
             MessageType::DeployInterchainToken => {
                 let decoded = DeployInterchainToken::abi_decode_params(&payload, true)
-                    .map_err(|_| MessageError::AbiDecodeFailed)?;
+                    .map_err(|_| ContractError::AbiDecodeFailed)?;
 
                 Ok(Self::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(env, &decoded.tokenId.into()),
@@ -131,14 +120,13 @@ impl Message {
                     minter: from_vec(env, decoded.minter.as_ref()),
                 }))
             }
-            _ => Err(MessageError::InvalidMessageType),
+            _ => Err(ContractError::InvalidMessageType),
         }
     }
 }
 
-#[allow(dead_code)]
 impl HubMessage {
-    pub fn abi_encode(self, env: &Env) -> Result<Bytes, MessageError> {
+    pub fn abi_encode(self, env: &Env) -> Result<Bytes, ContractError> {
         let msg = match self {
             Self::SendToHub {
                 destination_chain,
@@ -162,18 +150,15 @@ impl HubMessage {
         Ok(Bytes::from_slice(env, &msg))
     }
 
-    pub fn abi_decode(env: &Env, payload: &Bytes) -> Result<Self, MessageError> {
-        ensure!(payload.len() >= 32, MessageError::InsufficientMessageLength);
-
+    pub fn abi_decode(env: &Env, payload: &Bytes) -> Result<Self, ContractError> {
         let payload = payload.to_alloc_vec();
 
-        let message_type = MessageType::abi_decode(&payload[0..32], true)
-            .map_err(|_| MessageError::InvalidMessageType)?;
+        let message_type = get_message_type(&payload)?;
 
         match message_type {
             MessageType::SendToHub => {
                 let decoded = SendToHub::abi_decode_params(&payload, true)
-                    .map_err(|_| MessageError::AbiDecodeFailed)?;
+                    .map_err(|_| ContractError::AbiDecodeFailed)?;
 
                 Ok(Self::SendToHub {
                     destination_chain: String::from_str(env, &decoded.destination_chain),
@@ -185,7 +170,7 @@ impl HubMessage {
             }
             MessageType::ReceiveFromHub => {
                 let decoded = ReceiveFromHub::abi_decode_params(&payload, true)
-                    .map_err(|_| MessageError::AbiDecodeFailed)?;
+                    .map_err(|_| ContractError::AbiDecodeFailed)?;
 
                 Ok(Self::ReceiveFromHub {
                     source_chain: String::from_str(env, &decoded.source_chain),
@@ -195,19 +180,31 @@ impl HubMessage {
                     )?,
                 })
             }
-            _ => Err(MessageError::InvalidMessageType),
+            _ => Err(ContractError::InvalidMessageType),
         }
     }
 }
 
-fn to_std_string(soroban_string: String) -> Result<StdString, MessageError> {
+pub fn get_message_type(payload: &[u8]) -> Result<MessageType, ContractError> {
+    ensure!(
+        payload.len() >= 32,
+        ContractError::InsufficientMessageLength
+    );
+
+    let message_type = MessageType::abi_decode(&payload[0..32], true)
+        .map_err(|_| ContractError::InvalidMessageType)?;
+
+    Ok(message_type)
+}
+
+fn to_std_string(soroban_string: String) -> Result<StdString, ContractError> {
     let length = soroban_string.len() as usize;
     let mut bytes = vec![0u8; length];
     soroban_string.copy_into_slice(&mut bytes);
-    StdString::from_utf8(bytes).map_err(|_| MessageError::InvalidUtf8)
+    StdString::from_utf8(bytes).map_err(|_| ContractError::InvalidUtf8)
 }
 
-fn to_i128(value: Uint<256, 4>) -> Result<i128, MessageError> {
+fn to_i128(value: Uint<256, 4>) -> Result<i128, ContractError> {
     let slice = value.as_le_slice();
 
     let mut bytes_to_remove = [0; 16];
@@ -217,12 +214,12 @@ fn to_i128(value: Uint<256, 4>) -> Result<i128, MessageError> {
 
     ensure!(
         i128::from_le_bytes(bytes_to_remove) == 0,
-        MessageError::InvalidAmount
+        ContractError::InvalidAmount
     );
 
     let i128_value = i128::from_le_bytes(bytes_to_convert);
 
-    ensure!(i128_value >= 0, MessageError::InvalidAmount);
+    ensure!(i128_value >= 0, ContractError::InvalidAmount);
 
     Ok(i128_value)
 }
@@ -247,45 +244,42 @@ impl From<MessageType> for U256 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use alloc::vec;
-    use axelar_soroban_std::assert_ok;
-    use core::u128;
-    use soroban_sdk::{Bytes, BytesN, Env, String};
     use std::vec::Vec;
 
-    fn bytes_from_hex(env: &Env, hex_string: &str) -> Bytes {
-        let bytes_vec: Vec<u8> = hex::decode(hex_string).unwrap();
-        Bytes::from_slice(env, &bytes_vec)
-    }
+    use soroban_sdk::{Bytes, BytesN, Env, String};
+    use stellar_axelar_std::assert_ok;
+    use stellar_axelar_std::traits::BytesExt;
+
+    use super::*;
 
     #[test]
     fn soroban_str_to_std_string() {
         let env = Env::default();
 
         let plain_string = "hello world";
-        let plain_string_soroban = String::from_str(&env, &plain_string);
+        let plain_string_soroban = String::from_str(&env, plain_string);
         assert_eq!(
             to_std_string(plain_string_soroban).unwrap(),
             StdString::from(plain_string)
         );
 
         let var_length_chars = "🎉中🚀π🌈€";
-        let var_length_chars_soroban = String::from_str(&env, &var_length_chars);
+        let var_length_chars_soroban = String::from_str(&env, var_length_chars);
         assert_eq!(
             to_std_string(var_length_chars_soroban).unwrap(),
             StdString::from(var_length_chars)
         );
 
         let null_bytes = "Hello\x00World";
-        let null_bytes_soroban = String::from_str(&env, &null_bytes);
+        let null_bytes_soroban = String::from_str(&env, null_bytes);
         assert_eq!(
             to_std_string(null_bytes_soroban).unwrap(),
             StdString::from(null_bytes)
         );
 
         let escape_char = "Hello\tWorld";
-        let escape_char_soroban = String::from_str(&env, &escape_char);
+        let escape_char_soroban = String::from_str(&env, escape_char);
         assert_eq!(
             to_std_string(escape_char_soroban).unwrap(),
             StdString::from(escape_char)
@@ -297,16 +291,16 @@ mod tests {
         let env = Env::default();
 
         let invalid_sequences = vec![
-            String::from_bytes(&env, &vec![0xF5, 0x90, 0x80]), // not valid utf-8
-            String::from_bytes(&env, &vec![0x00, 0x01, 0x02, 0xC0]), // valid ASCII characters followed by an invalid UTF-8 starting byte
-            String::from_bytes(&env, &vec![0xC0, 0x80, 0xF5, 0x90]), // invalid UTF-8 starting byte followed by valid UTF-8 sequences
-            String::from_bytes(&env, &vec![0xF0, 0x90, 0x80, 0xDF, 0xFB, 0xBF]), // surrogate pairs with invalid charaters "\uD800\uDDFF"
-            String::from_bytes(&env, &vec![0xF4, 0x90, 0x80, 0x80]), // outside the Basic Multilingual Plane
+            String::from_bytes(&env, &[0xF5, 0x90, 0x80]), // not valid utf-8
+            String::from_bytes(&env, &[0x00, 0x01, 0x02, 0xC0]), // valid ASCII characters followed by an invalid UTF-8 starting byte
+            String::from_bytes(&env, &[0xC0, 0x80, 0xF5, 0x90]), // invalid UTF-8 starting byte followed by valid UTF-8 sequences
+            String::from_bytes(&env, &[0xF0, 0x90, 0x80, 0xDF, 0xFB, 0xBF]), // surrogate pairs with invalid charaters "\uD800\uDDFF"
+            String::from_bytes(&env, &[0xF4, 0x90, 0x80, 0x80]), // outside the Basic Multilingual Plane
         ];
 
         for sequence in invalid_sequences {
             let result = to_std_string(sequence);
-            assert!(matches!(result, Err(MessageError::InvalidUtf8)));
+            assert!(matches!(result, Err(ContractError::InvalidUtf8)));
         }
     }
 
@@ -341,81 +335,77 @@ mod tests {
 
         let result = to_i128(bad_uint);
 
-        assert!(matches!(result, Err(MessageError::InvalidAmount)));
+        assert!(matches!(result, Err(ContractError::InvalidAmount)));
     }
 
     #[test]
     fn to_i128_fails_overflow() {
         let overflow: Uint<256, 4> = Uint::from(i128::MAX) + Uint::from(1);
         let result = to_i128(overflow);
-        assert!(matches!(result, Err(MessageError::InvalidAmount)));
+        assert!(matches!(result, Err(ContractError::InvalidAmount)));
 
         let overflow: Uint<256, 4> = Uint::from(u128::MAX);
         let result = to_i128(overflow);
-        assert!(matches!(result, Err(MessageError::InvalidAmount)));
+        assert!(matches!(result, Err(ContractError::InvalidAmount)));
     }
 
     #[test]
     fn interchain_transfer_encode_decode() {
         let env = Env::default();
-        let remote_chain = String::from_str(&env, &"chain");
+        let remote_chain = String::from_str(&env, "chain");
 
         let cases = vec![
             types::HubMessage::SendToHub {
                 destination_chain: remote_chain.clone(),
                 message: types::Message::InterchainTransfer(types::InterchainTransfer {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    source_address: bytes_from_hex(&env, "00"),
-                    destination_address: bytes_from_hex(&env, "00"),
-                    amount: 1u64.try_into().unwrap(),
+                    source_address: Bytes::from_hex(&env, "00"),
+                    destination_address: Bytes::from_hex(&env, "00"),
+                    amount: 1u64.into(),
                     data: None,
-                })
-                .into(),
+                }),
             },
             types::HubMessage::SendToHub {
                 destination_chain: remote_chain.clone(),
                 message: types::Message::InterchainTransfer(types::InterchainTransfer {
                     token_id: BytesN::from_array(&env, &[255u8; 32]),
-                    source_address: bytes_from_hex(
+                    source_address: Bytes::from_hex(
                         &env,
                         "4F4495243837681061C4743b74B3eEdf548D56A5",
                     ),
-                    destination_address: bytes_from_hex(
+                    destination_address: Bytes::from_hex(
                         &env,
                         "4F4495243837681061C4743b74B3eEdf548D56A5",
                     ),
                     amount: i128::MAX,
-                    data: Some(bytes_from_hex(&env, "abcd")),
-                })
-                .into(),
+                    data: Some(Bytes::from_hex(&env, "abcd")),
+                }),
             },
             types::HubMessage::ReceiveFromHub {
                 source_chain: remote_chain.clone(),
                 message: types::Message::InterchainTransfer(types::InterchainTransfer {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    source_address: bytes_from_hex(&env, "00"),
-                    destination_address: bytes_from_hex(&env, "00"),
-                    amount: 1u64.try_into().unwrap(),
+                    source_address: Bytes::from_hex(&env, "00"),
+                    destination_address: Bytes::from_hex(&env, "00"),
+                    amount: 1u64.into(),
                     data: None,
-                })
-                .into(),
+                }),
             },
             types::HubMessage::ReceiveFromHub {
-                source_chain: remote_chain.clone(),
+                source_chain: remote_chain,
                 message: types::Message::InterchainTransfer(types::InterchainTransfer {
                     token_id: BytesN::from_array(&env, &[255u8; 32]),
-                    source_address: bytes_from_hex(
+                    source_address: Bytes::from_hex(
                         &env,
                         "4F4495243837681061C4743b74B3eEdf548D56A5",
                     ),
-                    destination_address: bytes_from_hex(
+                    destination_address: Bytes::from_hex(
                         &env,
                         "4F4495243837681061C4743b74B3eEdf548D56A5",
                     ),
                     amount: i128::MAX,
-                    data: Some(bytes_from_hex(&env, "abcd")),
-                })
-                .into(),
+                    data: Some(Bytes::from_hex(&env, "abcd")),
+                }),
             },
         ];
 
@@ -442,74 +432,68 @@ mod tests {
     #[test]
     fn deploy_interchain_token_encode_decode() {
         let env = Env::default();
-        let remote_chain = String::from_str(&env, &"chain");
+        let remote_chain = String::from_str(&env, "chain");
 
         let cases = vec![
             types::HubMessage::SendToHub {
                 destination_chain: remote_chain.clone(),
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    name: String::from_str(&env, &"t"),
-                    symbol: String::from_str(&env, &"T"),
+                    name: String::from_str(&env, "t"),
+                    symbol: String::from_str(&env, "T"),
                     decimals: 0,
                     minter: None,
-                })
-                .into(),
+                }),
             },
             types::HubMessage::SendToHub {
                 destination_chain: remote_chain.clone(),
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[1u8; 32]),
-                    name: String::from_str(&env, &"Test Token"),
-                    symbol: String::from_str(&env, &"TST"),
+                    name: String::from_str(&env, "Test Token"),
+                    symbol: String::from_str(&env, "TST"),
                     decimals: 18,
-                    minter: Some(bytes_from_hex(&env, "1234")),
-                })
-                .into(),
+                    minter: Some(Bytes::from_hex(&env, "1234")),
+                }),
             },
             types::HubMessage::SendToHub {
                 destination_chain: remote_chain.clone(),
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    name: String::from_str(&env, &"Unicode Token 🪙"),
-                    symbol: String::from_str(&env, &"UNI🔣"),
+                    name: String::from_str(&env, "Unicode Token 🪙"),
+                    symbol: String::from_str(&env, "UNI🔣"),
                     decimals: 255,
-                    minter: Some(bytes_from_hex(&env, "abcd")),
-                })
-                .into(),
+                    minter: Some(Bytes::from_hex(&env, "abcd")),
+                }),
             },
             types::HubMessage::ReceiveFromHub {
                 source_chain: remote_chain.clone(),
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    name: String::from_str(&env, &"t"),
-                    symbol: String::from_str(&env, &"T"),
+                    name: String::from_str(&env, "t"),
+                    symbol: String::from_str(&env, "T"),
                     decimals: 0,
                     minter: None,
-                })
-                .into(),
+                }),
             },
             types::HubMessage::ReceiveFromHub {
                 source_chain: remote_chain.clone(),
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[1u8; 32]),
-                    name: String::from_str(&env, &"Test Token"),
-                    symbol: String::from_str(&env, &"TST"),
+                    name: String::from_str(&env, "Test Token"),
+                    symbol: String::from_str(&env, "TST"),
                     decimals: 18,
-                    minter: Some(bytes_from_hex(&env, "1234")),
-                })
-                .into(),
+                    minter: Some(Bytes::from_hex(&env, "1234")),
+                }),
             },
             types::HubMessage::ReceiveFromHub {
-                source_chain: remote_chain.clone(),
+                source_chain: remote_chain,
                 message: types::Message::DeployInterchainToken(types::DeployInterchainToken {
                     token_id: BytesN::from_array(&env, &[0u8; 32]),
-                    name: String::from_str(&env, &"Unicode Token 🪙"),
-                    symbol: String::from_str(&env, &"UNI🔣"),
+                    name: String::from_str(&env, "Unicode Token 🪙"),
+                    symbol: String::from_str(&env, "UNI🔣"),
                     decimals: 255,
-                    minter: Some(bytes_from_hex(&env, "abcd")),
-                })
-                .into(),
+                    minter: Some(Bytes::from_hex(&env, "abcd")),
+                }),
             },
         ];
 
@@ -540,20 +524,20 @@ mod tests {
         let invalid_payload = Bytes::from_slice(&env, &bytes);
 
         let result = HubMessage::abi_decode(&env, &invalid_payload);
-        assert!(matches!(result, Err(MessageError::InvalidMessageType)));
+        assert!(matches!(result, Err(ContractError::InvalidMessageType)));
 
         let invalid_hub_message_type = assert_ok!(types::Message::InterchainTransfer(
             types::InterchainTransfer {
                 token_id: BytesN::from_array(&env, &[0u8; 32]),
-                source_address: bytes_from_hex(&env, "00"),
-                destination_address: bytes_from_hex(&env, "00"),
-                amount: 1u64.try_into().unwrap(),
+                source_address: Bytes::from_hex(&env, "00"),
+                destination_address: Bytes::from_hex(&env, "00"),
+                amount: 1u64.into(),
                 data: None,
             }
         )
         .abi_encode(&env));
 
         let result = HubMessage::abi_decode(&env, &invalid_hub_message_type);
-        assert!(matches!(result, Err(MessageError::InvalidMessageType)));
+        assert!(matches!(result, Err(ContractError::InvalidMessageType)));
     }
 }

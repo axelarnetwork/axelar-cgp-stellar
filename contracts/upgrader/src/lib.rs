@@ -2,5 +2,7 @@
 #[cfg(test)]
 extern crate alloc;
 
-pub mod contract;
+mod contract;
 pub mod error;
+
+pub use contract::{Upgrader, UpgraderClient};

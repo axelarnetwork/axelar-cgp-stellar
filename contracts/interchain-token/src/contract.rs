@@ -1,22 +1,23 @@
-use axelar_soroban_std::ttl::{
-    extend_instance_ttl, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD,
+use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
+use soroban_sdk::{
+    assert_with_error, contract, contractimpl, panic_with_error, token, Address, BytesN, Env,
+    String,
 };
+use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
+use stellar_axelar_std::interfaces::OwnableInterface;
+use stellar_axelar_std::token::validate_token_metadata;
+use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
 use crate::error::ContractError;
 use crate::event;
-use crate::storage_types::DataKey;
-
 use crate::interface::InterchainTokenInterface;
-use crate::storage_types::{AllowanceDataKey, AllowanceValue};
-use axelar_soroban_std::interfaces::{MigratableInterface, OwnableInterface, UpgradableInterface};
-use axelar_soroban_std::{ensure, interfaces};
-use soroban_sdk::token::TokenInterface;
-
-use soroban_sdk::{assert_with_error, contract, contractimpl, token, Address, BytesN, Env, String};
+use crate::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
 
 #[contract]
+#[derive(Upgradable)]
 pub struct InterchainToken;
 
 #[contractimpl]
@@ -24,27 +25,54 @@ impl InterchainToken {
     pub fn __constructor(
         env: Env,
         owner: Address,
-        minter: Address,
-        interchain_token_service: Address,
+        minter: Option<Address>,
         token_id: BytesN<32>,
-        token_meta_data: TokenMetadata,
-    ) -> Result<(), ContractError> {
+        token_metadata: TokenMetadata,
+    ) {
         interfaces::set_owner(&env, &owner);
 
-        Self::validate_token_metadata(token_meta_data.clone())?;
+        if let Err(err) = validate_token_metadata(&token_metadata) {
+            panic_with_error!(env, err);
+        }
 
-        Self::write_metadata(&env, token_meta_data);
+        Self::write_metadata(&env, token_metadata);
 
         env.storage().instance().set(&DataKey::TokenId, &token_id);
-        env.storage().instance().set(&DataKey::Minter(minter), &());
-        env.storage()
-            .instance()
-            .set(&DataKey::Minter(interchain_token_service.clone()), &());
-        env.storage()
-            .instance()
-            .set(&DataKey::InterchainTokenService, &interchain_token_service);
 
-        Ok(())
+        env.storage().instance().set(&DataKey::Minter(owner), &());
+
+        if let Some(minter) = minter {
+            env.storage().instance().set(&DataKey::Minter(minter), &());
+        }
+    }
+}
+
+#[contractimpl]
+impl StellarAssetInterface for InterchainToken {
+    fn set_admin(env: Env, admin: Address) {
+        Self::transfer_ownership(&env, admin);
+    }
+
+    fn admin(env: Env) -> Address {
+        Self::owner(&env)
+    }
+
+    fn set_authorized(_env: Env, _id: Address, _authorize: bool) {
+        todo!()
+    }
+
+    fn authorized(_env: Env, _id: Address) -> bool {
+        todo!()
+    }
+
+    fn mint(env: Env, to: Address, amount: i128) {
+        if let Err(err) = Self::mint_from(&env, Self::owner(&env), to, amount) {
+            panic_with_error!(env, err);
+        }
+    }
+
+    fn clawback(_env: Env, _from: Address, _amount: i128) {
+        todo!()
     }
 }
 
@@ -57,32 +85,30 @@ impl InterchainTokenInterface for InterchainToken {
             .expect("token id not found")
     }
 
-    fn interchain_token_service(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::InterchainTokenService)
-            .expect("interchain token service not found")
-    }
-
     fn is_minter(env: &Env, minter: Address) -> bool {
         env.storage().instance().has(&DataKey::Minter(minter))
     }
 
-    fn mint(env: Env, minter: Address, to: Address, amount: i128) -> Result<(), ContractError> {
+    fn mint_from(
+        env: &Env,
+        minter: Address,
+        to: Address,
+        amount: i128,
+    ) -> Result<(), ContractError> {
         minter.require_auth();
 
         ensure!(
-            Self::is_minter(&env, minter.clone()),
+            Self::is_minter(env, minter.clone()),
             ContractError::NotMinter
         );
 
-        Self::validate_amount(&env, amount);
+        Self::validate_amount(env, amount);
 
-        extend_instance_ttl(&env);
+        Self::receive_balance(env, to.clone(), amount);
 
-        Self::receive_balance(&env, to.clone(), amount);
+        extend_instance_ttl(env);
 
-        TokenUtils::new(&env).events().mint(minter, to, amount);
+        TokenUtils::new(env).events().mint(minter, to, amount);
 
         Ok(())
     }
@@ -94,6 +120,8 @@ impl InterchainTokenInterface for InterchainToken {
             .instance()
             .set(&DataKey::Minter(minter.clone()), &());
 
+        extend_instance_ttl(env);
+
         event::add_minter(env, minter);
     }
 
@@ -104,23 +132,9 @@ impl InterchainTokenInterface for InterchainToken {
             .instance()
             .remove(&DataKey::Minter(minter.clone()));
 
+        extend_instance_ttl(env);
+
         event::remove_minter(env, minter);
-    }
-
-    fn transfer_ownership(env: Env, new_owner: Address) -> Result<(), ContractError> {
-        let owner: Address = Self::owner(&env);
-
-        owner.require_auth();
-
-        interfaces::set_owner(&env, &new_owner);
-
-        TokenUtils::new(&env)
-            .events()
-            .set_admin(owner.clone(), new_owner.clone());
-
-        event::transfer_ownership(&env, owner, new_owner);
-
-        Ok(())
     }
 }
 
@@ -135,7 +149,6 @@ impl token::Interface for InterchainToken {
         from.require_auth();
 
         Self::validate_amount(&env, amount);
-        extend_instance_ttl(&env);
 
         Self::write_allowance(
             &env,
@@ -144,6 +157,8 @@ impl token::Interface for InterchainToken {
             amount,
             expiration_ledger,
         );
+
+        extend_instance_ttl(&env);
 
         TokenUtils::new(&env)
             .events()
@@ -158,10 +173,11 @@ impl token::Interface for InterchainToken {
     fn transfer(env: Env, from: Address, to: Address, amount: i128) {
         from.require_auth();
 
-        extend_instance_ttl(&env);
         Self::validate_amount(&env, amount);
         Self::spend_balance(&env, from.clone(), amount);
         Self::receive_balance(&env, to.clone(), amount);
+
+        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().transfer(from, to, amount);
     }
@@ -169,11 +185,12 @@ impl token::Interface for InterchainToken {
     fn transfer_from(env: Env, spender: Address, from: Address, to: Address, amount: i128) {
         spender.require_auth();
 
-        extend_instance_ttl(&env);
         Self::validate_amount(&env, amount);
         Self::spend_allowance(&env, from.clone(), spender, amount);
         Self::spend_balance(&env, from.clone(), amount);
         Self::receive_balance(&env, to.clone(), amount);
+
+        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().transfer(from, to, amount)
     }
@@ -181,9 +198,10 @@ impl token::Interface for InterchainToken {
     fn burn(env: Env, from: Address, amount: i128) {
         from.require_auth();
 
-        extend_instance_ttl(&env);
         Self::validate_amount(&env, amount);
         Self::spend_balance(&env, from.clone(), amount);
+
+        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().burn(from, amount);
     }
@@ -191,10 +209,11 @@ impl token::Interface for InterchainToken {
     fn burn_from(env: Env, spender: Address, from: Address, amount: i128) {
         spender.require_auth();
 
-        extend_instance_ttl(&env);
         Self::validate_amount(&env, amount);
         Self::spend_allowance(&env, from.clone(), spender, amount);
         Self::spend_balance(&env, from.clone(), amount);
+
+        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().burn(from, amount)
     }
@@ -218,25 +237,6 @@ impl InterchainToken {
 
     fn validate_amount(env: &Env, amount: i128) {
         assert_with_error!(env, amount >= 0, ContractError::InvalidAmount);
-    }
-
-    fn validate_token_metadata(
-        TokenMetadata {
-            decimal,
-            name,
-            symbol,
-        }: TokenMetadata,
-    ) -> Result<(), ContractError> {
-        ensure!(decimal <= u8::MAX.into(), ContractError::InvalidDecimal);
-        ensure!(!name.is_empty(), ContractError::InvalidTokenName);
-        ensure!(!symbol.is_empty(), ContractError::InvalidTokenSymbol);
-        Ok(())
-    }
-
-    fn extend_balance_ttl(env: &Env, key: &DataKey) {
-        env.storage()
-            .persistent()
-            .extend_ttl(key, INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
     }
 
     fn read_allowance(env: &Env, from: Address, spender: Address) -> AllowanceValue {
@@ -324,7 +324,7 @@ impl InterchainToken {
             .get::<_, i128>(&key)
             .inspect(|_| {
                 // Extend the TTL of the balance entry when the balance is successfully retrieved.
-                Self::extend_balance_ttl(env, &key);
+                extend_persistent_ttl(env, &key);
             })
             .unwrap_or_default()
     }
@@ -353,37 +353,22 @@ impl InterchainToken {
 
     fn write_balance(env: &Env, addr: Address, amount: i128) {
         let key = DataKey::Balance(addr);
+
         env.storage().persistent().set(&key, &amount);
-        Self::extend_balance_ttl(env, &key);
-    }
-}
 
-#[contractimpl]
-impl MigratableInterface for InterchainToken {
-    type MigrationData = ();
-    type Error = ContractError;
-
-    fn migrate(env: &Env, migration_data: ()) -> Result<(), ContractError> {
-        interfaces::migrate::<Self>(env, || Self::run_migration(env, migration_data))
-            .map_err(|_| ContractError::MigrationNotAllowed)
-    }
-}
-
-#[contractimpl]
-impl UpgradableInterface for InterchainToken {
-    fn version(env: &Env) -> String {
-        String::from_str(env, env!("CARGO_PKG_VERSION"))
-    }
-
-    fn upgrade(env: &Env, new_wasm_hash: BytesN<32>) {
-        interfaces::upgrade::<Self>(env, new_wasm_hash);
+        extend_persistent_ttl(env, &key);
     }
 }
 
 #[contractimpl]
 impl OwnableInterface for InterchainToken {
-    // boilerplate necessary for the contractimpl macro to include function in the generated client
     fn owner(env: &Env) -> Address {
         interfaces::owner(env)
+    }
+
+    fn transfer_ownership(env: &Env, new_owner: Address) {
+        interfaces::transfer_ownership::<Self>(env, new_owner.clone());
+        // adhere to reference implementation for tokens and emit predefined soroban event
+        TokenEvents::new(env).set_admin(Self::owner(env), new_owner);
     }
 }

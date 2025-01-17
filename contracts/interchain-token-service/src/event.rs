@@ -1,44 +1,72 @@
-use soroban_sdk::{Address, Bytes, Env, String, Symbol};
+use core::fmt::Debug;
 
-pub fn set_trusted_address(env: &Env, chain: String, trusted_address: String) {
-    let topics = (
-        Symbol::new(env, "trusted_address_set"),
-        chain,
-        trusted_address,
-    );
-    env.events().publish(topics, ());
+use soroban_sdk::{Address, Bytes, BytesN, String};
+use stellar_axelar_std::IntoEvent;
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct TrustedChainSetEvent {
+    pub chain: String,
 }
 
-pub fn remove_trusted_address(env: &Env, chain: String, trusted_address: String) {
-    let topics = (
-        Symbol::new(env, "trusted_address_removed"),
-        chain,
-        trusted_address,
-    );
-    env.events().publish(topics, ());
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct TrustedChainRemovedEvent {
+    pub chain: String,
 }
 
-pub fn transfer_ownership(env: &Env, previous_owner: Address, new_owner: Address) {
-    let topics = (
-        Symbol::new(env, "ownership_transferred"),
-        previous_owner,
-        new_owner,
-    );
-    env.events().publish(topics, ());
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct FlowLimitSetEvent {
+    pub token_id: BytesN<32>,
+    /// A `None` value implies that flow limit checks have been disabled for this `token_id`
+    pub flow_limit: Option<i128>,
 }
 
-pub fn executed(
-    env: &Env,
-    source_chain: String,
-    message_id: String,
-    source_address: String,
-    payload: Bytes,
-) {
-    let topics = (
-        Symbol::new(env, "executed"),
-        source_chain,
-        message_id,
-        source_address,
-    );
-    env.events().publish(topics, (payload,));
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct InterchainTokenDeployedEvent {
+    pub token_id: BytesN<32>,
+    pub token_address: Address,
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u32,
+    pub minter: Option<Address>,
+}
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[event_name("token_deployment_started")]
+pub struct InterchainTokenDeploymentStartedEvent {
+    pub token_id: BytesN<32>,
+    pub token_address: Address,
+    pub destination_chain: String,
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u32,
+    pub minter: Option<Address>,
+}
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct InterchainTokenIdClaimedEvent {
+    pub token_id: BytesN<32>,
+    pub deployer: Address,
+    pub salt: BytesN<32>,
+}
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct InterchainTransferSentEvent {
+    pub token_id: BytesN<32>,
+    pub source_address: Address,
+    pub destination_chain: String,
+    pub destination_address: Bytes,
+    pub amount: i128,
+    #[data]
+    pub data: Option<Bytes>,
+}
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct InterchainTransferReceivedEvent {
+    pub source_chain: String,
+    pub token_id: BytesN<32>,
+    pub source_address: Bytes,
+    pub destination_address: Address,
+    pub amount: i128,
+    #[data]
+    pub data: Option<Bytes>,
 }

@@ -1,18 +1,28 @@
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env, String};
+use stellar_axelar_gas_service::AxelarGasServiceClient;
+use stellar_axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
+use stellar_axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
+use stellar_axelar_std::types::Token;
+
 use crate::event;
-use axelar_gas_service::AxelarGasServiceClient;
-use axelar_gateway::AxelarGatewayMessagingClient;
-use axelar_soroban_std::types::Token;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env, String};
-
 use crate::storage_types::DataKey;
-
-use axelar_gateway::executable::AxelarExecutableInterface;
 
 #[contract]
 pub struct Example;
 
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum ExampleError {
+    NotApproved = 1,
+}
+
+impl_not_approved_error!(ExampleError);
+
 #[contractimpl]
 impl AxelarExecutableInterface for Example {
+    type Error = ExampleError;
+
     fn gateway(env: &Env) -> Address {
         env.storage().instance().get(&DataKey::Gateway).unwrap()
     }
@@ -23,10 +33,11 @@ impl AxelarExecutableInterface for Example {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) {
-        let _ = Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload);
+    ) -> Result<(), ExampleError> {
+        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
 
         event::executed(&env, source_chain, message_id, source_address, payload);
+        Ok(())
     }
 }
 

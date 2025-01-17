@@ -1,4 +1,4 @@
-name: Compiling
+name: Compile
 
 on:
   pull_request:
@@ -18,18 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: 1.81.0
-          target: wasm32-unknown-unknown
-          override: true
+          targets: wasm32-unknown-unknown
 
-      - name: Add wasm32-unknown-unknown Target
-        run: rustup target add wasm32-unknown-unknown
-
-      - name: Cache build artifacts
+      - name: Rust Cache
         uses: useblacksmith/rust-cache@v3
         with:
           shared-key: "cache"

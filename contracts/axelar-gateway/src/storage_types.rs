@@ -19,7 +19,6 @@ pub enum MessageApprovalValue {
 #[derive(Clone, Debug)]
 pub enum DataKey {
     /// Gateway
-    Operator,
     MessageApproval(MessageApprovalKey),
     /// Auth Module
     PreviousSignerRetention,

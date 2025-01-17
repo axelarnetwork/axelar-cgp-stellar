@@ -1,13 +1,15 @@
-use soroban_sdk::{contract, contractimpl, token, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{contract, contractimpl, token, Address, Bytes, Env, String};
+use stellar_axelar_std::ttl::extend_instance_ttl;
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event;
 use crate::interface::AxelarGasServiceInterface;
 use crate::storage_types::DataKey;
-use axelar_soroban_std::interfaces::{MigratableInterface, OwnableInterface, UpgradableInterface};
-use axelar_soroban_std::{ensure, interfaces, types::Token};
 
 #[contract]
+#[derive(Ownable, Upgradable)]
 pub struct AxelarGasService;
 
 #[contractimpl]
@@ -24,36 +26,6 @@ impl AxelarGasService {
 impl AxelarGasService {
     // Modify this function to add migration logic
     const fn run_migration(_env: &Env, _migration_data: ()) {}
-}
-
-#[contractimpl]
-impl MigratableInterface for AxelarGasService {
-    type MigrationData = ();
-    type Error = ContractError;
-
-    fn migrate(env: &Env, migration_data: ()) -> Result<(), ContractError> {
-        interfaces::migrate::<Self>(env, || Self::run_migration(env, migration_data))
-            .map_err(|_| ContractError::MigrationNotAllowed)
-    }
-}
-
-#[contractimpl]
-impl UpgradableInterface for AxelarGasService {
-    fn version(env: &Env) -> String {
-        String::from_str(env, env!("CARGO_PKG_VERSION"))
-    }
-
-    fn upgrade(env: &Env, new_wasm_hash: BytesN<32>) {
-        interfaces::upgrade::<Self>(env, new_wasm_hash);
-    }
-}
-
-#[contractimpl]
-impl OwnableInterface for AxelarGasService {
-    // boilerplate necessary for the contractimpl macro to include function in the generated client
-    fn owner(env: &Env) -> Address {
-        interfaces::owner(env)
-    }
 }
 
 #[contractimpl]
@@ -131,6 +103,8 @@ impl AxelarGasServiceInterface for AxelarGasService {
         token_client.transfer(&env.current_contract_address(), &receiver, &token.amount);
 
         event::fee_collected(&env, gas_collector, token);
+
+        extend_instance_ttl(&env);
 
         Ok(())
     }

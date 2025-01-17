@@ -1,18 +1,12 @@
 #![cfg(test)]
 extern crate std;
 
-use axelar_operators::error::ContractError;
-use axelar_soroban_std::{
-    assert_contract_err, assert_invoke_auth_err, assert_last_emitted_event,
-    testutils::assert_invocation,
-};
-
-use axelar_operators::contract::{AxelarOperators, AxelarOperatorsClient};
-use soroban_sdk::{
-    contract, contractimpl, symbol_short,
-    testutils::{Address as _, MockAuth, MockAuthInvoke},
-    Address, Env, Symbol, Val, Vec,
-};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, Val, Vec};
+use stellar_axelar_operators::error::ContractError;
+use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
+use stellar_axelar_std::testutils::assert_invocation;
+use stellar_axelar_std::{assert_auth_err, assert_contract_err, assert_last_emitted_event};
 
 #[contract]
 pub struct TestTarget;
@@ -49,39 +43,6 @@ fn register_operators() {
     let client = AxelarOperatorsClient::new(&env, &contract_id);
 
     assert_eq!(client.owner(), user);
-}
-
-#[test]
-fn transfer_owner() {
-    let (env, client, _) = setup_env();
-
-    let initial_owner = client.owner();
-    let new_owner = Address::generate(&env);
-
-    // transfer ownership to the new owner
-    client.transfer_ownership(&new_owner);
-
-    assert_invocation(
-        &env,
-        &initial_owner,
-        &client.address,
-        "transfer_ownership",
-        (new_owner.clone(),),
-    );
-
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (
-            Symbol::new(&env, "ownership_transferred"),
-            initial_owner,
-            new_owner.clone(),
-        ),
-        (),
-    );
-
-    let retrieved_owner = client.owner();
-    assert_eq!(retrieved_owner, new_owner);
 }
 
 #[test]
@@ -236,9 +197,9 @@ fn fail_execute_when_target_panics() {
     client.add_operator(&operator);
 
     // call execute as an operator
-    assert_invoke_auth_err!(
+    assert_auth_err!(
         operator,
-        client.try_execute(
+        client.execute(
             &operator,
             &target,
             &symbol_short!("failing"),

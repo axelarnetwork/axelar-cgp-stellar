@@ -1,8 +1,7 @@
 #![no_std]
 
+mod contract;
 mod event;
 mod storage_types;
 
-pub mod contract;
-
-pub use contract::ExampleClient;
+pub use contract::{Example, ExampleClient};

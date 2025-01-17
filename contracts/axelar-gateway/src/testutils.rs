@@ -1,23 +1,19 @@
 extern crate std;
 
-use crate::auth::{self, epoch};
-use crate::{AxelarGateway, AxelarGatewayClient};
-use axelar_soroban_std::{assert_last_emitted_event, assert_ok};
 use ed25519_dalek::{Signature, Signer, SigningKey};
+use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
+use soroban_sdk::testutils::{Address as _, BytesN as _};
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Symbol, Vec};
+use stellar_axelar_std::traits::IntoVec;
+use stellar_axelar_std::{assert_last_emitted_event, assert_ok};
 
-use soroban_sdk::Symbol;
-use soroban_sdk::{testutils::Address as _, Address};
-use soroban_sdk::{testutils::BytesN as _, vec, xdr::ToXdr, Bytes, BytesN, Env, String, Vec};
-
+use crate::auth::{self, epoch};
 use crate::types::{
     CommandType, Message, Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners,
 };
-
-use axelar_soroban_std::traits::IntoVec;
-
-const DESTINATION_CHAIN: &str = "ethereum";
-const DESTINATION_ADDRESS: &str = "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59";
+use crate::{AxelarGateway, AxelarGatewayClient};
 
 #[derive(Clone, Debug)]
 pub struct TestSignerSet {
@@ -59,8 +55,19 @@ pub fn get_approve_hash(env: &Env, messages: Vec<Message>) -> BytesN<32> {
         .into()
 }
 
+pub fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
+    use rand::SeedableRng;
+    rand_chacha::ChaCha20Rng::seed_from_u64(42)
+}
+
 pub fn generate_test_message(env: &Env) -> (Message, Bytes) {
-    let mut rng = rand::thread_rng();
+    generate_test_message_with_rng(env, rand::thread_rng())
+}
+
+pub fn generate_test_message_with_rng(
+    env: &Env,
+    mut rng: impl Rng + rand::CryptoRng,
+) -> (Message, Bytes) {
     let len = rng.gen_range(0..20);
     let mut payload = std::vec![0u8; len];
     rng.fill(&mut payload[..]);
@@ -69,9 +76,9 @@ pub fn generate_test_message(env: &Env) -> (Message, Bytes) {
 
     (
         Message {
-            source_chain: String::from_str(env, DESTINATION_CHAIN),
-            message_id: String::from_str(env, "test"),
-            source_address: String::from_str(env, DESTINATION_ADDRESS),
+            source_chain: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 10)),
+            message_id: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 16)),
+            source_address: String::from_str(env, &Alphanumeric.sample_string(&mut rng, 42)),
             contract_address: Address::generate(env),
             payload_hash: env.crypto().keccak256(&payload).into(),
         },
@@ -88,8 +95,15 @@ pub fn generate_signers_set(
     num_signers: u32,
     domain_separator: BytesN<32>,
 ) -> TestSignerSet {
-    let mut rng = rand::thread_rng();
+    generate_signers_set_with_rng(env, num_signers, domain_separator, rand::thread_rng())
+}
 
+pub fn generate_signers_set_with_rng(
+    env: &Env,
+    num_signers: u32,
+    domain_separator: BytesN<32>,
+    mut rng: impl Rng + rand::CryptoRng,
+) -> TestSignerSet {
     let mut signer_keypair: std::vec::Vec<_> = (0..num_signers)
         .map(|_| {
             let signing_key = SigningKey::generate(&mut rng);
