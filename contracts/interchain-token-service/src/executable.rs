@@ -5,15 +5,30 @@
 //!
 //! This is similar to the [AxelarExecutableInterface] but meant for messages sent with an ITS token.
 
-use soroban_sdk::{Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 
-/// Interface for an Interchain Token Executable app.
-pub trait InterchainTokenExecutableInterface {
+pub trait CustomExecutableInterface {
     type Error: Into<soroban_sdk::Error>;
-
-    /// Return the trusted interchain token service contract address.
     fn interchain_token_service(env: &Env) -> Address;
+    fn execute(
+        env: &Env,
+        source_chain: String,
+        message_id: String,
+        source_address: Bytes,
+        payload: Bytes,
+        token_id: BytesN<32>,
+        token_address: Address,
+        amount: i128,
+    ) -> Result<(), Self::Error>;
+}
 
+/// Marker trait for interfaces that should not be implemented manually.
+#[doc(hidden)]
+pub trait DeriveOnly {}
+
+/// Interface for an Interchain Token Executable app. Use the [axelar_soroban_std::Executable] derive macro to implement this interface.
+#[contractclient(name = "InterchainTokenExecutableClient")]
+pub trait InterchainTokenExecutableInterface: CustomExecutableInterface + DeriveOnly {
     /// Execute a cross-chain message with the given payload and token.
     /// [`validate`] must be called first in the implementation of [`execute_with_interchain_token`].
     fn execute_with_interchain_token(
@@ -25,11 +40,5 @@ pub trait InterchainTokenExecutableInterface {
         token_id: BytesN<32>,
         token_address: Address,
         amount: i128,
-    ) -> Result<(), <Self as InterchainTokenExecutableInterface>::Error>;
-
-    /// Ensure that only the interchain token service can call [`execute_with_interchain_token`].
-    fn validate(env: &Env) -> Result<(), <Self as InterchainTokenExecutableInterface>::Error> {
-        Self::interchain_token_service(env).require_auth();
-        Ok(())
-    }
+    ) -> Result<(), soroban_sdk::Error>;
 }

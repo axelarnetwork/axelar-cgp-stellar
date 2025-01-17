@@ -14,14 +14,15 @@ mod test {
     use core::fmt::Debug;
 
     use axelar_soroban_std::events::Event;
-    use axelar_soroban_std::impl_event_testutils;
-    use interchain_token_service::executable::InterchainTokenExecutableInterface;
+    use axelar_soroban_std::{impl_event_testutils, Executable};
+    use interchain_token_service::executable::CustomExecutableInterface;
     use soroban_sdk::{
         contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
         String, Symbol, Topics, Val,
     };
 
     #[contract]
+    #[derive(Executable)]
     pub struct ExecutableContract;
 
     #[contracttype]
@@ -71,8 +72,7 @@ mod test {
         SomeError = 1,
     }
 
-    #[contractimpl]
-    impl InterchainTokenExecutableInterface for ExecutableContract {
+    impl CustomExecutableInterface for ExecutableContract {
         type Error = ContractError;
 
         fn interchain_token_service(env: &Env) -> Address {
@@ -82,7 +82,7 @@ mod test {
                 .expect("its not found")
         }
 
-        fn execute_with_interchain_token(
+        fn execute(
             env: &Env,
             source_chain: String,
             message_id: String,
@@ -92,8 +92,6 @@ mod test {
             token_address: Address,
             amount: i128,
         ) -> Result<(), ContractError> {
-            let _ = Self::validate(env);
-
             env.storage().persistent().set(&DataKey::Message, &payload);
 
             ExecutedEvent {
