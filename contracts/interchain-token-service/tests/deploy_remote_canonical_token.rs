@@ -5,7 +5,7 @@ use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
-use stellar_axelar_std::{auth_invocation, events};
+use stellar_axelar_std::{auth_invocation, events, mock_auth};
 use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, Message, TokenManagerType,
