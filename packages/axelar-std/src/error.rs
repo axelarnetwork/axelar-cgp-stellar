@@ -105,6 +105,36 @@ macro_rules! assert_some {
     };
 }
 
+/// Assert that a contract call with authentication succeeds
+///
+/// This macro is used to test contract calls that require authentication. It mocks the authentication
+/// for the specified caller and executes the contract call. If the call fails or doesn't require the authentication,
+/// the macro will panic with an error message.
+///
+/// # Example
+///
+/// ```no_run
+/// # use soroban_sdk::{Address, Env, contract, contractimpl};
+/// # use soroban_sdk::testutils::Address as _;
+/// # use stellar_axelar_std::assert_auth;
+///
+/// #[contract]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///    pub fn set_value(env: &Env, caller: Address, value: u32) {
+///        caller.require_auth();
+///    }
+/// }
+///
+/// # let env = Env::default();
+/// # let caller = Address::generate(&env);
+/// # let contract_id = env.register(Contract, ());
+/// # let client = ContractClient::new(&env, &contract_id);
+///
+/// assert_auth!(caller, client.set_value(&caller, &42));
+/// ```
 #[macro_export]
 macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
@@ -112,20 +142,37 @@ macro_rules! assert_auth {
 
         // Paste is used to concatenate the method name with the `try_` prefix
         paste::paste! {
-        let call_result = $client
+        let result = $client
             .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
             .[<try_ $method>]($($arg),*);
         }
 
-        match call_result {
+        let result = match result {
             Ok(outer) => {
                 match outer {
-                    Ok(inner) => {inner},
+                    Ok(inner) => inner,
                     Err(err) => panic!("Expected Ok result, but got an error {:?}", err),
                 }
             }
             Err(err) => panic!("Expected Ok result, but got an error {:?}", err),
-        }
+        };
+
+        assert_eq!(
+            $client.env.auths(),
+            std::vec![(
+                $caller.clone(),
+                soroban_sdk::testutils::AuthorizedInvocation {
+                    function: soroban_sdk::testutils::AuthorizedFunction::Contract((
+                        $client.address.clone(),
+                        soroban_sdk::Symbol::new(&$client.env, stringify!($method)),
+                        ($($arg.clone(),)*).into_val(&$client.env)
+                    )),
+                    sub_invocations: std::vec![]
+                }
+            )]
+        );
+
+        result
     }};
 }
 
