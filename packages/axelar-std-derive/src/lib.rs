@@ -311,6 +311,24 @@ fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let event_name = event_name_snake_case(input);
     let ((topic_idents, _), (data_idents, _)) = event_struct_fields(input);
 
+    let data_impl = if data_idents.is_empty() {
+        quote! {
+            fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
+                soroban_sdk::Vec::<soroban_sdk::Val>::new(env)
+            }
+        }
+    } else {
+        quote! {
+            fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
+                let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
+                    env,
+                    #(soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env)),*
+                ];
+                data
+            }
+        }
+    };
+
     quote! {
         impl stellar_axelar_std::events::Event for #name {
             fn topics(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::Topics + core::fmt::Debug {
@@ -320,10 +338,7 @@ fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
                 )
             }
 
-            fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
-                let vec: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![env, #(soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env))*];
-                vec
-            }
+            #data_impl
 
             fn emit(self, env: &soroban_sdk::Env) {
                 env.events().publish(self.topics(env), self.data(env));
@@ -410,6 +425,20 @@ fn event_name_snake_case(input: &DeriveInput) -> String {
                 .unwrap()
                 .to_snake_case()
         })
+}
+
+struct DataAttr;
+
+impl Parse for DataAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        if !input.is_empty() {
+            return Err(Error::new(
+                input.span(),
+                "data attribute takes no arguments",
+            ));
+        }
+        Ok(DataAttr)
+    }
 }
 
 fn event_struct_fields(
