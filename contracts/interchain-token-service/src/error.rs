@@ -1,6 +1,6 @@
-use axelar_gateway::executable::NotApprovedError;
-use axelar_gateway::impl_not_approved_error;
 use soroban_sdk::contracterror;
+use stellar_axelar_gateway::executable::NotApprovedError;
+use stellar_axelar_gateway::impl_not_approved_error;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -28,6 +28,8 @@ pub enum ContractError {
     FlowLimitExceeded = 20,
     FlowAmountOverflow = 21,
     NotApproved = 22,
+    InvalidDestinationChain = 23,
+    InvalidData = 24,
 }
 
 impl_not_approved_error!(ContractError);

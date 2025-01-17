@@ -1,10 +1,10 @@
-use axelar_gateway::error::ContractError;
-use axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
-use axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
-use axelar_gateway::AxelarGateway;
-use axelar_soroban_std::{assert_contract_err, assert_invoke_auth_ok};
 use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::{Address, BytesN, Env, Vec};
+use stellar_axelar_gateway::error::ContractError;
+use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
+use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
+use stellar_axelar_gateway::AxelarGateway;
+use stellar_axelar_std::{assert_auth, assert_contract_err};
 
 mod utils;
 use utils::setup_env;
@@ -285,9 +285,9 @@ fn rotate_signers_fail_duplicated_signers() {
 
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
     let proof = generate_proof(&env, data_hash.clone(), signers);
-    assert_invoke_auth_ok!(
+    assert_auth!(
         client.operator(),
-        client.try_rotate_signers(&new_signers.signers, &proof, &true)
+        client.rotate_signers(&new_signers.signers, &proof, &true)
     );
 
     let proof = generate_proof(&env, data_hash, new_signers);
@@ -315,9 +315,9 @@ fn rotate_signers_panics_on_outdated_signer_set() {
         );
         let data_hash = new_signers.signers.signers_rotation_hash(&env);
         let proof = generate_proof(&env, data_hash, original_signers.clone());
-        assert_invoke_auth_ok!(
+        assert_auth!(
             client.operator(),
-            client.try_rotate_signers(&new_signers.signers, &proof, &true)
+            client.rotate_signers(&new_signers.signers, &proof, &true)
         );
     }
 
@@ -350,9 +350,9 @@ fn multi_rotate_signers() {
 
         let data_hash = new_signers.signers.signers_rotation_hash(&env);
         let proof = generate_proof(&env, data_hash.clone(), original_signers.clone());
-        assert_invoke_auth_ok!(
+        assert_auth!(
             client.operator(),
-            client.try_rotate_signers(&new_signers.signers, &proof, &true)
+            client.rotate_signers(&new_signers.signers, &proof, &true)
         );
 
         let proof = generate_proof(&env, msg_hash.clone(), new_signers.clone());

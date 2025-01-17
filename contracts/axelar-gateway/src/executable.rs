@@ -1,5 +1,5 @@
-use axelar_soroban_std::ensure;
 use soroban_sdk::{Address, Bytes, Env, String};
+use stellar_axelar_std::ensure;
 
 use crate::AxelarGatewayMessagingClient;
 

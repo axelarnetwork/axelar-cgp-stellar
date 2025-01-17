@@ -1,22 +1,28 @@
 [package]
-name = "axelar-soroban-std-derive"
+name = "stellar-axelar-std-derive"
 version = "0.1.0"
 edition = { workspace = true }
-description = "Proc macros for Axelar Soroban contracts"
+description = "Proc macros for Axelar contracts."
 license = "MIT"
 publish = true
 
 [lib]
 proc-macro = true
 
+[features]
+testutils = []
+
 [dependencies]
+heck = "0.5.0"
+proc-macro2 = { workspace = true }
 quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
 proc-macro2 = "1.0.89"
 
 [dev-dependencies]
-axelar-soroban-std = { workspace = true }
+paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true

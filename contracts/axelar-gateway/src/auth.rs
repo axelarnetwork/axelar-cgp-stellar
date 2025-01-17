@@ -1,7 +1,7 @@
-use axelar_soroban_std::ensure;
-use axelar_soroban_std::events::Event;
 use soroban_sdk::crypto::Hash;
 use soroban_sdk::{Bytes, BytesN, Env, Vec};
+use stellar_axelar_std::ensure;
+use stellar_axelar_std::events::Event;
 
 use crate::error::ContractError;
 use crate::event::SignersRotatedEvent;
