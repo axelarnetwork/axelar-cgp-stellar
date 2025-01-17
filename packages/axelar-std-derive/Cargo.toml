@@ -10,7 +10,7 @@ publish = true
 proc-macro = true
 
 [features]
-testutils = []
+testutils = ["soroban-sdk/testutils"]
 
 [dependencies]
 heck = "0.5.0"

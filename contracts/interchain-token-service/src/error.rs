@@ -30,6 +30,7 @@ pub enum ContractError {
     NotApproved = 22,
     InvalidDestinationChain = 23,
     InvalidData = 24,
+    InvalidAssetName = 25,
 }
 
 impl_not_approved_error!(ContractError);

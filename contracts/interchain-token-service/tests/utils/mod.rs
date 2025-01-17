@@ -40,6 +40,8 @@ fn setup_its<'a>(
         .deployer()
         .upload_contract_wasm(INTERCHAIN_TOKEN_WASM_HASH);
 
+    let native_token_address = env.register_stellar_asset_contract_v2(owner.clone());
+
     let contract_id = env.register(
         InterchainTokenService,
         (
@@ -49,6 +51,7 @@ fn setup_its<'a>(
             &gas_service.address,
             its_hub_address,
             chain_name,
+            native_token_address.address(),
             interchain_token_wasm_hash,
         ),
     );
