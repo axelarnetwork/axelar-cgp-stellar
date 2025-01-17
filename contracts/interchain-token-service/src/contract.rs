@@ -354,6 +354,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     ) -> Result<(), ContractError> {
         ensure!(amount > 0, ContractError::InvalidAmount);
 
+        ensure!(
+            !destination_address.is_empty(),
+            ContractError::InvalidDestinationAddress
+        );
+
+        if let Some(ref data) = data {
+            ensure!(!data.is_empty(), ContractError::InvalidData);
+        }
+
         caller.require_auth();
 
         token_handler::take_token(
@@ -729,6 +738,11 @@ impl InterchainTokenService {
         destination_chain: String,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(
+            destination_chain != Self::chain_name(env),
+            ContractError::InvalidDestinationChain
+        );
+
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
         let token_address = Self::token_id_config(env, token_id.clone())?.token_address;
         let token = token::Client::new(env, &token_address);
