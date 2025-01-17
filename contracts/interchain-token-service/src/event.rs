@@ -1,8 +1,6 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{Address, Bytes, BytesN, String};
-#[cfg(any(test, feature = "testutils"))]
-use stellar_axelar_std::events::Event;
 use stellar_axelar_std::IntoEvent;
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]

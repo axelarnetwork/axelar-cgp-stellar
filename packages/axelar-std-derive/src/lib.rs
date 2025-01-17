@@ -338,6 +338,8 @@ fn event_testutils(
         impl stellar_axelar_std::events::EventTestutils for #name {
             fn matches(self, env: &soroban_sdk::Env, event: &(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> bool {
                 use soroban_sdk::IntoVal;
+                use stellar_axelar_std::events::Event;
+
                 Self::standardized_fmt(env, event) == Self::standardized_fmt(env, &(event.0.clone(), self.topics(env).into_val(env), self.data(env).into_val(env)))
             }
 
