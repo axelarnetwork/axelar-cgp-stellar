@@ -128,6 +128,23 @@ fn approve_its_transfer(
     }
 }
 
+fn execute_its_transfer(
+    env: &Env,
+    client: &InterchainTokenServiceClient,
+    gateway: &GatewayConfig,
+    token_id: &BytesN<32>,
+    amount: i128,
+) {
+    let msg = approve_its_transfer(env, client, gateway, token_id, amount);
+
+    client.execute(
+        &msg.source_chain,
+        &msg.message_id,
+        &msg.source_address,
+        &msg.payload,
+    )
+}
+
 #[test]
 fn set_flow_limit_succeeds() {
     let (env, client, _, _, _) = setup_env();
@@ -205,19 +222,14 @@ fn flow_limit_resets_after_epoch() {
     let (env, client, gateway, token) = setup();
 
     let amount = dummy_flow_limit();
-    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    client.execute(
-        &msg.source_chain,
-        &msg.message_id,
-        &msg.source_address,
-        &msg.payload,
-    );
+    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
     assert_eq!(client.flow_in_amount(&token.id), amount);
 
     env.ledger()
         .set_timestamp(env.ledger().timestamp() + EPOCH_TIME);
+
     assert_eq!(client.flow_in_amount(&token.id), 0);
 }
 
@@ -226,16 +238,10 @@ fn add_flow_in_succeeds() {
     let (env, client, gateway, token) = setup();
 
     let amount = dummy_flow_limit();
-    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
     assert_eq!(client.flow_in_amount(&token.id), 0);
 
-    client.execute(
-        &msg.source_chain,
-        &msg.message_id,
-        &msg.source_address,
-        &msg.payload,
-    );
+    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
     assert_eq!(client.flow_in_amount(&token.id), amount);
     assert_eq!(client.flow_out_amount(&token.id), 0);
@@ -246,26 +252,20 @@ fn add_flow_in_fails_on_exceeding_flow_limit() {
     let (env, client, gateway, token) = setup();
 
     let amount = dummy_flow_limit();
-    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    client.execute(
-        &msg.source_chain,
-        &msg.message_id,
-        &msg.source_address,
-        &msg.payload,
-    );
+    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
     assert_eq!(client.flow_in_amount(&token.id), amount);
 
-    let second_amount = 1;
-    let second_msg = approve_its_transfer(&env, &client, &gateway, &token.id, second_amount);
+    let amount = 1;
+    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
     assert_contract_err!(
         client.try_execute(
-            &second_msg.source_chain,
-            &second_msg.message_id,
-            &second_msg.source_address,
-            &second_msg.payload
+            &msg.source_chain,
+            &msg.message_id,
+            &msg.source_address,
+            &msg.payload
         ),
         ContractError::FlowLimitExceeded
     );
@@ -360,14 +360,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
         let amount_in = case.0;
         let amount_out = case.1;
 
-        let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount_in);
-
-        client.execute(
-            &msg.source_chain,
-            &msg.message_id,
-            &msg.source_address,
-            &msg.payload,
-        );
+        execute_its_transfer(&env, &client, &gateway, &token.id, amount_in);
 
         assert_contract_err!(
             client.mock_all_auths().try_interchain_transfer(
