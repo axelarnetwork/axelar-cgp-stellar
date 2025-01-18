@@ -14,7 +14,7 @@ use stellar_interchain_token_service::event::{
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_token, HUB_CHAIN};
+use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_token};
 
 #[test]
 #[should_panic(expected = "Error(Contract, #22)")] // ContractError::NotApproved

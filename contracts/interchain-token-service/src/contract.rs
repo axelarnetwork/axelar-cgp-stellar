@@ -13,7 +13,6 @@ use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use stellar_interchain_token::InterchainTokenClient;
 
-use crate::abi::{get_message_type, MessageType as EncodedMessageType};
 use crate::error::ContractError;
 use crate::event::{
     InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,

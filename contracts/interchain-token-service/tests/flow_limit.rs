@@ -12,7 +12,6 @@ use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Me
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 use utils::{
     approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
-    HUB_CHAIN,
 };
 
 const TEST_FLOW_LIMIT: Option<i128> = Some(1000);

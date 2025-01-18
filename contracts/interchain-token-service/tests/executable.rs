@@ -8,7 +8,7 @@ use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth_err, events};
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
-use utils::{register_chains, setup_env, setup_its_token, HUB_CHAIN};
+use utils::{setup_env, setup_its_token};
 
 mod test {
     use core::fmt::Debug;

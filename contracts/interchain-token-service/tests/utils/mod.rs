@@ -11,8 +11,6 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::types::Token;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
-pub const HUB_CHAIN: &str = "axelar";
-
 const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("../testdata/interchain_token.wasm");
 
 pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
