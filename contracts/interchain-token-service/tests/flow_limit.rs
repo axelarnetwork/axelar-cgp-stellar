@@ -341,26 +341,26 @@ fn add_flow_out_fails_on_exceeding_flow_limit() {
 
 #[test]
 fn add_flow_fails_on_flow_comparison_overflow() {
-    let flow_limit = i128::MAX - 50;
-    let cases = std::vec![(flow_limit - 1, 2), (i128::MAX - 100, 2), (flow_limit, 1),];
+    let cases = std::vec![
+        (i128::MAX - 50, i128::MAX - 51, 2),
+        (i128::MAX - 100, i128::MAX - 101, 2),
+        (i128::MAX / 2 + 1, i128::MAX / 2 + 1, 2),
+    ];
 
-    for case in &cases {
+    for (flow_limit, flow_in, flow_out) in &cases {
         let (env, client, gateway, token) = setup();
         let gas_token = setup_gas_token(&env, &token.deployer);
 
         client
             .mock_all_auths()
-            .set_flow_limit(&token.id, &Some(flow_limit));
+            .set_flow_limit(&token.id, &Some(*flow_limit));
 
         let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
         client
             .mock_all_auths()
             .set_trusted_chain(&destination_chain);
 
-        let amount_in = case.0;
-        let amount_out = case.1;
-
-        execute_its_transfer(&env, &client, &gateway, &token.id, amount_in);
+        execute_its_transfer(&env, &client, &gateway, &token.id, *flow_in);
 
         assert_contract_err!(
             client.mock_all_auths().try_interchain_transfer(
@@ -368,7 +368,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
                 &token.id,
                 &destination_chain,
                 &destination_address,
-                &amount_out,
+                flow_out,
                 &data,
                 &gas_token
             ),
@@ -376,7 +376,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
         );
     }
 
-    for case in cases {
+    for (flow_limit, flow_out, flow_in) in cases {
         let (env, client, gateway, token) = setup();
         let gas_token = setup_gas_token(&env, &token.deployer);
 
@@ -389,20 +389,17 @@ fn add_flow_fails_on_flow_comparison_overflow() {
             .mock_all_auths()
             .set_trusted_chain(&destination_chain);
 
-        let amount_out = case.0;
-        let amount_in = case.1;
-
         client.mock_all_auths().interchain_transfer(
             &token.deployer,
             &token.id,
             &destination_chain,
             &destination_address,
-            &amount_out,
+            &flow_out,
             &data,
             &gas_token,
         );
 
-        let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount_in);
+        let msg = approve_its_transfer(&env, &client, &gateway, &token.id, flow_in);
 
         assert_contract_err!(
             client.try_execute(
