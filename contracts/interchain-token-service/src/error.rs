@@ -33,7 +33,6 @@ pub enum ContractError {
     InvalidTokenName = 25,
     InvalidTokenSymbol = 26,
     InvalidTokenDecimals = 27,
-    InvalidAssetName = 28,
 }
 
 impl_not_approved_error!(ContractError);
