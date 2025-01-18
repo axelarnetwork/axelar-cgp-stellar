@@ -133,7 +133,9 @@ fn interchain_transfer_execute_succeeds() {
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,

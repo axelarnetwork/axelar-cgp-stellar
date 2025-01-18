@@ -116,7 +116,9 @@ pub fn setup_its_token(
 
 #[allow(dead_code)]
 pub fn register_chains(_env: &Env, client: &InterchainTokenServiceClient) {
-    client.mock_all_auths().set_trusted_chain(&client.its_hub_chain_name());
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 }
 
 #[allow(dead_code)]

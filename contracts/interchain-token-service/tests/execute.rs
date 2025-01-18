@@ -85,12 +85,7 @@ fn execute_fails_with_invalid_source_chain() {
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     assert_contract_err!(
-        client.try_execute(
-            &source_chain,
-            &message_id,
-            &source_address,
-            &payload,
-        ),
+        client.try_execute(&source_chain, &message_id, &source_address, &payload,),
         ContractError::NotHubChain
     );
 }
@@ -118,12 +113,7 @@ fn execute_fails_with_invalid_source_address() {
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     assert_contract_err!(
-        client.try_execute(
-            &source_chain,
-            &message_id,
-            &source_address,
-            &payload,
-        ),
+        client.try_execute(&source_chain, &message_id, &source_address, &payload,),
         ContractError::NotHubAddress
     );
 }
@@ -141,7 +131,9 @@ fn interchain_transfer_message_execute_succeeds() {
     let amount = 1000;
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -194,7 +186,9 @@ fn deploy_interchain_token_message_execute_succeeds() {
         decimal: 18,
     };
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -250,7 +244,9 @@ fn deploy_interchain_token_message_execute_fails_empty_token_name() {
     let source_address = client.its_hub_address();
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg_empty_name = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -298,7 +294,9 @@ fn deploy_interchain_token_message_execute_fails_empty_token_symbol() {
     let source_address = client.its_hub_address();
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg_empty_symbol = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -348,7 +346,9 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
     let invalid_minter = Bytes::from_array(&env, &[1u8; 32]);
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg_invalid_minter = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -404,7 +404,9 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
         decimal: 18,
     };
     let original_source_chain = String::from_str(&env, "ethereum");
-    client.mock_all_auths().set_trusted_chain(&original_source_chain);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,

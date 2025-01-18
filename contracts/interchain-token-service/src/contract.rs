@@ -460,7 +460,8 @@ impl InterchainTokenService {
         source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
-        let (source_chain, message) = Self::get_execute_params(env, source_chain, source_address, payload)?;
+        let (source_chain, message) =
+            Self::get_execute_params(env, source_chain, source_address, payload)?;
 
         match message {
             Message::InterchainTransfer(InterchainTransfer {
