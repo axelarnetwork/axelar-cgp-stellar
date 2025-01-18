@@ -132,7 +132,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - `ContractError::InvalidMinter`: If the minter address is invalid.
     ///
     /// # Authorization
-    /// - The caller must authenticate.
+    /// - The `deployer` must authenticate.
     fn deploy_interchain_token(
         env: &Env,
         deployer: Address,
@@ -158,7 +158,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
-    /// - The caller must authenticate.
+    /// - The `caller` must authenticate.
     fn deploy_remote_interchain_token(
         env: &Env,
         caller: Address,
@@ -202,7 +202,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
-    /// - Gas Service requires authorization for spender.
+    /// - `spender` needs to authorize `pay_gas` call to the gas service.
     fn deploy_remote_canonical_token(
         env: &Env,
         token_address: Address,
@@ -238,7 +238,7 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
-    /// - The caller must authenticate.
+    /// - The `caller` must authenticate.
     fn interchain_transfer(
         env: &Env,
         caller: Address,

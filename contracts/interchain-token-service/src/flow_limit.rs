@@ -100,13 +100,17 @@ pub fn set_flow_limit(
     token_id: BytesN<32>,
     flow_limit: Option<i128>,
 ) -> Result<(), ContractError> {
-    if let Some(limit) = flow_limit {
-        ensure!(limit >= 0, ContractError::InvalidFlowLimit);
-    }
+    if let Some(flow_limit) = flow_limit {
+        ensure!(flow_limit >= 0, ContractError::InvalidFlowLimit);
 
-    env.storage()
-        .persistent()
-        .set(&DataKey::FlowLimit(token_id.clone()), &flow_limit);
+        env.storage()
+            .persistent()
+            .set(&DataKey::FlowLimit(token_id.clone()), &flow_limit);
+    } else {
+        env.storage()
+            .persistent()
+            .remove(&DataKey::FlowLimit(token_id.clone()));
+    }
 
     FlowLimitSetEvent {
         token_id,
