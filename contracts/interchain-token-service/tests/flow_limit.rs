@@ -14,7 +14,6 @@ use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Me
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 use utils::{
     approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
-    HUB_CHAIN,
 };
 
 struct GatewayConfig<'a> {
@@ -90,10 +89,10 @@ fn approve_its_transfer(
     let sender = Address::generate(env).to_xdr(env);
     let recipient = Address::generate(env).to_xdr(env);
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(env).to_string();
+    let source_address = client.its_hub_address();
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(env, HUB_CHAIN),
+        source_chain: source_chain.clone(),
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,
