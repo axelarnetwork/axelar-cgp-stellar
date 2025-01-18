@@ -115,9 +115,8 @@ pub fn setup_its_token(
 }
 
 #[allow(dead_code)]
-pub fn register_chains(env: &Env, client: &InterchainTokenServiceClient) {
-    let chain = String::from_str(env, HUB_CHAIN);
-    client.mock_all_auths().set_trusted_chain(&chain);
+pub fn register_chains(_env: &Env, client: &InterchainTokenServiceClient) {
+    client.mock_all_auths().set_trusted_chain(&client.its_hub_chain_name());
 }
 
 #[allow(dead_code)]

@@ -121,21 +121,22 @@ mod test {
 #[test]
 fn interchain_transfer_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
 
     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
 
     let sender = Address::generate(&env).to_xdr(&env);
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address: String = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client.mock_all_auths().set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,

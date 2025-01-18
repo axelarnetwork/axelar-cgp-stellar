@@ -39,10 +39,10 @@ fn create_interchain_transfer_message(
     let sender = Address::generate(env).to_xdr(env);
     let recipient = Address::generate(env).to_xdr(env);
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(env).to_string();
+    let source_address = client.its_hub_address();
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(env, HUB_CHAIN),
+        source_chain: source_chain.clone(),
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,
