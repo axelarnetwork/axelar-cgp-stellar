@@ -2,7 +2,7 @@ mod utils;
 
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{vec, Address, Bytes, BytesN, String};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::{assert_contract_err, events};
@@ -177,12 +177,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
 #[test]
 fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
-    let (env, client, gateway_client, _, signers) = setup_env();
-
-    let source_chain = client.its_hub_chain_name();
-    let source_address = client.its_hub_address();
-    let original_source_chain = String::from_str(&env, "ethereum");
-    let message_id = String::from_str(&env, "message_id");
+    let env = Env::default();
 
     let cases = [
         (
@@ -203,10 +198,6 @@ fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
         ),
     ];
 
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&original_source_chain);
-
     for (
         i,
         (
@@ -219,6 +210,17 @@ fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
         ),
     ) in cases.into_iter().enumerate()
     {
+        let (env, client, gateway_client, _, signers) = setup_env();
+
+        let source_chain = client.its_hub_chain_name();
+        let source_address = client.its_hub_address();
+        let original_source_chain = String::from_str(&env, "ethereum");
+        let message_id = String::from_str(&env, "message_id");
+
+        client
+            .mock_all_auths()
+            .set_trusted_chain(&original_source_chain);
+
         let token_id = BytesN::from_array(&env, &[i as u8; 32]);
         let msg = HubMessage::ReceiveFromHub {
             source_chain: original_source_chain.clone(),
@@ -240,10 +242,11 @@ fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
                 message_id: message_id.clone(),
                 source_address: source_address.clone(),
                 contract_address: client.address.clone(),
-                payload_hash,
+                payload_hash: payload_hash.clone(),
             },
         ];
-        approve_gateway_messages(&env, &gateway_client, signers.clone(), messages);
+
+        approve_gateway_messages(&env, &gateway_client, signers, messages);
 
         assert_contract_err!(
             client.try_execute(&source_chain, &message_id, &source_address, &payload),
