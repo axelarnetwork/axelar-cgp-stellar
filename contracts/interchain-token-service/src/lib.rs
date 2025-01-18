@@ -15,6 +15,7 @@ cfg_if::cfg_if! {
         mod abi;
         pub mod event;
         mod storage_types;
+        mod token_metadata;
         mod token_handler;
         mod contract;
         mod flow_limit;

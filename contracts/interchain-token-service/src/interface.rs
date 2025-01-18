@@ -9,20 +9,23 @@ use crate::types::TokenManagerType;
 #[allow(dead_code)]
 #[contractclient(name = "InterchainTokenServiceClient")]
 pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
-    /// Returns the name of the current chain.
-    fn chain_name(env: &Env) -> String;
-
     /// Returns the address of the Gas Service contract.
     fn gas_service(env: &Env) -> Address;
 
-    /// Returns the WASM hash of the token contract used for deploying interchain tokens.
-    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32>;
+    /// Returns the name of the current chain.
+    fn chain_name(env: &Env) -> String;
+
+    /// Returns the name of the chain on which the ITS Hub is deployed.
+    fn its_hub_chain_name(env: &Env) -> String;
 
     /// Returns the address of the ITS Hub.
     fn its_hub_address(env: &Env) -> String;
 
-    /// Returns the name of the chain on which the ITS Hub is deployed.
-    fn its_hub_chain_name(env: &Env) -> String;
+    /// Returns the address of the native token on the current chain.
+    fn native_token_address(env: &Env) -> Address;
+
+    /// Returns the WASM hash of the token contract used for deploying interchain tokens.
+    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32>;
 
     /// Returns whether the specified chain is trusted for cross-chain messaging.
     fn is_trusted_chain(env: &Env, chain: String) -> bool;
@@ -182,6 +185,8 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// Deploys a remote canonical token on a specified destination chain.
     ///
     /// Anyone can call this to deploy a trustless canonical representation of the token to any trusted destination chain.
+    /// If the token name is longer than 32 characters, the symbol will be used as the name.
+    /// Specifically, natively issued Stellar assets will be deployed with the symbol as the name.
     ///
     /// # Arguments
     /// * `token_address` - The address of the token to be deployed.

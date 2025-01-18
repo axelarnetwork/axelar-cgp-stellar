@@ -1,4 +1,4 @@
-use soroban_sdk::token::{self, StellarAssetClient};
+use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::xdr::{FromXdr, ToXdr};
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -26,7 +26,7 @@ use crate::storage_types::{DataKey, TokenIdConfigValue};
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use crate::{flow_limit, token_handler};
+use crate::{flow_limit, token_handler, token_metadata};
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
@@ -47,6 +47,7 @@ impl InterchainTokenService {
         gas_service: Address,
         its_hub_address: String,
         chain_name: String,
+        native_token_address: Address,
         interchain_token_wasm_hash: BytesN<32>,
     ) {
         interfaces::set_owner(&env, &owner);
@@ -61,6 +62,9 @@ impl InterchainTokenService {
         env.storage()
             .instance()
             .set(&DataKey::ChainName, &chain_name);
+        env.storage()
+            .instance()
+            .set(&DataKey::NativeTokenAddress, &native_token_address);
         env.storage().instance().set(
             &DataKey::InterchainTokenWasmHash,
             &interchain_token_wasm_hash,
@@ -70,13 +74,6 @@ impl InterchainTokenService {
 
 #[contractimpl]
 impl InterchainTokenServiceInterface for InterchainTokenService {
-    fn chain_name(env: &Env) -> String {
-        env.storage()
-            .instance()
-            .get(&DataKey::ChainName)
-            .expect("chain name not found")
-    }
-
     fn gas_service(env: &Env) -> Address {
         env.storage()
             .instance()
@@ -84,11 +81,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .expect("gas service not found")
     }
 
-    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32> {
+    fn chain_name(env: &Env) -> String {
         env.storage()
             .instance()
-            .get(&DataKey::InterchainTokenWasmHash)
-            .expect("interchain token wasm hash not found")
+            .get(&DataKey::ChainName)
+            .expect("chain name not found")
+    }
+
+    fn its_hub_chain_name(env: &Env) -> String {
+        String::from_str(env, ITS_HUB_CHAIN_NAME)
     }
 
     fn its_hub_address(env: &Env) -> String {
@@ -98,8 +99,18 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .expect("its hub address not found")
     }
 
-    fn its_hub_chain_name(env: &Env) -> String {
-        String::from_str(env, ITS_HUB_CHAIN_NAME)
+    fn native_token_address(env: &Env) -> Address {
+        env.storage()
+            .instance()
+            .get(&DataKey::NativeTokenAddress)
+            .expect("native token address not found")
+    }
+
+    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32> {
+        env.storage()
+            .instance()
+            .get(&DataKey::InterchainTokenWasmHash)
+            .expect("interchain token wasm hash not found")
     }
 
     fn is_trusted_chain(env: &Env, chain: String) -> bool {
@@ -676,23 +687,17 @@ impl InterchainTokenService {
 
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
         let token_address = Self::token_id_config(env, token_id.clone())?.token_address;
-        let token = token::Client::new(env, &token_address);
-        let token_metadata = TokenMetadata {
-            name: token.name(),
-            decimal: token.decimals(),
-            symbol: token.symbol(),
-        };
-
-        ensure!(
-            validate_token_metadata(&token_metadata).is_ok(),
-            ContractError::InvalidTokenMetaData
-        );
+        let TokenMetadata {
+            name,
+            symbol,
+            decimal,
+        } = token_metadata::token_metadata(env, &token_address, &Self::native_token_address(env))?;
 
         let message = Message::DeployInterchainToken(DeployInterchainToken {
             token_id: token_id.clone(),
-            name: token_metadata.name.clone(),
-            symbol: token_metadata.symbol.clone(),
-            decimals: token_metadata.decimal as u8,
+            name: name.clone(),
+            symbol: symbol.clone(),
+            decimals: decimal as u8,
             minter: None,
         });
 
@@ -700,9 +705,9 @@ impl InterchainTokenService {
             token_id: token_id.clone(),
             token_address,
             destination_chain: destination_chain.clone(),
-            name: token_metadata.name,
-            symbol: token_metadata.symbol,
-            decimals: token_metadata.decimal,
+            name,
+            symbol,
+            decimals: decimal,
             minter: None,
         }
         .emit(env);

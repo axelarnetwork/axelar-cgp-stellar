@@ -2,7 +2,7 @@ mod utils;
 
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
+use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{auth_invocation, events, mock_auth};
@@ -10,7 +10,7 @@ use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEve
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, Message, TokenManagerType,
 };
-use utils::{setup_env, setup_gas_token};
+use utils::{setup_env, setup_gas_token, TokenMetadataExt};
 
 #[test]
 fn deploy_remote_canonical_token_succeeds() {
@@ -43,20 +43,13 @@ fn deploy_remote_canonical_token_succeeds() {
         .set_trusted_chain(&destination_chain);
 
     let token = token::Client::new(&env, &asset.address());
-    let token_metadata = TokenMetadata {
-        name: token.name(),
-        decimal: token.decimals(),
-        symbol: token.symbol(),
-    };
-
     let message = Message::DeployInterchainToken(DeployInterchainToken {
         token_id: expected_id.clone(),
-        name: token_metadata.name.clone(),
-        symbol: token_metadata.symbol.clone(),
-        decimals: token_metadata.decimal as u8,
+        name: token.symbol(),
+        symbol: token.symbol(),
+        decimals: token.decimals() as u8,
         minter: None,
     });
-
     let payload = HubMessage::SendToHub {
         destination_chain: destination_chain.clone(),
         message,
@@ -125,6 +118,62 @@ fn deploy_remote_canonical_token_succeeds() {
     );
 
     assert_eq!(env.auths(), gas_service_auth);
+}
+
+#[test]
+fn deploy_remote_canonical_token_succeeds_native_token() {
+    let (env, client, _, _, _) = setup_env();
+    let spender = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &spender);
+    let token_address = client.native_token_address();
+    let destination_chain = String::from_str(&env, "ethereum");
+
+    client.register_canonical_token(&token_address);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+    client
+        .mock_all_auths_allowing_non_root_auth()
+        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeploymentStartedEvent,
+    >(&env, -4));
+}
+
+#[test]
+fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
+    let (env, client, _, _, _) = setup_env();
+    let spender = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &spender);
+
+    let token_metadata = TokenMetadata::new(&env, "name", "symbol", 255);
+    let initial_supply = 1;
+    let minter: Option<Address> = None;
+    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+    let token_id = client.mock_all_auths().deploy_interchain_token(
+        &Address::generate(&env),
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
+    );
+    let token_address = client.token_address(&token_id);
+    let destination_chain = String::from_str(&env, "ethereum");
+
+    client.register_canonical_token(&token_address);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+    client
+        .mock_all_auths_allowing_non_root_auth()
+        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeploymentStartedEvent,
+    >(&env, -4));
 }
 
 #[test]
