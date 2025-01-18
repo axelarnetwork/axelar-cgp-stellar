@@ -1,36 +1,11 @@
 #![cfg(any(test, feature = "testutils"))]
 extern crate std;
 
-use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation, Events};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec};
-
-/// Asserts invocation auth of a contract from a single caller.
-pub fn assert_invocation<T>(
-    env: &Env,
-    caller: &Address,
-    contract_id: &Address,
-    function_name: &str,
-    args: T,
-) where
-    T: IntoVal<Env, Vec<Val>>,
-{
-    assert_eq!(
-        env.auths(),
-        std::vec![(
-            caller.clone(),
-            AuthorizedInvocation {
-                function: AuthorizedFunction::Contract((
-                    contract_id.clone(),
-                    Symbol::new(env, function_name),
-                    args.into_val(env),
-                )),
-                sub_invocations: std::vec![]
-            }
-        )]
-    );
-}
+use soroban_sdk::testutils::Events;
+use soroban_sdk::{vec, Address, Env, IntoVal, Val, Vec};
 
 /// Asserts that the event at `event_index` in the environment's emitted events is the expected event.
+///
 /// If `event_index` is negative, the length of events will be added to it, i.e it'll be indexed from the end.
 pub fn assert_emitted_event<U, V>(
     env: &Env,

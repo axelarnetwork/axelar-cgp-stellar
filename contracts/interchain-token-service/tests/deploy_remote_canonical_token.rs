@@ -5,7 +5,7 @@ use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
-use stellar_axelar_std::{auth_invocation, events};
+use stellar_axelar_std::{auth_invocation, events, mock_auth};
 use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, Message, TokenManagerType,
@@ -14,7 +14,7 @@ use utils::{setup_env, setup_gas_token};
 
 #[test]
 fn deploy_remote_canonical_token_succeeds() {
-    let (env, client, _, gas_service, _) = setup_env();
+    let (env, client, gateway, gas_service, _) = setup_env();
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
@@ -63,8 +63,35 @@ fn deploy_remote_canonical_token_succeeds() {
     }
     .abi_encode(&env);
 
+    let transfer_token_auth = mock_auth!(
+        env,
+        spender,
+        gas_token.transfer(spender, gas_service.address, gas_token.amount)
+    );
+
+    let pay_gas_auth = mock_auth!(
+        env,
+        spender,
+        gas_service.pay_gas(
+            client.address,
+            its_hub_chain,
+            its_hub_address,
+            payload,
+            spender,
+            gas_token,
+            Bytes::new(&env)
+        ),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
+    let call_contract_auth = mock_auth!(
+        env,
+        spender,
+        gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload)
+    );
+
     let deployed_token_id = client
-        .mock_all_auths_allowing_non_root_auth()
+        .mock_auths(&[pay_gas_auth, call_contract_auth])
         .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
     assert_eq!(expected_id, deployed_token_id);
 

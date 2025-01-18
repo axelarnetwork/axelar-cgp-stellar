@@ -105,36 +105,97 @@ macro_rules! assert_some {
     };
 }
 
+/// Assert that a contract call with authentication succeeds
+///
+/// This macro is used to test contract calls that require authentication. It mocks the authentication
+/// for the specified caller and executes the contract call. If the call fails or doesn't require the authentication,
+/// the macro will panic with an error message.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// # use soroban_sdk::{Address, Env, contract, contractimpl};
+/// # use soroban_sdk::testutils::Address as _;
+/// # use stellar_axelar_std::assert_auth;
+///
+/// #[contract]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///    pub fn set_value(env: &Env, caller: Address, value: u32) {
+///        caller.require_auth();
+///    }
+/// }
+///
+/// # let env = Env::default();
+/// # let caller = Address::generate(&env);
+/// # let contract_id = env.register(Contract, ());
+/// # let client = ContractClient::new(&env, &contract_id);
+///
+/// assert_auth!(caller, client.set_value(&caller, &42));
+/// ```
 #[macro_export]
-macro_rules! assert_invoke_auth_ok {
+macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::IntoVal;
 
-        let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
+        // Paste is used to concatenate the method name with the `try_` prefix
+        paste::paste! {
+        let result = $client
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
+            .[<try_ $method>]($($arg),*);
+        }
 
-        match call_result {
+        let result = match result {
             Ok(outer) => {
                 match outer {
-                    Ok(inner) => {inner},
+                    Ok(inner) => inner,
                     Err(err) => panic!("Expected Ok result, but got an error {:?}", err),
                 }
             }
             Err(err) => panic!("Expected Ok result, but got an error {:?}", err),
-        }
+        };
+
+        assert_eq!(
+            $client.env.auths(),
+            std::vec![(
+                $caller.clone(),
+                soroban_sdk::testutils::AuthorizedInvocation {
+                    function: soroban_sdk::testutils::AuthorizedFunction::Contract((
+                        $client.address.clone(),
+                        soroban_sdk::Symbol::new(&$client.env, stringify!($method)),
+                        ($($arg.clone(),)*).into_val(&$client.env)
+                    )),
+                    sub_invocations: std::vec![]
+                }
+            )]
+        );
+
+        result
     }};
 }
 
 #[macro_export]
-macro_rules! assert_invoke_auth_err {
+macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
-        use soroban_sdk::{IntoVal, xdr::{ScError, ScErrorCode, ScVal}};
+        use soroban_sdk::xdr::{ScError, ScErrorCode, ScVal};
 
+        paste::paste! {
         let call_result = $client
-            .mock_auths($crate::mock_auth!($caller, $client, $method, $($arg),*))
-            .$method($($arg),*);
-
+            .mock_auths(&[$crate::mock_auth!(
+                $client.env,
+                $caller,
+                $client.$method($($arg),*),
+                &[]
+            )])
+            .[<try_ $method>]($($arg),*);
+        }
         match call_result {
             Err(_) => {
                 let val = ScVal::Error(ScError::Context(ScErrorCode::InvalidAction));
@@ -150,15 +211,29 @@ macro_rules! assert_invoke_auth_err {
 
 #[macro_export]
 macro_rules! mock_auth {
-    ($caller:expr, $client:ident, $method:ident, $($arg:expr),*) => {
-        &[soroban_sdk::testutils::MockAuth {
-                address: &$caller,
-                invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                    contract: &$client.address,
-                    fn_name: &stringify!($method).replace("try_", ""),
-                    args: ($($arg.clone(),)*).into_val(&$client.env),
-                    sub_invokes: &[],
-                },
-            }]
-    };
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
+        $sub_invokes:expr
+    ) => {{
+        use soroban_sdk::IntoVal;
+
+        soroban_sdk::testutils::MockAuth {
+            address: &$caller,
+            invoke: &soroban_sdk::testutils::MockAuthInvoke {
+                contract: &$client.address,
+                fn_name: &stringify!($method).replace("try_", ""),
+                args: ($($arg.clone(),)*).into_val(&$env),
+                sub_invokes: $sub_invokes,
+            },
+        }
+    }};
+    (
+        $env:expr,
+        $caller:expr,
+        $client:ident . $method:ident ( $($arg:expr),* $(,)? )
+    ) => {{
+        mock_auth!($env, $caller, $client.$method($($arg),*), &[])
+    }};
 }

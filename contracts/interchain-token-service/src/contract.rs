@@ -273,6 +273,39 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::deploy_remote_token(env, caller, deploy_salt, destination_chain, gas_token)
     }
 
+    fn register_canonical_token(
+        env: &Env,
+        token_address: Address,
+    ) -> Result<BytesN<32>, ContractError> {
+        let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
+        let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
+
+        ensure!(
+            !env.storage()
+                .persistent()
+                .has(&DataKey::TokenIdConfigKey(token_id.clone())),
+            ContractError::TokenAlreadyRegistered
+        );
+
+        InterchainTokenIdClaimedEvent {
+            token_id: token_id.clone(),
+            deployer: Address::zero(env),
+            salt: deploy_salt,
+        }
+        .emit(env);
+
+        Self::set_token_id_config(
+            env,
+            token_id.clone(),
+            TokenIdConfigValue {
+                token_address,
+                token_manager_type: TokenManagerType::LockUnlock,
+            },
+        );
+
+        Ok(token_id)
+    }
+
     fn deploy_remote_canonical_token(
         env: &Env,
         token_address: Address,
@@ -299,6 +332,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         gas_token: Token,
     ) -> Result<(), ContractError> {
         ensure!(amount > 0, ContractError::InvalidAmount);
+
+        ensure!(
+            !destination_address.is_empty(),
+            ContractError::InvalidDestinationAddress
+        );
+
+        if let Some(ref data) = data {
+            ensure!(!data.is_empty(), ContractError::InvalidData);
+        }
 
         caller.require_auth();
 
@@ -332,39 +374,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::pay_gas_and_call_contract(env, caller, destination_chain, message, gas_token)?;
 
         Ok(())
-    }
-
-    fn register_canonical_token(
-        env: &Env,
-        token_address: Address,
-    ) -> Result<BytesN<32>, ContractError> {
-        let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
-        let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
-
-        ensure!(
-            !env.storage()
-                .persistent()
-                .has(&DataKey::TokenIdConfigKey(token_id.clone())),
-            ContractError::TokenAlreadyRegistered
-        );
-
-        InterchainTokenIdClaimedEvent {
-            token_id: token_id.clone(),
-            deployer: Address::zero(env),
-            salt: deploy_salt,
-        }
-        .emit(env);
-
-        Self::set_token_id_config(
-            env,
-            token_id.clone(),
-            TokenIdConfigValue {
-                token_address,
-                token_manager_type: TokenManagerType::LockUnlock,
-            },
-        );
-
-        Ok(token_id)
     }
 }
 
@@ -664,6 +673,11 @@ impl InterchainTokenService {
         destination_chain: String,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(
+            destination_chain != Self::chain_name(env),
+            ContractError::InvalidDestinationChain
+        );
+
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
         let token_address = Self::token_id_config(env, token_id.clone())?.token_address;
         let token = token::Client::new(env, &token_address);
