@@ -1,7 +1,6 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
@@ -67,8 +66,8 @@ fn interchain_transfer_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_xdr(&env);
-    let recipient = Address::generate(&env).to_bytes(&env);
+    let sender = Address::generate(&env).to_string_bytes(&env);
+    let recipient = Address::generate(&env).to_string_bytes(&env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 
@@ -117,7 +116,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
     register_chains(&env, &client);
 
     let sender = Address::generate(&env);
-    let sender_bytes = sender.to_bytes(&env);
+    let sender_bytes = sender.to_string_bytes(&env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 
@@ -320,7 +319,7 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_bytes(&env);
+    let sender = Address::generate(&env).to_string_bytes(&env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 

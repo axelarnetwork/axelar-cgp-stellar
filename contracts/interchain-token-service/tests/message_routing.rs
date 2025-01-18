@@ -45,7 +45,7 @@ fn send_to_untrusted_chain_fails() {
             &sender,
             &token_id,
             &String::from_str(&env, "untrusted_chain"),
-            &Address::generate(&env).to_bytes(&env),
+            &Address::generate(&env).to_string_bytes(&env),
             &amount,
             &None,
             &gas_token,

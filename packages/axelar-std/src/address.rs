@@ -1,11 +1,11 @@
 use soroban_sdk::{Address, Bytes, Env, String};
 
 const ZERO_ADDRESS: &str = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
-const STELLAR_ADDRESS_LEN: usize = 56;
+const STELLAR_ADDRESS_LEN: usize = ZERO_ADDRESS.len();
 
 pub trait AddressExt {
     fn zero(env: &Env) -> Address;
-    fn to_bytes(&self, env: &Env) -> Bytes;
+    fn to_string_bytes(&self, env: &Env) -> Bytes;
 }
 
 impl AddressExt for Address {
@@ -17,10 +17,9 @@ impl AddressExt for Address {
     }
 
     // Converts Stellar address (soroban_sdk::Address) to soroban_sdk::Bytes
-    fn to_bytes(&self, env: &Env) -> Bytes {
-        let address_str = self.to_string();
-        let mut str_bytes = [0u8; STELLAR_ADDRESS_LEN];
-        address_str.copy_into_slice(&mut str_bytes);
-        Bytes::from_slice(env, &str_bytes)
+    fn to_string_bytes(&self, env: &Env) -> Bytes {
+        let mut address_string_bytes = [0u8; STELLAR_ADDRESS_LEN];
+        self.to_string().copy_into_slice(&mut address_string_bytes);
+        Bytes::from_slice(env, &address_string_bytes)
     }
 }

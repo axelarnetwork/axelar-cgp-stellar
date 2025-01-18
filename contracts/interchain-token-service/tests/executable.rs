@@ -1,7 +1,6 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
@@ -126,7 +125,7 @@ fn interchain_transfer_execute_succeeds() {
 
     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes(&env);
     let source_chain = client.its_hub_chain_name();
     let source_address = Address::generate(&env).to_string();
 
@@ -134,7 +133,7 @@ fn interchain_transfer_execute_succeeds() {
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
-    let destination_address = executable_id.to_bytes(&env);
+    let destination_address = executable_id.to_string_bytes(&env);
 
     let msg = HubMessage::ReceiveFromHub {
         source_chain: String::from_str(&env, HUB_CHAIN),
@@ -185,7 +184,7 @@ fn executable_fails_if_not_executed_from_its() {
     let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
 
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_bytes(&env);
+    let source_address = Address::generate(&env).to_string_bytes(&env);
     let amount = 1000;
     let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_address = Address::generate(&env);
