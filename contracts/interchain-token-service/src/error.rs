@@ -19,8 +19,8 @@ pub enum ContractError {
     InvalidUtf8 = 11,
     InvalidMinter = 12,
     InvalidDestinationAddress = 13,
-    InvalidHubChain = 14,
-    TokenAlreadyRegistered = 15,
+    NotHubChain = 14,
+    NotHubAddress = 15,
     InvalidTokenMetaData = 16,
     InvalidTokenId = 17,
     TokenAlreadyDeployed = 18,
@@ -33,6 +33,7 @@ pub enum ContractError {
     InvalidTokenName = 25,
     InvalidTokenSymbol = 26,
     InvalidTokenDecimals = 27,
+    TokenAlreadyRegistered = 28,
 }
 
 impl_not_approved_error!(ContractError);

@@ -12,7 +12,6 @@ use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use stellar_interchain_token::InterchainTokenClient;
 
-use crate::abi::{get_message_type, MessageType as EncodedMessageType};
 use crate::error::ContractError;
 use crate::event::{
     InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
@@ -470,10 +469,11 @@ impl InterchainTokenService {
         env: &Env,
         source_chain: String,
         message_id: String,
-        _source_address: String,
+        source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
-        let (source_chain, message) = Self::get_execute_params(env, source_chain, &payload)?;
+        let (source_chain, message) =
+            Self::get_execute_params(env, source_chain, source_address, payload)?;
 
         match message {
             Message::InterchainTransfer(message) => {
@@ -488,39 +488,35 @@ impl InterchainTokenService {
         Ok(())
     }
 
+    /// Validate that the message is coming from the ITS Hub and decode the message
     fn get_execute_params(
         env: &Env,
         source_chain: String,
-        payload: &Bytes,
+        source_address: String,
+        payload: Bytes,
     ) -> Result<(String, Message), ContractError> {
-        let message_type = get_message_type(&payload.to_alloc_vec())?;
-
-        ensure!(
-            message_type == EncodedMessageType::ReceiveFromHub,
-            ContractError::InvalidMessageType
-        );
-
         ensure!(
             source_chain == Self::its_hub_chain_name(env),
-            ContractError::InvalidHubChain
+            ContractError::NotHubChain
         );
-
-        let decoded_message = HubMessage::abi_decode(env, payload)?;
+        ensure!(
+            source_address == Self::its_hub_address(env),
+            ContractError::NotHubAddress
+        );
 
         let HubMessage::ReceiveFromHub {
             source_chain: original_source_chain,
-            message: inner_message,
-        } = decoded_message
+            message,
+        } = HubMessage::abi_decode(env, &payload)?
         else {
             return Err(ContractError::InvalidMessageType);
         };
-
         ensure!(
             Self::is_trusted_chain(env, original_source_chain.clone()),
             ContractError::UntrustedChain
         );
 
-        Ok((original_source_chain, inner_message))
+        Ok((original_source_chain, message))
     }
 
     fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
