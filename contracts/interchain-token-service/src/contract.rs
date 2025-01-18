@@ -733,8 +733,7 @@ impl InterchainTokenService {
         let token_metadata = TokenMetadata::new(name, symbol, decimals as u32)?;
 
         // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
-        let minter = minter
-            .map(|m| Address::from_string_bytes(&m));
+        let minter = minter.map(|m| Address::from_string_bytes(&m));
 
         let deployed_address =
             Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);
