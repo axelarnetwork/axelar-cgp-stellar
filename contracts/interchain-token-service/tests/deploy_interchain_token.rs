@@ -199,6 +199,8 @@ fn deploy_interchain_token_fails_with_invalid_token_metadata() {
     let sender = Address::generate(&env);
     let minter: Option<Address> = None;
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+    let invalid_decimals = (u8::MAX) as u32 + 1;
+    let token_metadata = TokenMetadata::new(&env, "Test", "TEST", invalid_decimals);
     let initial_supply = 0;
 
     let cases = [
