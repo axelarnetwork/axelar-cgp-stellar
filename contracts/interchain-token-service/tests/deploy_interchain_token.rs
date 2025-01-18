@@ -193,25 +193,58 @@ fn deploy_interchain_token_zero_initial_supply_no_minter() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
-fn deploy_interchain_token_fails_with_invalid_decimals() {
+fn deploy_interchain_token_fails_with_invalid_token_metadata() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter: Option<Address> = None;
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
-    let invalid_decimals = (u8::MAX) as u32 + 1;
-    let token_metadata = TokenMetadata::new(&env, "name", "symbol", invalid_decimals);
     let initial_supply = 0;
 
-    client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter);
+    let cases = [
+        (
+            TokenMetadata::new(&env, "", "symbol", 6),
+            ContractError::InvalidTokenName,
+        ),
+        (
+            TokenMetadata::new(&env, "A".repeat(33).as_str(), "symbol", 6),
+            ContractError::InvalidTokenName,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "", 6),
+            ContractError::InvalidTokenSymbol,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "A".repeat(33).as_str(), 6),
+            ContractError::InvalidTokenSymbol,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "symbol", (u8::MAX) as u32 + 1),
+            ContractError::InvalidTokenDecimals,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "symbol", u32::MAX),
+            ContractError::InvalidTokenDecimals,
+        ),
+    ];
+
+    for (token_metadata, expected_error) in cases {
+        assert_contract_err!(
+            client.mock_all_auths().try_deploy_interchain_token(
+                &sender,
+                &salt,
+                &token_metadata,
+                &initial_supply,
+                &minter
+            ),
+            expected_error
+        );
+    }
 }
 
 #[test]
 fn deploy_interchain_token_fails_with_invalid_auth() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let user = Address::generate(&env);
@@ -223,6 +256,6 @@ fn deploy_interchain_token_fails_with_invalid_auth() {
 
     assert_auth_err!(
         user,
-        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
 }

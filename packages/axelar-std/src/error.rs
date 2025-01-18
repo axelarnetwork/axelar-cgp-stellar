@@ -64,7 +64,7 @@ macro_rules! assert_err {
 /// `assert_contract_err(client.try_fun(...), ContractError);`
 #[macro_export]
 macro_rules! assert_contract_err {
-    ($given:expr, $expected:pat) => {
+    ($given:expr, $expected:expr) => {
         match $given {
             Ok(v) => panic!(
                 "Expected error {:?}, got {:?} instead",
@@ -72,16 +72,11 @@ macro_rules! assert_contract_err {
                 v
             ),
             Err(e) => match e {
-                Ok(v) => {
-                    if !matches!(v, $expected) {
-                        panic!(
-                            "Expected error {}, got {:?} instead",
-                            stringify!($expected),
-                            v
-                        )
-                    }
-                }
                 Err(e) => panic!("Unexpected error {e:?}"),
+                Ok(v) if v != $expected => {
+                    panic!("Expected error {:?}, got {:?} instead", $expected, v)
+                }
+                _ => (),
             },
         }
     };

@@ -7,7 +7,6 @@ use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::token::validate_token_metadata;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
@@ -24,6 +23,7 @@ use crate::executable::InterchainTokenExecutableClient;
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
 use crate::storage_types::{DataKey, TokenIdConfigValue};
+use crate::token_metadata::TokenMetadataExt;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
@@ -240,6 +240,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let deploy_salt = Self::interchain_token_deploy_salt(env, caller.clone(), salt);
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
+
+        token_metadata.validate()?;
 
         let deployed_address = Self::deploy_interchain_token_contract(
             env,
@@ -474,100 +476,11 @@ impl InterchainTokenService {
         let (source_chain, message) = Self::get_execute_params(env, source_chain, &payload)?;
 
         match message {
-            Message::InterchainTransfer(InterchainTransfer {
-                token_id,
-                source_address,
-                destination_address,
-                amount,
-                data,
-            }) => {
-                let destination_address = Address::from_xdr(env, &destination_address)
-                    .map_err(|_| ContractError::InvalidDestinationAddress)?;
-
-                let token_config_value =
-                    Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
-
-                FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
-
-                token_handler::give_token(
-                    env,
-                    &destination_address,
-                    token_config_value.clone(),
-                    amount,
-                )?;
-
-                InterchainTransferReceivedEvent {
-                    source_chain: source_chain.clone(),
-                    token_id: token_id.clone(),
-                    source_address: source_address.clone(),
-                    destination_address: destination_address.clone(),
-                    amount,
-                    data: data.clone(),
-                }
-                .emit(env);
-
-                let token_address = token_config_value.token_address;
-
-                if let Some(payload) = data {
-                    let executable =
-                        InterchainTokenExecutableClient::new(env, &destination_address);
-                    executable.execute_with_interchain_token(
-                        &source_chain,
-                        &message_id,
-                        &source_address,
-                        &payload,
-                        &token_id,
-                        &token_address,
-                        &amount,
-                    );
-                }
+            Message::InterchainTransfer(message) => {
+                Self::execute_transfer_message(env, &source_chain, message_id, message)
             }
-            Message::DeployInterchainToken(DeployInterchainToken {
-                token_id,
-                name,
-                symbol,
-                decimals,
-                minter,
-            }) => {
-                ensure!(
-                    Self::token_id_config(env, token_id.clone()).is_err(),
-                    ContractError::TokenAlreadyDeployed
-                );
-
-                let token_metadata = TokenMetadata {
-                    name,
-                    symbol,
-                    decimal: decimals as u32,
-                };
-
-                ensure!(
-                    validate_token_metadata(&token_metadata).is_ok(),
-                    ContractError::InvalidTokenMetaData
-                );
-
-                // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
-                let minter = minter
-                    .map(|m| Address::from_xdr(env, &m))
-                    .transpose()
-                    .map_err(|_| ContractError::InvalidMinter)?;
-
-                let deployed_address = Self::deploy_interchain_token_contract(
-                    env,
-                    minter,
-                    token_id.clone(),
-                    token_metadata,
-                );
-
-                Self::set_token_id_config(
-                    env,
-                    token_id,
-                    TokenIdConfigValue {
-                        token_address: deployed_address,
-                        token_manager_type: TokenManagerType::NativeInterchainToken,
-                    },
-                );
-            }
-        };
+            Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
+        }?;
 
         extend_persistent_ttl(env, &DataKey::TrustedChain(source_chain));
         extend_instance_ttl(env);
@@ -751,5 +664,97 @@ impl InterchainTokenService {
         .emit(env);
 
         deployed_address
+    }
+
+    fn execute_transfer_message(
+        env: &Env,
+        source_chain: &String,
+        message_id: String,
+        InterchainTransfer {
+            token_id,
+            source_address,
+            destination_address,
+            amount,
+            data,
+        }: InterchainTransfer,
+    ) -> Result<(), ContractError> {
+        let destination_address = Address::from_xdr(env, &destination_address)
+            .map_err(|_| ContractError::InvalidDestinationAddress)?;
+
+        let token_config_value = Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
+
+        FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
+
+        token_handler::give_token(
+            env,
+            &destination_address,
+            token_config_value.clone(),
+            amount,
+        )?;
+
+        InterchainTransferReceivedEvent {
+            source_chain: source_chain.clone(),
+            token_id: token_id.clone(),
+            source_address: source_address.clone(),
+            destination_address: destination_address.clone(),
+            amount,
+            data: data.clone(),
+        }
+        .emit(env);
+
+        let token_address = token_config_value.token_address;
+
+        if let Some(payload) = data {
+            let executable = InterchainTokenExecutableClient::new(env, &destination_address);
+            executable.execute_with_interchain_token(
+                source_chain,
+                &message_id,
+                &source_address,
+                &payload,
+                &token_id,
+                &token_address,
+                &amount,
+            );
+        }
+
+        Ok(())
+    }
+
+    fn execute_deploy_message(
+        env: &Env,
+        DeployInterchainToken {
+            token_id,
+            name,
+            symbol,
+            decimals,
+            minter,
+        }: DeployInterchainToken,
+    ) -> Result<(), ContractError> {
+        ensure!(
+            Self::token_id_config(env, token_id.clone()).is_err(),
+            ContractError::TokenAlreadyDeployed
+        );
+
+        let token_metadata = TokenMetadata::new(name, symbol, decimals as u32)?;
+
+        // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
+        let minter = minter
+            .map(|m| Address::from_xdr(env, &m))
+            .transpose()
+            .map_err(|_| ContractError::InvalidMinter)?;
+
+        let deployed_address =
+            Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);
+
+        Self::set_token_id_config(
+            env,
+            token_id,
+            TokenIdConfigValue {
+                token_address: deployed_address,
+                token_manager_type: TokenManagerType::NativeInterchainToken,
+            },
+        );
+
+        Ok(())
     }
 }
