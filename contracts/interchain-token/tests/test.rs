@@ -31,42 +31,6 @@ fn setup_token<'a>(env: &Env) -> (InterchainTokenClient<'a>, Address, Address) {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
-fn register_token_with_invalid_decimals_fails() {
-    let env = Env::default();
-    let owner = Address::generate(&env);
-    let minter = Address::generate(&env);
-    let token_id: BytesN<32> = BytesN::<32>::random(&env);
-    let token_metadata = setup_token_metadata(&env, "name", "symbol", u32::from(u8::MAX) + 1);
-
-    env.register(InterchainToken, (owner, minter, &token_id, token_metadata));
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
-fn register_token_with_invalid_name_fails() {
-    let env = Env::default();
-    let owner = Address::generate(&env);
-    let minter = Address::generate(&env);
-    let token_id: BytesN<32> = BytesN::<32>::random(&env);
-    let token_metadata = setup_token_metadata(&env, "", "symbol", 1);
-
-    env.register(InterchainToken, (owner, minter, &token_id, token_metadata));
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
-fn register_token_with_invalid_symbol_fails() {
-    let env = Env::default();
-    let owner = Address::generate(&env);
-    let minter = Address::generate(&env);
-    let token_id: BytesN<32> = BytesN::<32>::random(&env);
-    let token_metadata = setup_token_metadata(&env, "name", "", 1);
-
-    env.register(InterchainToken, (owner, minter, &token_id, token_metadata));
-}
-
-#[test]
 fn register_interchain_token() {
     let env = Env::default();
 

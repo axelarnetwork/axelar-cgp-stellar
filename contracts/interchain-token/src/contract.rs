@@ -7,7 +7,6 @@ use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::interfaces::OwnableInterface;
-use stellar_axelar_std::token::validate_token_metadata;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
@@ -30,10 +29,6 @@ impl InterchainToken {
         token_metadata: TokenMetadata,
     ) {
         interfaces::set_owner(&env, &owner);
-
-        if let Err(err) = validate_token_metadata(&token_metadata) {
-            panic_with_error!(env, err);
-        }
 
         Self::write_metadata(&env, token_metadata);
 
