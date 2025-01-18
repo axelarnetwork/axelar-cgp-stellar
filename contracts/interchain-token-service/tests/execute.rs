@@ -5,8 +5,9 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_std::events;
+use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
+use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
@@ -58,6 +59,72 @@ fn execute_fails_with_invalid_message() {
         &message_id,
         &source_address,
         &invalid_payload,
+    );
+}
+
+#[test]
+fn execute_fails_with_invalid_source_chain() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let message_id = String::from_str(&env, "test");
+    let source_chain = String::from_str(&env, "invalid");
+    let source_address = client.its_hub_address();
+    let payload = Bytes::new(&env);
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(
+            &source_chain,
+            &message_id,
+            &source_address,
+            &payload,
+        ),
+        ContractError::NotHubChain
+    );
+}
+
+#[test]
+fn execute_fails_with_invalid_source_address() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let message_id = String::from_str(&env, "test");
+    let source_chain = client.its_hub_chain_name();
+    let source_address = String::from_str(&env, "invalid");
+    let payload = Bytes::new(&env);
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(
+            &source_chain,
+            &message_id,
+            &source_address,
+            &payload,
+        ),
+        ContractError::NotHubAddress
     );
 }
 
