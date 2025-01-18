@@ -1,7 +1,6 @@
 mod utils;
 
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gateway::testutils::TestSignerSet;
 use stellar_axelar_gateway::types::Message as GatewayMessage;

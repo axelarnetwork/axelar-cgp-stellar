@@ -1,5 +1,5 @@
 use soroban_sdk::token::StellarAssetClient;
-use soroban_sdk::xdr::{FromXdr, ToXdr};
+use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
