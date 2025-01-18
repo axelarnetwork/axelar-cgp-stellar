@@ -1,13 +1,51 @@
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::ensure;
-use stellar_axelar_std::token::validate_token_metadata;
 
 use crate::error::ContractError;
 
 const NATIVE_TOKEN_NAME: &str = "Stellar";
 const NATIVE_TOKEN_SYMBOL: &str = "XLM";
+const MAX_DECIMALS: u32 = u8::MAX as u32;
 const MAX_NAME_LENGTH: u32 = 32;
+const MAX_SYMBOL_LENGTH: u32 = 32;
+
+pub trait TokenMetadataExt: Sized {
+    fn new(name: String, symbol: String, decimals: u32) -> Result<Self, ContractError>;
+
+    fn validate(&self) -> Result<(), ContractError>;
+}
+
+impl TokenMetadataExt for TokenMetadata {
+    fn new(name: String, symbol: String, decimals: u32) -> Result<Self, ContractError> {
+        let token_metadata = Self {
+            name,
+            symbol,
+            decimal: decimals,
+        };
+
+        token_metadata.validate()?;
+
+        Ok(token_metadata)
+    }
+
+    fn validate(&self) -> Result<(), ContractError> {
+        ensure!(
+            self.decimal <= MAX_DECIMALS,
+            ContractError::InvalidTokenDecimals
+        );
+        ensure!(
+            !self.name.is_empty() && self.name.len() <= MAX_NAME_LENGTH,
+            ContractError::InvalidTokenName
+        );
+        ensure!(
+            !self.symbol.is_empty() && self.symbol.len() <= MAX_SYMBOL_LENGTH,
+            ContractError::InvalidTokenSymbol
+        );
+
+        Ok(())
+    }
+}
 
 pub fn token_metadata(
     env: &Env,
@@ -32,16 +70,5 @@ pub fn token_metadata(
         (name, symbol)
     };
 
-    let token_metadata = TokenMetadata {
-        name,
-        symbol,
-        decimal: decimals,
-    };
-
-    ensure!(
-        validate_token_metadata(&token_metadata).is_ok(),
-        ContractError::InvalidTokenMetaData
-    );
-
-    Ok(token_metadata)
+    TokenMetadata::new(name, symbol, decimals)
 }

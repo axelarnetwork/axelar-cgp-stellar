@@ -30,7 +30,10 @@ pub enum ContractError {
     NotApproved = 22,
     InvalidDestinationChain = 23,
     InvalidData = 24,
-    TokenAlreadyRegistered = 25,
+    InvalidTokenName = 25,
+    InvalidTokenSymbol = 26,
+    InvalidTokenDecimals = 27,
+    TokenAlreadyRegistered = 28,
 }
 
 impl_not_approved_error!(ContractError);
