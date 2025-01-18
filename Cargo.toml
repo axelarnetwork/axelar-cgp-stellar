@@ -5,6 +5,7 @@ members = ["contracts/*", "packages/*"]
 [workspace.package]
 edition = "2021"
 rust-version = "1.81.0"
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 soroban-sdk = { version = "22.0.2" }
