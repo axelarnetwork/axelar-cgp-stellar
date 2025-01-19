@@ -377,7 +377,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let message = Message::InterchainTransfer(InterchainTransfer {
             token_id,
-            source_address: caller.to_string_bytes(env),
+            source_address: caller.to_string_bytes(),
             destination_address,
             amount,
             data,

@@ -86,8 +86,8 @@ fn approve_its_transfer(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> ApprovedMessage {
-    let sender = Address::generate(env).to_string_bytes(env);
-    let recipient = Address::generate(env).to_string_bytes(env);
+    let sender = Address::generate(env).to_string_bytes();
+    let recipient = Address::generate(env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
 
