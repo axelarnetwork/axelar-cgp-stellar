@@ -19,7 +19,7 @@ mod test {
     };
     use stellar_axelar_std::events::Event;
     use stellar_axelar_std::{ensure, impl_event_testutils, InterchainTokenExecutable};
-    use stellar_interchain_token_service::executable::CustomExecutable;
+    use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 
     #[contract]
     #[derive(InterchainTokenExecutable)]
@@ -72,17 +72,17 @@ mod test {
         PayloadLenOne = 1,
     }
 
-    impl CustomExecutable for ExecutableContract {
+    impl CustomInterchainTokenExecutable for ExecutableContract {
         type Error = ContractError;
 
-        fn interchain_token_service(env: &Env) -> Address {
+        fn __interchain_token_service(env: &Env) -> Address {
             env.storage()
                 .instance()
                 .get(&DataKey::InterchainTokenService)
                 .expect("its not found")
         }
 
-        fn authorized_execute_with_token(
+        fn __authorized_execute_with_token(
             env: &Env,
             source_chain: String,
             message_id: String,

@@ -9,6 +9,10 @@ pub fn its_executable(name: &Ident) -> TokenStream2 {
 
         #[contractimpl]
         impl stellar_interchain_token_service::executable::InterchainTokenExecutableInterface for #name {
+            fn interchain_token_service(env: &Env) -> soroban_sdk::Address {
+                <Self as stellar_interchain_token_service::executable::CustomInterchainTokenExecutable>::__interchain_token_service(env)
+            }
+
             fn execute_with_interchain_token(
                 env: &Env,
                 source_chain: String,
@@ -19,8 +23,8 @@ pub fn its_executable(name: &Ident) -> TokenStream2 {
                 token_address: Address,
                 amount: i128,
             ) -> Result<(), soroban_sdk::Error> {
-                    <Self as stellar_interchain_token_service::executable::CustomExecutable>::interchain_token_service(env).require_auth();
-                    <Self as stellar_interchain_token_service::executable::CustomExecutable>::authorized_execute_with_token(
+                    <Self as stellar_interchain_token_service::executable::CustomInterchainTokenExecutable>::__interchain_token_service(env).require_auth();
+                    <Self as stellar_interchain_token_service::executable::CustomInterchainTokenExecutable>::__authorized_execute_with_token(
                         env,
                         source_chain,
                         message_id,

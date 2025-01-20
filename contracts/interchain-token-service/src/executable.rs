@@ -12,19 +12,19 @@ pub use stellar_axelar_std::InterchainTokenExecutable;
 ///
 /// To make a contract executable by the interchain token service contract, it must implement the [`InterchainTokenExecutableInterface`] trait.
 /// For security purposes and convenience, sender authorization and other commonly shared code necessary to implement that trait can be automatically generated with the [`axelar_soroban_std::Executable`] derive macro.
-/// All parts that are specific to an individual ITS executable contract are collected in this [`CustomExecutable`] trait and must be implemented by the contract to be compatible with the [`InterchainTokenExecutableInterface`] trait.
+/// All parts that are specific to an individual ITS executable contract are collected in this [`CustomInterchainTokenExecutable`] trait and must be implemented by the contract to be compatible with the [`InterchainTokenExecutableInterface`] trait.
 ///
-/// Do NOT add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
-pub trait CustomExecutable {
-    /// The type of error the [`CustomExecutable::authorized_execute_with_token`] function returns. Generally matches the error type of the whole contract.
+/// Do NOT add the implementation of [`CustomInterchainTokenExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
+pub trait CustomInterchainTokenExecutable {
+    /// The type of error the [`CustomInterchainTokenExecutable::__authorized_execute_with_token`] function returns. Generally matches the error type of the whole contract.
     type Error: Into<soroban_sdk::Error>;
 
     /// Returns the address of the interchain token service contract that is authorized to execute arbitrary payloads on this contract
-    fn interchain_token_service(env: &Env) -> Address;
+    fn __interchain_token_service(env: &Env) -> Address;
 
     /// The custom execution logic that takes in an arbitrary payload and a token.
     /// At the time this function is called, the calling address has already been verified as the correct interchain token service contract.
-    fn authorized_execute_with_token(
+    fn __authorized_execute_with_token(
         env: &Env,
         source_chain: String,
         message_id: String,
@@ -41,8 +41,11 @@ pub trait CustomExecutable {
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]
 pub trait InterchainTokenExecutableInterface:
-    CustomExecutable + stellar_axelar_std::interfaces::DeriveOnly
+    CustomInterchainTokenExecutable + stellar_axelar_std::interfaces::DeriveOnly
 {
+    /// Returns the address of the interchain token service contract that is authorized to execute arbitrary payloads on this contract
+    fn interchain_token_service(env: &Env) -> Address;
+
     /// Execute a cross-chain message with the given payload and token.
     /// # Authorization
     /// - Only callable by ITS contract.
