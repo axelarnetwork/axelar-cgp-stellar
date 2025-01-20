@@ -43,6 +43,8 @@ pub trait InterchainTokenExecutableInterface:
     CustomExecutable + stellar_axelar_std::interfaces::DeriveOnly
 {
     /// Execute a cross-chain message with the given payload and token.
+    /// # Authorization
+    /// - Only callable by ITS contract.
     fn execute_with_interchain_token(
         env: &Env,
         source_chain: String,
