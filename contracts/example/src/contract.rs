@@ -115,8 +115,8 @@ impl Example {
         message: Bytes,
         gas_token: Token,
     ) {
-        let gateway = AxelarGatewayMessagingClient::new(&env, &Self::gateway(&env));
-        let gas_service = AxelarGasServiceClient::new(&env, &Self::gas_service(&env));
+        let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
+        let gas_service = AxelarGasServiceClient::new(env, &Self::gas_service(env));
 
         caller.require_auth();
 
@@ -127,7 +127,7 @@ impl Example {
             &message,
             &caller,
             &gas_token,
-            &Bytes::new(&env),
+            &Bytes::new(env),
         );
 
         gateway.call_contract(
@@ -157,7 +157,7 @@ impl Example {
             .ok_or(ExampleError::InvalidItsAddress)?;
 
         let interchain_token_service_client =
-            InterchainTokenServiceClient::new(&env, &interchain_token_service);
+            InterchainTokenServiceClient::new(env, &interchain_token_service);
 
         interchain_token_service_client.interchain_transfer(
             &caller,
@@ -177,7 +177,7 @@ impl Example {
             amount,
             message,
         }
-        .emit(&env);
+        .emit(env);
 
         Ok(())
     }

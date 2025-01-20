@@ -207,8 +207,8 @@ fn gmp_example() {
         user,
         source_app.send(
             &user,
-            destination_chain.clone(),
-            destination_address.clone(),
+            destination_chain,
+            destination_address,
             payload.clone(),
             gas_token
         ),
@@ -290,7 +290,7 @@ fn its_example() {
                 source_address: user,
                 destination_address,
                 amount,
-                data: Some(data.clone()),
+                data: Some(data),
             },
         ),
     };
