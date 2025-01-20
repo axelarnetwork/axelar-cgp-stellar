@@ -1,10 +1,10 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
 use stellar_interchain_token_service::error::ContractError;
@@ -124,8 +124,8 @@ fn execute_fails_with_invalid_source_address() {
 fn interchain_transfer_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
-    let sender = Address::generate(&env).to_xdr(&env);
-    let recipient = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
     let original_source_chain = String::from_str(&env, "ethereum");
@@ -176,8 +176,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env);
-    let sender_bytes = sender.clone().to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
 
@@ -199,7 +198,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
             name: token_metadata.name.clone(),
             symbol: token_metadata.symbol.clone(),
             decimals: token_metadata.decimal as u8,
-            minter: Some(sender_bytes),
+            minter: Some(sender.clone()),
         }),
     };
     let payload = msg.abi_encode(&env).unwrap();
@@ -226,7 +225,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
-    assert!(token.is_minter(&sender));
+    assert!(token.is_minter(&Address::from_string_bytes(&sender)));
     assert_eq!(token.name(), token_metadata.name);
     assert_eq!(token.symbol(), token_metadata.symbol);
     assert_eq!(token.decimals(), token_metadata.decimal);
@@ -374,7 +373,7 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
 

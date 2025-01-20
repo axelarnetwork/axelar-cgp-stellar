@@ -1,5 +1,5 @@
 use soroban_sdk::token::StellarAssetClient;
-use soroban_sdk::xdr::{FromXdr, ToXdr};
+use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
@@ -377,7 +377,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let message = Message::InterchainTransfer(InterchainTransfer {
             token_id,
-            source_address: caller.clone().to_xdr(env),
+            source_address: caller.to_string_bytes(),
             destination_address,
             amount,
             data,
@@ -674,8 +674,7 @@ impl InterchainTokenService {
             data,
         }: InterchainTransfer,
     ) -> Result<(), ContractError> {
-        let destination_address = Address::from_xdr(env, &destination_address)
-            .map_err(|_| ContractError::InvalidDestinationAddress)?;
+        let destination_address = Address::from_string_bytes(&destination_address);
 
         let token_config_value = Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
 
@@ -734,10 +733,7 @@ impl InterchainTokenService {
         let token_metadata = TokenMetadata::new(name, symbol, decimals as u32)?;
 
         // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
-        let minter = minter
-            .map(|m| Address::from_xdr(env, &m))
-            .transpose()
-            .map_err(|_| ContractError::InvalidMinter)?;
+        let minter = minter.map(|m| Address::from_string_bytes(&m));
 
         let deployed_address =
             Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);

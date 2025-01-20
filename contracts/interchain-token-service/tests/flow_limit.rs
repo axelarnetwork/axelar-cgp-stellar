@@ -1,11 +1,11 @@
 mod utils;
 
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gateway::testutils::TestSignerSet;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_gateway::AxelarGatewayClient;
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
@@ -86,8 +86,8 @@ fn approve_its_transfer(
     token_id: &BytesN<32>,
     amount: i128,
 ) -> ApprovedMessage {
-    let sender = Address::generate(env).to_xdr(env);
-    let recipient = Address::generate(env).to_xdr(env);
+    let sender = Address::generate(env).to_string_bytes();
+    let recipient = Address::generate(env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
 

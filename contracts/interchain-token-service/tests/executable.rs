@@ -1,10 +1,10 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth_err, events};
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
@@ -124,7 +124,7 @@ fn interchain_transfer_execute_succeeds() {
 
     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
     let source_address: String = client.its_hub_address();
 
@@ -132,6 +132,7 @@ fn interchain_transfer_execute_succeeds() {
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
+    let destination_address = executable_id.to_string_bytes();
     let original_source_chain = String::from_str(&env, "ethereum");
     client
         .mock_all_auths()
@@ -142,7 +143,7 @@ fn interchain_transfer_execute_succeeds() {
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id: token_id.clone(),
             source_address: sender,
-            destination_address: executable_id.clone().to_xdr(&env),
+            destination_address,
             amount,
             data: Some(data.clone()),
         }),
@@ -186,7 +187,7 @@ fn executable_fails_if_not_executed_from_its() {
     let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
 
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_xdr(&env);
+    let source_address = Address::generate(&env).to_string_bytes();
     let amount = 1000;
     let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_address = Address::generate(&env);
