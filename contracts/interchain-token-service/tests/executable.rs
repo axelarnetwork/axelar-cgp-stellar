@@ -14,14 +14,15 @@ mod test {
     use core::fmt::Debug;
 
     use soroban_sdk::{
-        contract, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
-        Topics, Val,
+        contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
+        String, Symbol, Topics, Val,
     };
     use stellar_axelar_std::events::Event;
-    use stellar_axelar_std::impl_event_testutils;
-    use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface;
+    use stellar_axelar_std::{ensure, impl_event_testutils, InterchainTokenExecutable};
+    use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 
     #[contract]
+    #[derive(InterchainTokenExecutable)]
     pub struct ExecutableContract;
 
     #[contracttype]
@@ -66,16 +67,22 @@ mod test {
         (Bytes)
     );
 
-    #[contractimpl]
-    impl InterchainTokenExecutableInterface for ExecutableContract {
-        fn interchain_token_service(env: &Env) -> Address {
+    #[contracterror]
+    pub enum ContractError {
+        PayloadLenOne = 1,
+    }
+
+    impl CustomInterchainTokenExecutable for ExecutableContract {
+        type Error = ContractError;
+
+        fn __interchain_token_service(env: &Env) -> Address {
             env.storage()
                 .instance()
                 .get(&DataKey::InterchainTokenService)
                 .expect("its not found")
         }
 
-        fn execute_with_interchain_token(
+        fn __authorized_execute_with_token(
             env: &Env,
             source_chain: String,
             message_id: String,
@@ -84,8 +91,8 @@ mod test {
             token_id: BytesN<32>,
             token_address: Address,
             amount: i128,
-        ) {
-            Self::validate(env);
+        ) -> Result<(), ContractError> {
+            ensure!(payload.len() != 1, ContractError::PayloadLenOne);
 
             env.storage().persistent().set(&DataKey::Message, &payload);
 
@@ -99,6 +106,8 @@ mod test {
                 amount,
             }
             .emit(env);
+
+            Ok(())
         }
     }
 
@@ -205,4 +214,58 @@ fn executable_fails_if_not_executed_from_its() {
             &amount,
         )
     );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #1)")] // ContractError::PayloadLenOne
+fn interchain_transfer_execute_fails_if_payload_is_len_one() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
+
+    let sender = Address::generate(&env).to_string_bytes();
+    let source_chain = client.its_hub_chain_name();
+    let source_address: String = client.its_hub_address();
+
+    let amount = 1000;
+    let deployer = Address::generate(&env);
+    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let data_with_len_1 = Bytes::from_slice(&env, &[1]);
+    let destination_address = executable_id.to_string_bytes();
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
+
+    let msg = HubMessage::ReceiveFromHub {
+        source_chain: original_source_chain,
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address,
+            amount,
+            data: Some(data_with_len_1),
+        }),
+    };
+    let payload = msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let message_id = String::from_str(&env, "test");
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+    let data_hash = get_approve_hash(&env, messages.clone());
+    let proof = generate_proof(&env, data_hash, signers);
+
+    gateway_client.approve_messages(&messages, &proof);
+
+    client.execute(&source_chain, &message_id, &source_address, &payload);
 }
