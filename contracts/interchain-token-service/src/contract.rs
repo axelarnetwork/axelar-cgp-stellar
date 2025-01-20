@@ -14,7 +14,9 @@ use stellar_interchain_token::InterchainTokenClient;
 
 use crate::error::ContractError;
 use crate::event::{
-    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent, InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent, PauseStatusSetEvent, TrustedChainRemovedEvent, TrustedChainSetEvent
+    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
+    InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
+    PauseStatusSetEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
 use crate::executable::InterchainTokenExecutableClient;
 use crate::flow_limit::FlowDirection;
