@@ -34,6 +34,7 @@ pub enum ContractError {
     InvalidTokenSymbol = 26,
     InvalidTokenDecimals = 27,
     TokenAlreadyRegistered = 28,
+    ContractPaused = 29,
 }
 
 impl_not_approved_error!(ContractError);
