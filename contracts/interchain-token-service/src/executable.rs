@@ -35,7 +35,7 @@ pub trait CustomExecutable {
     ) -> Result<(), Self::Error>;
 }
 
-/// Interface for an Interchain Token Executable app. Use the [axelar_soroban_std::Executable] derive macro to implement this interface.
+/// Interface for an Interchain Token Executable app. Use the [`stellar_axelar_std::Executable`] derive macro to implement this interface.
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]
