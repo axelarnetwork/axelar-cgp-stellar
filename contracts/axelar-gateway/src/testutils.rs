@@ -55,11 +55,6 @@ pub fn get_approve_hash(env: &Env, messages: Vec<Message>) -> BytesN<32> {
         .into()
 }
 
-pub fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
-    use rand::SeedableRng;
-    rand_chacha::ChaCha20Rng::seed_from_u64(42)
-}
-
 pub fn generate_test_message(env: &Env) -> (Message, Bytes) {
     generate_test_message_with_rng(env, rand::thread_rng())
 }
