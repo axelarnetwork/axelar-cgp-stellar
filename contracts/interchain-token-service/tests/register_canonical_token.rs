@@ -18,17 +18,15 @@ fn register_canonical_token_succeeds() {
     let expected_id = client.interchain_token_id(&Address::zero(&env), &expected_deploy_salt);
 
     assert_eq!(client.register_canonical_token(&token_address), expected_id);
+    goldie::assert!(events::fmt_last_emitted_event::<
+        InterchainTokenIdClaimedEvent,
+    >(&env));
 
     assert_eq!(client.token_address(&expected_id), token_address);
-
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
     );
-
-    goldie::assert!(events::fmt_last_emitted_event::<
-        InterchainTokenIdClaimedEvent,
-    >(&env));
 }
 
 #[test]
