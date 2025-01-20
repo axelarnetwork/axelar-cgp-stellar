@@ -12,25 +12,26 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 cfg-if = { workspace = true }
 ed25519-dalek = { version = "^2.1", default-features = false, optional = true }
-rand = { version = "0.8.5", optional = true }
-rand_chacha = "0.3"
+rand = { workspace = true, optional = true }
+rand_chacha = { version = "0.3", optional = true }
 soroban-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
 ed25519-dalek = { version = "^2.1" }
 goldie = { workspace = true }
-hex = "0.4"
+hex = { workspace = true }
 hex-literal = "0.4"
 paste = { workspace = true }
-rand = { version = "0.8.5" }
+rand = { workspace = true }
+rand_chacha = { version = "0.3" }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [features]
 library = [] # Only export the contract interface
-testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils", "ed25519-dalek", "rand"]
+testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils", "ed25519-dalek", "rand", "rand_chacha"]
 
 [lints]
 workspace = true

@@ -8,26 +8,27 @@ rust-version = "1.81.0"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+alloy-primitives = { version = "0.8.19", default-features = false, features = [
+    "std",
+] }
+alloy-sol-types = { version = "0.8.19", default-features = false, features = [
+    "std",
+] }
+cfg-if = { version = "1.0", default-features = false }
+goldie = { version = "0.5.0", default-features = false }
+hex = { version = "0.4", default-features = false }
+paste = { version = "1.0", default-features = false }
+proc-macro2 = { version = "1.0", default-features = false }
+rand = { version = "0.8.5", default-features = false }
 soroban-sdk = { version = "22.0.2" }
 soroban-token-sdk = { version = "22.0.2" }
-proc-macro2 = { version = "1.0" }
-cfg-if = { version = "1.0" }
-stellar-axelar-std = { version = "^0.1.0", path = "packages/axelar-std", features = ["derive"] }
-stellar-axelar-std-derive = { version = "^0.1.0", path = "packages/axelar-std-derive" }
 stellar-axelar-gas-service = { version = "^0.1.0", path = "contracts/axelar-gas-service" }
 stellar-axelar-gateway = { version = "^0.1.0", path = "contracts/axelar-gateway" }
 stellar-axelar-operators = { version = "^0.1.0", path = "contracts/axelar-operators" }
+stellar-axelar-std = { version = "^0.1.0", path = "packages/axelar-std", features = ["derive"] }
+stellar-axelar-std-derive = { version = "^0.1.0", path = "packages/axelar-std-derive" }
 stellar-interchain-token = { version = "^0.1.0", path = "contracts/interchain-token" }
 stellar-interchain-token-service = { version = "^0.1.0", path = "contracts/interchain-token-service" }
-alloy-primitives = { version = "0.8.14", default-features = false, features = [
-    "std",
-] }
-alloy-sol-types = { version = "0.8.14", default-features = false, features = [
-    "std",
-] }
-goldie = "0.5.0"
-hex = { version = "0.4" }
-paste = "1.0"
 
 [workspace.lints.clippy]
 nursery = { level = "warn", priority = -1 }
