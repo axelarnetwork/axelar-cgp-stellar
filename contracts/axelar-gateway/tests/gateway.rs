@@ -6,8 +6,8 @@ use stellar_axelar_gateway::event::{
 };
 #[cfg(any(test, feature = "testutils"))]
 use stellar_axelar_gateway::testutils::{
-    deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
-    generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
+    generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
+    generate_test_message_with_rng, get_approve_hash, randint,
 };
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
@@ -17,6 +17,11 @@ use utils::setup_env;
 
 const DESTINATION_CHAIN: &str = "ethereum";
 const DESTINATION_ADDRESS: &str = "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59";
+
+fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
+    use rand::SeedableRng;
+    rand_chacha::ChaCha20Rng::seed_from_u64(42)
+}
 
 #[test]
 fn call_contract() {
