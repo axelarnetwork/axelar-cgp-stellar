@@ -443,7 +443,7 @@ fn executable(name: &Ident) -> TokenStream2 {
 
         impl stellar_axelar_std::interfaces::DeriveOnly for #name {}
 
-        #[contractimpl]
+        #[soroban_sdk::contractimpl]
         impl stellar_interchain_token_service::executable::InterchainTokenExecutableInterface for #name {
             fn execute_with_interchain_token(
                 env: &Env,
