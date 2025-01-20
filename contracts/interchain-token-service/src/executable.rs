@@ -6,6 +6,7 @@
 //! This is similar to the [AxelarExecutableInterface] but meant for messages sent with an ITS token.
 
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
+pub use stellar_axelar_std::InterchainTokenExecutable;
 
 /// This trait must be implemented by a contract to be compatible with the [`InterchainTokenExecutableInterface`].
 ///
@@ -15,7 +16,7 @@ use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 ///
 /// Do not add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
 pub trait CustomExecutable {
-    /// The type of error the [`CustomExecutable::execute`] function returns. Generally matches the error type of the whole contract.
+    /// The type of error the [`CustomExecutable::authorized_execute_with_token`] function returns. Generally matches the error type of the whole contract.
     type Error: Into<soroban_sdk::Error>;
 
     /// Returns the address of the interchain token service contract that is authorized to execute arbitrary payloads on this contract
@@ -23,7 +24,7 @@ pub trait CustomExecutable {
 
     /// The custom execution logic that takes in an arbitrary payload and a token.
     /// At the time this function is called, the calling address has already been verified as the correct interchain token service contract.
-    fn execute(
+    fn authorized_execute_with_token(
         env: &Env,
         source_chain: String,
         message_id: String,

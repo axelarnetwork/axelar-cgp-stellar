@@ -18,13 +18,11 @@ mod test {
         String, Symbol, Topics, Val,
     };
     use stellar_axelar_std::events::Event;
-    use stellar_axelar_std::{ensure, impl_event_testutils, Executable};
-    use stellar_interchain_token_service::executable::{
-        CustomExecutable, InterchainTokenExecutableInterface,
-    };
+    use stellar_axelar_std::{ensure, impl_event_testutils, InterchainTokenExecutable};
+    use stellar_interchain_token_service::executable::CustomExecutable;
 
     #[contract]
-    #[derive(Executable)]
+    #[derive(InterchainTokenExecutable)]
     pub struct ExecutableContract;
 
     #[contracttype]
@@ -84,7 +82,7 @@ mod test {
                 .expect("its not found")
         }
 
-        fn execute(
+        fn authorized_execute_with_token(
             env: &Env,
             source_chain: String,
             message_id: String,
