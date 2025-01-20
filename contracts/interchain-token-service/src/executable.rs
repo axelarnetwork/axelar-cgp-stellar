@@ -13,7 +13,7 @@ use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 /// For security purposes and convenience, sender authorization and other commonly shared code necessary to implement that trait can be automatically generated with the [`axelar_soroban_std::Executable`] derive macro.
 /// All parts that are specific to an individual ITS executable contract are collected in this [`CustomExecutable`] trait and must be implemented by the contract to be compatible with the [`InterchainTokenExecutableInterface`] trait.
 ///
-/// Do not add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
+/// Do NOT add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
 pub trait CustomExecutable {
     /// The type of error the [`CustomExecutable::execute`] function returns. Generally matches the error type of the whole contract.
     type Error: Into<soroban_sdk::Error>;
