@@ -169,11 +169,10 @@ fn interchain_transfer_execute_succeeds() {
     gateway_client.approve_messages(&messages, &proof);
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
+    goldie::assert!(events::fmt_last_emitted_event::<test::ExecutedEvent>(&env));
 
     let token = token::TokenClient::new(&env, &client.token_address(&token_id));
     assert_eq!(token.balance(&executable_id), amount);
-
-    goldie::assert!(events::fmt_last_emitted_event::<test::ExecutedEvent>(&env));
 
     let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
     assert_eq!(executable_client.message(), Some(data));
