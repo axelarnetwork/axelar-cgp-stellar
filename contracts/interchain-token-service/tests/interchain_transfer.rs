@@ -50,10 +50,10 @@ fn interchain_transfer_send_fails_when_paused() {
         client.try_interchain_transfer(
             &Address::generate(&env),
             &BytesN::from_array(&env, &[0u8; 32]),
-            &String::from_str(&env, "ethereum"),
-            &Bytes::from_hex(&env, "4F4495243837681061C4743b74B3eEdf548D56A5"),
-            &1000,
-            &Some(Bytes::from_hex(&env, "abcd")),
+            &String::from_str(&env, ""),
+            &Bytes::from_hex(&env, ""),
+            &1,
+            &Some(Bytes::from_hex(&env, "")),
             &setup_gas_token(&env, &Address::generate(&env))
         ),
         ContractError::ContractPaused
