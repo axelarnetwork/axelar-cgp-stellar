@@ -11,8 +11,6 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::types::Token;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
-pub const HUB_CHAIN: &str = "axelar";
-
 const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("../testdata/interchain_token.wasm");
 
 pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
@@ -40,6 +38,8 @@ fn setup_its<'a>(
         .deployer()
         .upload_contract_wasm(INTERCHAIN_TOKEN_WASM_HASH);
 
+    let native_token_address = env.register_stellar_asset_contract_v2(owner.clone());
+
     let contract_id = env.register(
         InterchainTokenService,
         (
@@ -49,6 +49,7 @@ fn setup_its<'a>(
             &gas_service.address,
             its_hub_address,
             chain_name,
+            native_token_address.address(),
             interchain_token_wasm_hash,
         ),
     );
@@ -115,9 +116,10 @@ pub fn setup_its_token(
 }
 
 #[allow(dead_code)]
-pub fn register_chains(env: &Env, client: &InterchainTokenServiceClient) {
-    let chain = String::from_str(env, HUB_CHAIN);
-    client.mock_all_auths().set_trusted_chain(&chain);
+pub fn register_chains(_env: &Env, client: &InterchainTokenServiceClient) {
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 }
 
 #[allow(dead_code)]

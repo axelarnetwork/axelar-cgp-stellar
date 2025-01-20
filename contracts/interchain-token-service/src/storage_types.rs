@@ -5,12 +5,13 @@ use crate::types::TokenManagerType;
 #[contracttype]
 #[derive(Clone, Debug)]
 pub enum DataKey {
-    TrustedChain(String),
     Gateway,
     GasService,
-    ItsHubAddress,
     ChainName,
+    ItsHubAddress,
+    NativeTokenAddress,
     InterchainTokenWasmHash,
+    TrustedChain(String),
     TokenIdConfigKey(BytesN<32>),
     FlowLimit(BytesN<32>),
     FlowOut(FlowKey),
