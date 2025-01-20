@@ -223,25 +223,29 @@ fn executable_fails_if_not_executed_from_its() {
 #[should_panic(expected = "Error(Contract, #1)")] // ContractError::PayloadLenOne
 fn interchain_transfer_execute_fails_if_payload_is_len_one() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
 
     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address: String = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
     let data_with_len_1 = Bytes::from_slice(&env, &[1]);
+    let destination_address = executable_id.to_string_bytes();
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id,
             source_address: sender,
-            destination_address: executable_id.to_xdr(&env),
+            destination_address,
             amount,
             data: Some(data_with_len_1),
         }),

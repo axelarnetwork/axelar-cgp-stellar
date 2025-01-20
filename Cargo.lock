@@ -2026,6 +2026,7 @@ name = "stellar-axelar-std-derive"
 version = "0.1.0"
 dependencies = [
  "heck",
+ "paste",
  "proc-macro2",
  "quote",
  "soroban-sdk",
