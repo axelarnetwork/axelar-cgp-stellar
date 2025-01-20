@@ -1,8 +1,8 @@
 #![cfg(test)]
 extern crate std;
 
-use soroban_sdk::testutils::{Address as _, BytesN as _};
-use soroban_sdk::{Address, BytesN, Env, IntoVal as _, Symbol};
+use soroban_sdk::testutils::{Address as _, BytesN as _, Ledger};
+use soroban_sdk::{Address, BytesN, Env, IntoVal as _, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_last_emitted_event};
 use stellar_interchain_token::{InterchainToken, InterchainTokenClient};
@@ -34,8 +34,22 @@ fn setup_token<'a>(env: &Env) -> (InterchainTokenClient<'a>, Address, Address) {
 fn register_interchain_token() {
     let env = Env::default();
 
-    let (token, owner, minter) = setup_token(&env);
+    let owner = Address::generate(&env);
+    let minter = Address::generate(&env);
+    let token_id: BytesN<32> = BytesN::<32>::random(&env);
+    let token_metadata = setup_token_metadata(&env, "name", "symbol", 6);
 
+    let contract_id = env.register(
+        InterchainToken,
+        (owner.clone(), minter.clone(), &token_id, token_metadata),
+    );
+
+    let token = InterchainTokenClient::new(&env, &contract_id);
+
+    assert_eq!(token.token_id(), token_id);
+    assert_eq!(token.name(), String::from_str(&env, "name"));
+    assert_eq!(token.symbol(), String::from_str(&env, "symbol"));
+    assert_eq!(token.decimals(), 6);
     assert_eq!(token.owner(), owner);
     assert!(token.is_minter(&owner));
     assert!(token.is_minter(&minter));
@@ -62,7 +76,7 @@ fn register_interchain_token_without_minter() {
 }
 
 #[test]
-fn transfer_ownership_from_non_owner() {
+fn transfer_ownership_from_non_owner_fails() {
     let env = Env::default();
 
     let new_owner = Address::generate(&env);
@@ -89,7 +103,7 @@ fn transfer_ownership() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
-fn fail_transfer_with_negative_amount() {
+fn transfer_fails_with_negative_amount() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -104,7 +118,7 @@ fn fail_transfer_with_negative_amount() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #9)")] // InsufficientBalance
-fn fail_transfer_with_insufficient_balance() {
+fn transfer_fails_with_insufficient_balance() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -137,7 +151,7 @@ fn transfer() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
-fn fail_transfer_from_with_negative_amount() {
+fn transfer_from_fails_with_negative_amount() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -164,7 +178,7 @@ fn fail_transfer_from_with_negative_amount() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
-fn fail_transfer_from_without_approval() {
+fn transfer_from_fails_without_approval() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -182,7 +196,7 @@ fn fail_transfer_from_without_approval() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
-fn fail_transfer_from_with_insufficient_allowance() {
+fn transfer_from_fails_with_insufficient_allowance() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -204,6 +218,36 @@ fn fail_transfer_from_with_insufficient_allowance() {
     assert_eq!(token.allowance(&user1, &user2), 100_i128);
 
     token.transfer_from(&user2, &user1, &user3, &400_i128);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
+fn transfer_from_fails_with_expired_allowance() {
+    let env = Env::default();
+
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let user3 = Address::generate(&env);
+
+    let (token, _owner, minter) = setup_token(&env);
+
+    token
+        .mock_all_auths()
+        .mint_from(&minter, &user1, &1000_i128);
+    let allowance: i128 = 100;
+
+    let current_ledger = env.ledger().sequence();
+    let expiration_ledger = current_ledger + 100;
+
+    token
+        .mock_all_auths()
+        .approve(&user1, &user2, &allowance, &expiration_ledger);
+
+    env.ledger().set_sequence_number(expiration_ledger + 1);
+
+    token
+        .mock_all_auths()
+        .transfer_from(&user2, &user1, &user3, &allowance);
 }
 
 #[test]
@@ -237,7 +281,7 @@ fn transfer_from() {
 }
 
 #[test]
-fn fail_mint_from_invalid_minter() {
+fn mint_from_invalid_minter_fails() {
     let env = Env::default();
 
     let amount = 1000;
@@ -268,7 +312,7 @@ fn mint_from_minter_succeeds() {
 }
 
 #[test]
-fn fail_add_minter_from_non_owner() {
+fn add_minter_fails_without_owner_auth() {
     let env = Env::default();
 
     let minter2 = Address::generate(&env);
@@ -303,7 +347,7 @@ fn add_minter_succeeds() {
 }
 
 #[test]
-fn fail_remove_minter_from_non_owner() {
+fn remove_minter_fails_without_owner_auth() {
     let env = Env::default();
 
     let minter1 = Address::generate(&env);
@@ -338,7 +382,7 @@ fn remove_minter() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
-fn fail_burn_with_negative_amount() {
+fn burn_fails_with_negative_amount() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -357,7 +401,7 @@ fn fail_burn_with_negative_amount() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #9)")] // InsufficientBalance
-fn fail_burn_with_insufficient_balance() {
+fn burn_fails_with_insufficient_balance() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -392,7 +436,7 @@ fn burn_succeeds() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
-fn fail_burn_from_with_negative_amount() {
+fn burn_from_fails_with_negative_amount() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -407,7 +451,7 @@ fn fail_burn_from_with_negative_amount() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
-fn fail_burn_from_without_approval() {
+fn burn_from_fails_without_approval() {
     let env = Env::default();
     env.mock_all_auths();
 
