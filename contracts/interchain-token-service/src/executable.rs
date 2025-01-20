@@ -14,7 +14,7 @@ pub use stellar_axelar_std::InterchainTokenExecutable;
 /// For security purposes and convenience, sender authorization and other commonly shared code necessary to implement that trait can be automatically generated with the [`axelar_soroban_std::Executable`] derive macro.
 /// All parts that are specific to an individual ITS executable contract are collected in this [`CustomExecutable`] trait and must be implemented by the contract to be compatible with the [`InterchainTokenExecutableInterface`] trait.
 ///
-/// Do not add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
+/// Do NOT add the implementation of [`CustomExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
 pub trait CustomExecutable {
     /// The type of error the [`CustomExecutable::authorized_execute_with_token`] function returns. Generally matches the error type of the whole contract.
     type Error: Into<soroban_sdk::Error>;
@@ -36,7 +36,7 @@ pub trait CustomExecutable {
     ) -> Result<(), Self::Error>;
 }
 
-/// Interface for an Interchain Token Executable app. Use the [axelar_soroban_std::Executable] derive macro to implement this interface.
+/// Interface for an Interchain Token Executable app. Use the [`stellar_axelar_std::Executable`] derive macro to implement this interface.
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]
@@ -44,6 +44,8 @@ pub trait InterchainTokenExecutableInterface:
     CustomExecutable + stellar_axelar_std::interfaces::DeriveOnly
 {
     /// Execute a cross-chain message with the given payload and token.
+    /// # Authorization
+    /// - Only callable by ITS contract.
     fn execute_with_interchain_token(
         env: &Env,
         source_chain: String,

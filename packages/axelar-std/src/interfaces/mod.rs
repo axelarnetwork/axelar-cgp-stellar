@@ -8,7 +8,7 @@ pub use operatable::*;
 pub use ownable::*;
 pub use upgradable::*;
 
-/// Marker trait for interfaces that should not be implemented by using .
+/// Marker trait for interfaces that should not be implemented by using `contractimpl`.
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[doc(hidden)]
