@@ -1,19 +1,22 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{vec, Address, Bytes, BytesN, String};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
-use stellar_axelar_std::events;
+use stellar_axelar_std::address::AddressExt;
+use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
+use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use utils::{approve_gateway_messages, register_chains, setup_env, setup_its_token, HUB_CHAIN};
+use utils::{
+    approve_gateway_messages, register_chains, setup_env, setup_its_token, TokenMetadataExt,
+};
 
 #[test]
 #[should_panic(expected = "Error(Contract, #22)")] // ContractError::NotApproved
@@ -33,9 +36,9 @@ fn execute_fails_without_gateway_approval() {
 fn execute_fails_with_invalid_message() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
-    let source_chain = client.its_hub_chain_name();
     let message_id = String::from_str(&env, "test");
-    let source_address = Address::generate(&env).to_string();
+    let source_chain = client.its_hub_chain_name();
+    let source_address = client.its_hub_address();
 
     let invalid_payload = Bytes::from_array(&env, &[1u8; 16]);
     let payload_hash: BytesN<32> = env.crypto().keccak256(&invalid_payload).into();
@@ -62,21 +65,80 @@ fn execute_fails_with_invalid_message() {
 }
 
 #[test]
+fn execute_fails_with_invalid_source_chain() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let message_id = String::from_str(&env, "test");
+    let source_chain = String::from_str(&env, "invalid");
+    let source_address = client.its_hub_address();
+    let payload = Bytes::new(&env);
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload,),
+        ContractError::NotHubChain
+    );
+}
+
+#[test]
+fn execute_fails_with_invalid_source_address() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let message_id = String::from_str(&env, "test");
+    let source_chain = client.its_hub_chain_name();
+    let source_address = String::from_str(&env, "invalid");
+    let payload = Bytes::new(&env);
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload,),
+        ContractError::NotHubAddress
+    );
+}
+
+#[test]
 fn interchain_transfer_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_xdr(&env);
-    let recipient = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address = client.its_hub_address();
+    let original_source_chain = String::from_str(&env, "ethereum");
 
     let amount = 1000;
     let deployer = Address::generate(&env);
     let token_id = setup_its_token(&env, &client, &deployer, amount);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::InterchainTransfer(InterchainTransfer {
             token_id,
             source_address: sender,
@@ -85,10 +147,9 @@ fn interchain_transfer_message_execute_succeeds() {
             data: None,
         }),
     };
+    let message_id = String::from_str(&env, "test");
     let payload = msg.abi_encode(&env).unwrap();
     let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
-
-    let message_id = String::from_str(&env, "test");
 
     let messages = vec![
         &env,
@@ -115,10 +176,9 @@ fn deploy_interchain_token_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env);
-    let sender_bytes = sender.clone().to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address = client.its_hub_address();
 
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
     let token_metadata = TokenMetadata {
@@ -126,15 +186,19 @@ fn deploy_interchain_token_message_execute_succeeds() {
         symbol: String::from_str(&env, "TEST"),
         decimal: 18,
     };
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::DeployInterchainToken(DeployInterchainToken {
             token_id: token_id.clone(),
             name: token_metadata.name.clone(),
             symbol: token_metadata.symbol.clone(),
             decimals: token_metadata.decimal as u8,
-            minter: Some(sender_bytes),
+            minter: Some(sender.clone()),
         }),
     };
     let payload = msg.abi_encode(&env).unwrap();
@@ -161,7 +225,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
-    assert!(token.is_minter(&sender));
+    assert!(token.is_minter(&Address::from_string_bytes(&sender)));
     assert_eq!(token.name(), token_metadata.name);
     assert_eq!(token.symbol(), token_metadata.symbol);
     assert_eq!(token.decimals(), token_metadata.decimal);
@@ -172,96 +236,83 @@ fn deploy_interchain_token_message_execute_succeeds() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
-fn deploy_interchain_token_message_execute_fails_empty_token_name() {
-    let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
+fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
+    let env = Env::default();
 
-    let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
-    let token_id = BytesN::from_array(&env, &[1u8; 32]);
-
-    let msg_empty_name = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
-        message: Message::DeployInterchainToken(DeployInterchainToken {
-            token_id,
-            name: String::from_str(&env, ""),
-            symbol: String::from_str(&env, "TEST"),
-            decimals: 18,
-            minter: None,
-        }),
-    };
-    let payload_empty_name = msg_empty_name.abi_encode(&env).unwrap();
-    let payload_hash_empty_name: BytesN<32> = env.crypto().keccak256(&payload_empty_name).into();
-
-    let message_id_empty_name = String::from_str(&env, "no_name");
-
-    let messages = vec![
-        &env,
-        GatewayMessage {
-            source_chain: source_chain.clone(),
-            message_id: message_id_empty_name.clone(),
-            source_address: source_address.clone(),
-            contract_address: client.address.clone(),
-            payload_hash: payload_hash_empty_name,
-        },
+    let cases = [
+        (
+            TokenMetadata::new(&env, "", "symbol", 6),
+            ContractError::InvalidTokenName,
+        ),
+        (
+            TokenMetadata::new(&env, "A".repeat(33).as_str(), "symbol", 6),
+            ContractError::InvalidTokenName,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "", 6),
+            ContractError::InvalidTokenSymbol,
+        ),
+        (
+            TokenMetadata::new(&env, "name", "A".repeat(33).as_str(), 6),
+            ContractError::InvalidTokenSymbol,
+        ),
     ];
 
-    approve_gateway_messages(&env, &gateway_client, signers, messages);
+    for (
+        i,
+        (
+            TokenMetadata {
+                name,
+                symbol,
+                decimal,
+            },
+            expected_error,
+        ),
+    ) in cases.into_iter().enumerate()
+    {
+        let (env, client, gateway_client, _, signers) = setup_env();
 
-    client.execute(
-        &source_chain,
-        &message_id_empty_name,
-        &source_address,
-        &payload_empty_name,
-    );
-}
+        let source_chain = client.its_hub_chain_name();
+        let source_address = client.its_hub_address();
+        let original_source_chain = String::from_str(&env, "ethereum");
+        let message_id = String::from_str(&env, "message_id");
 
-#[test]
-#[should_panic(expected = "Error(Contract, #16)")] // ContractError::InvalidTokenMetadata
-fn deploy_interchain_token_message_execute_fails_empty_token_symbol() {
-    let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
+        client
+            .mock_all_auths()
+            .set_trusted_chain(&original_source_chain);
 
-    let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
-    let token_id = BytesN::from_array(&env, &[1u8; 32]);
+        let token_id = BytesN::from_array(&env, &[i as u8; 32]);
+        let msg = HubMessage::ReceiveFromHub {
+            source_chain: original_source_chain.clone(),
+            message: Message::DeployInterchainToken(DeployInterchainToken {
+                token_id,
+                name,
+                symbol,
+                decimals: decimal as u8,
+                minter: None,
+            }),
+        };
+        let payload = msg.abi_encode(&env).unwrap();
+        let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
-    let msg_empty_symbol = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
-        message: Message::DeployInterchainToken(DeployInterchainToken {
-            token_id,
-            name: String::from_str(&env, "test"),
-            symbol: String::from_str(&env, ""),
-            decimals: 18,
-            minter: None,
-        }),
-    };
-    let payload_empty_symbol = msg_empty_symbol.abi_encode(&env).unwrap();
-    let payload_hash_empty_symbol: BytesN<32> =
-        env.crypto().keccak256(&payload_empty_symbol).into();
+        let messages = vec![
+            &env,
+            GatewayMessage {
+                source_chain: source_chain.clone(),
+                message_id: message_id.clone(),
+                source_address: source_address.clone(),
+                contract_address: client.address.clone(),
+                payload_hash: payload_hash.clone(),
+            },
+        ];
 
-    let message_id_empty_symbol = String::from_str(&env, "no_symbol");
+        approve_gateway_messages(&env, &gateway_client, signers, messages);
 
-    let messages = vec![
-        &env,
-        GatewayMessage {
-            source_chain: source_chain.clone(),
-            message_id: message_id_empty_symbol.clone(),
-            source_address: source_address.clone(),
-            contract_address: client.address.clone(),
-            payload_hash: payload_hash_empty_symbol,
-        },
-    ];
-
-    approve_gateway_messages(&env, &gateway_client, signers, messages);
-
-    client.execute(
-        &source_chain,
-        &message_id_empty_symbol,
-        &source_address,
-        &payload_empty_symbol,
-    );
+        assert_contract_err!(
+            client.try_execute(&source_chain, &message_id, &source_address, &payload),
+            expected_error
+        );
+    }
 }
 
 #[test]
@@ -271,13 +322,16 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
     register_chains(&env, &client);
 
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address = client.its_hub_address();
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
-
     let invalid_minter = Bytes::from_array(&env, &[1u8; 32]);
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg_invalid_minter = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::DeployInterchainToken(DeployInterchainToken {
             token_id,
             name: String::from_str(&env, "test"),
@@ -319,9 +373,9 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
 
-    let sender = Address::generate(&env).to_xdr(&env);
+    let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string();
+    let source_address = client.its_hub_address();
 
     let token_id = BytesN::from_array(&env, &[1u8; 32]);
     let token_metadata = TokenMetadata {
@@ -329,9 +383,13 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
         symbol: String::from_str(&env, "TEST"),
         decimal: 18,
     };
+    let original_source_chain = String::from_str(&env, "ethereum");
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
 
     let msg = HubMessage::ReceiveFromHub {
-        source_chain: String::from_str(&env, HUB_CHAIN),
+        source_chain: original_source_chain,
         message: Message::DeployInterchainToken(DeployInterchainToken {
             token_id,
             name: token_metadata.name.clone(),

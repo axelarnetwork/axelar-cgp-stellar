@@ -1,7 +1,7 @@
 mod utils;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{Address, Bytes, String};
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::assert_contract_err;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_interchain_token_service::error::ContractError;
@@ -45,7 +45,7 @@ fn send_to_untrusted_chain_fails() {
             &sender,
             &token_id,
             &String::from_str(&env, "untrusted_chain"),
-            &Address::generate(&env).to_xdr(&env),
+            &Address::generate(&env).to_string_bytes(),
             &amount,
             &None,
             &gas_token,

@@ -9,13 +9,11 @@ use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::token::validate_token_metadata;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 use stellar_interchain_token::InterchainTokenClient;
 
-use crate::abi::{get_message_type, MessageType as EncodedMessageType};
 use crate::error::ContractError;
 use crate::event::{
     InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
@@ -25,10 +23,11 @@ use crate::event::{
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
 use crate::storage_types::{DataKey, TokenIdConfigValue};
+use crate::token_metadata::TokenMetadataExt;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use crate::{flow_limit, token_handler};
+use crate::{flow_limit, token_handler, token_metadata};
 
 const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
@@ -50,6 +49,7 @@ impl InterchainTokenService {
         gas_service: Address,
         its_hub_address: String,
         chain_name: String,
+        native_token_address: Address,
         interchain_token_wasm_hash: BytesN<32>,
     ) {
         interfaces::set_owner(&env, &owner);
@@ -64,6 +64,9 @@ impl InterchainTokenService {
         env.storage()
             .instance()
             .set(&DataKey::ChainName, &chain_name);
+        env.storage()
+            .instance()
+            .set(&DataKey::NativeTokenAddress, &native_token_address);
         env.storage().instance().set(
             &DataKey::InterchainTokenWasmHash,
             &interchain_token_wasm_hash,
@@ -73,13 +76,6 @@ impl InterchainTokenService {
 
 #[contractimpl]
 impl InterchainTokenServiceInterface for InterchainTokenService {
-    fn chain_name(env: &Env) -> String {
-        env.storage()
-            .instance()
-            .get(&DataKey::ChainName)
-            .expect("chain name not found")
-    }
-
     fn gas_service(env: &Env) -> Address {
         env.storage()
             .instance()
@@ -87,11 +83,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .expect("gas service not found")
     }
 
-    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32> {
+    fn chain_name(env: &Env) -> String {
         env.storage()
             .instance()
-            .get(&DataKey::InterchainTokenWasmHash)
-            .expect("interchain token wasm hash not found")
+            .get(&DataKey::ChainName)
+            .expect("chain name not found")
+    }
+
+    fn its_hub_chain_name(env: &Env) -> String {
+        String::from_str(env, ITS_HUB_CHAIN_NAME)
     }
 
     fn its_hub_address(env: &Env) -> String {
@@ -101,8 +101,18 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .expect("its hub address not found")
     }
 
-    fn its_hub_chain_name(env: &Env) -> String {
-        String::from_str(env, ITS_HUB_CHAIN_NAME)
+    fn native_token_address(env: &Env) -> Address {
+        env.storage()
+            .instance()
+            .get(&DataKey::NativeTokenAddress)
+            .expect("native token address not found")
+    }
+
+    fn interchain_token_wasm_hash(env: &Env) -> BytesN<32> {
+        env.storage()
+            .instance()
+            .get(&DataKey::InterchainTokenWasmHash)
+            .expect("interchain token wasm hash not found")
     }
 
     fn is_trusted_chain(env: &Env, chain: String) -> bool {
@@ -231,6 +241,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let deploy_salt = Self::interchain_token_deploy_salt(env, caller.clone(), salt);
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
+
+        token_metadata.validate()?;
 
         let deployed_address = Self::deploy_interchain_token_contract(
             env,
@@ -367,7 +379,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         let message = Message::InterchainTransfer(InterchainTransfer {
             token_id,
-            source_address: caller.clone().to_xdr(env),
+            source_address: caller.to_string_bytes(),
             destination_address,
             amount,
             data,
@@ -459,113 +471,18 @@ impl InterchainTokenService {
         env: &Env,
         source_chain: String,
         message_id: String,
-        _source_address: String,
+        source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
-        let (source_chain, message) = Self::get_execute_params(env, source_chain, &payload)?;
+        let (source_chain, message) =
+            Self::get_execute_params(env, source_chain, source_address, payload)?;
 
         match message {
-            Message::InterchainTransfer(InterchainTransfer {
-                token_id,
-                source_address,
-                destination_address,
-                amount,
-                data,
-            }) => {
-                let destination_address = Address::from_xdr(env, &destination_address)
-                    .map_err(|_| ContractError::InvalidDestinationAddress)?;
-
-                let token_config_value =
-                    Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
-
-                FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
-
-                token_handler::give_token(
-                    env,
-                    &destination_address,
-                    token_config_value.clone(),
-                    amount,
-                )?;
-
-                InterchainTransferReceivedEvent {
-                    source_chain: source_chain.clone(),
-                    token_id: token_id.clone(),
-                    source_address: source_address.clone(),
-                    destination_address: destination_address.clone(),
-                    amount,
-                    data: data.clone(),
-                }
-                .emit(env);
-
-                let token_address = token_config_value.token_address;
-
-                if let Some(payload) = data {
-                    let call_data = vec![
-                        &env,
-                        source_chain.to_val(),
-                        message_id.to_val(),
-                        source_address.to_val(),
-                        payload.to_val(),
-                        token_id.to_val(),
-                        token_address.to_val(),
-                        amount.into_val(env),
-                    ];
-
-                    // Due to limitations of the soroban-sdk, there is no type-safe client for contract execution.
-                    // The invocation will panic on error, so we can safely cast the return value to `()` and discard it.
-                    env.invoke_contract::<()>(
-                        &destination_address,
-                        &Symbol::new(env, EXECUTE_WITH_TOKEN),
-                        call_data,
-                    );
-                }
+            Message::InterchainTransfer(message) => {
+                Self::execute_transfer_message(env, &source_chain, message_id, message)
             }
-            Message::DeployInterchainToken(DeployInterchainToken {
-                token_id,
-                name,
-                symbol,
-                decimals,
-                minter,
-            }) => {
-                ensure!(
-                    Self::token_id_config(env, token_id.clone()).is_err(),
-                    ContractError::TokenAlreadyDeployed
-                );
-
-                let token_metadata = TokenMetadata {
-                    name,
-                    symbol,
-                    decimal: decimals as u32,
-                };
-
-                ensure!(
-                    validate_token_metadata(&token_metadata).is_ok(),
-                    ContractError::InvalidTokenMetaData
-                );
-
-                // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
-                let minter = minter
-                    .map(|m| Address::from_xdr(env, &m))
-                    .transpose()
-                    .map_err(|_| ContractError::InvalidMinter)?;
-
-                let deployed_address = Self::deploy_interchain_token_contract(
-                    env,
-                    minter,
-                    token_id.clone(),
-                    token_metadata,
-                );
-
-                Self::set_token_id_config(
-                    env,
-                    token_id,
-                    TokenIdConfigValue {
-                        token_address: deployed_address,
-                        token_manager_type: TokenManagerType::NativeInterchainToken,
-                    },
-                );
-            }
-        };
+            Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
+        }?;
 
         extend_persistent_ttl(env, &DataKey::TrustedChain(source_chain));
         extend_instance_ttl(env);
@@ -573,39 +490,35 @@ impl InterchainTokenService {
         Ok(())
     }
 
+    /// Validate that the message is coming from the ITS Hub and decode the message
     fn get_execute_params(
         env: &Env,
         source_chain: String,
-        payload: &Bytes,
+        source_address: String,
+        payload: Bytes,
     ) -> Result<(String, Message), ContractError> {
-        let message_type = get_message_type(&payload.to_alloc_vec())?;
-
-        ensure!(
-            message_type == EncodedMessageType::ReceiveFromHub,
-            ContractError::InvalidMessageType
-        );
-
         ensure!(
             source_chain == Self::its_hub_chain_name(env),
-            ContractError::InvalidHubChain
+            ContractError::NotHubChain
         );
-
-        let decoded_message = HubMessage::abi_decode(env, payload)?;
+        ensure!(
+            source_address == Self::its_hub_address(env),
+            ContractError::NotHubAddress
+        );
 
         let HubMessage::ReceiveFromHub {
             source_chain: original_source_chain,
-            message: inner_message,
-        } = decoded_message
+            message,
+        } = HubMessage::abi_decode(env, &payload)?
         else {
             return Err(ContractError::InvalidMessageType);
         };
-
         ensure!(
             Self::is_trusted_chain(env, original_source_chain.clone()),
             ContractError::UntrustedChain
         );
 
-        Ok((original_source_chain, inner_message))
+        Ok((original_source_chain, message))
     }
 
     fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
@@ -689,23 +602,17 @@ impl InterchainTokenService {
 
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt);
         let token_address = Self::token_id_config(env, token_id.clone())?.token_address;
-        let token = token::Client::new(env, &token_address);
-        let token_metadata = TokenMetadata {
-            name: token.name(),
-            decimal: token.decimals(),
-            symbol: token.symbol(),
-        };
-
-        ensure!(
-            validate_token_metadata(&token_metadata).is_ok(),
-            ContractError::InvalidTokenMetaData
-        );
+        let TokenMetadata {
+            name,
+            symbol,
+            decimal,
+        } = token_metadata::token_metadata(env, &token_address, &Self::native_token_address(env))?;
 
         let message = Message::DeployInterchainToken(DeployInterchainToken {
             token_id: token_id.clone(),
-            name: token_metadata.name.clone(),
-            symbol: token_metadata.symbol.clone(),
-            decimals: token_metadata.decimal as u8,
+            name: name.clone(),
+            symbol: symbol.clone(),
+            decimals: decimal as u8,
             minter: None,
         });
 
@@ -713,9 +620,9 @@ impl InterchainTokenService {
             token_id: token_id.clone(),
             token_address,
             destination_chain: destination_chain.clone(),
-            name: token_metadata.name,
-            symbol: token_metadata.symbol,
-            decimals: token_metadata.decimal,
+            name,
+            symbol,
+            decimals: decimal,
             minter: None,
         }
         .emit(env);
@@ -755,5 +662,93 @@ impl InterchainTokenService {
         .emit(env);
 
         deployed_address
+    }
+
+    fn execute_transfer_message(
+        env: &Env,
+        source_chain: &String,
+        message_id: String,
+        InterchainTransfer {
+            token_id,
+            source_address,
+            destination_address,
+            amount,
+            data,
+        }: InterchainTransfer,
+    ) -> Result<(), ContractError> {
+        let destination_address = Address::from_string_bytes(&destination_address);
+
+        let token_config_value = Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
+
+        FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
+
+        token_handler::give_token(
+            env,
+            &destination_address,
+            token_config_value.clone(),
+            amount,
+        )?;
+
+        InterchainTransferReceivedEvent {
+            source_chain: source_chain.clone(),
+            token_id: token_id.clone(),
+            source_address: source_address.clone(),
+            destination_address: destination_address.clone(),
+            amount,
+            data: data.clone(),
+        }
+        .emit(env);
+
+        let token_address = token_config_value.token_address;
+
+        if let Some(payload) = data {
+            let executable = InterchainTokenExecutableClient::new(env, &destination_address);
+            executable.execute_with_interchain_token(
+                source_chain,
+                &message_id,
+                &source_address,
+                &payload,
+                &token_id,
+                &token_address,
+                &amount,
+            );
+        }
+
+        Ok(())
+    }
+
+    fn execute_deploy_message(
+        env: &Env,
+        DeployInterchainToken {
+            token_id,
+            name,
+            symbol,
+            decimals,
+            minter,
+        }: DeployInterchainToken,
+    ) -> Result<(), ContractError> {
+        ensure!(
+            Self::token_id_config(env, token_id.clone()).is_err(),
+            ContractError::TokenAlreadyDeployed
+        );
+
+        let token_metadata = TokenMetadata::new(name, symbol, decimals as u32)?;
+
+        // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
+        let minter = minter.map(|m| Address::from_string_bytes(&m));
+
+        let deployed_address =
+            Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);
+
+        Self::set_token_id_config(
+            env,
+            token_id,
+            TokenIdConfigValue {
+                token_address: deployed_address,
+                token_manager_type: TokenManagerType::NativeInterchainToken,
+            },
+        );
+
+        Ok(())
     }
 }

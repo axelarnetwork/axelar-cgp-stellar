@@ -22,7 +22,7 @@ soroban-sdk = { workspace = true, features = ["testutils"] }
 stellar-axelar-std-derive = { workspace = true, features = ["testutils"] }
 
 [features]
-testutils = ["soroban-sdk/testutils", "hex"]
+testutils = ["soroban-sdk/testutils", "hex", "stellar-axelar-std-derive/testutils"]
 derive = ["dep:stellar-axelar-std-derive"]
 
 [lints]

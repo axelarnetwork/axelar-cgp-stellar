@@ -10,9 +10,7 @@ use stellar_axelar_gateway::testutils::{
     generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
 };
 use stellar_axelar_gateway::types::Message;
-use stellar_axelar_std::{
-    assert_auth, assert_auth_err, assert_contract_err, assert_invocation, events,
-};
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 
 mod utils;
 use utils::setup_env;
@@ -32,14 +30,6 @@ fn call_contract() {
     assert_auth!(
         user,
         client.call_contract(&user, &destination_chain, &destination_address, &payload)
-    );
-
-    assert_invocation(
-        &env,
-        &user,
-        &client.address,
-        "call_contract",
-        (&user, destination_chain, destination_address, payload),
     );
 
     goldie::assert!(events::fmt_last_emitted_event::<ContractCalledEvent>(&env));
@@ -73,20 +63,6 @@ fn validate_message() {
         )
     );
     assert!(!approved);
-
-    assert_invocation(
-        &env,
-        &contract_address,
-        &client.address,
-        "validate_message",
-        (
-            &contract_address,
-            source_chain,
-            message_id,
-            source_address,
-            payload_hash,
-        ),
-    );
 
     assert_eq!(env.events().all().len(), prev_event_count);
 }
