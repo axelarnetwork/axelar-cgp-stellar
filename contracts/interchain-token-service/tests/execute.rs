@@ -19,7 +19,6 @@ use utils::{
 };
 
 #[test]
-#[should_panic(expected = "Error(Contract, #22)")] // ContractError::NotApproved
 fn execute_fails_without_gateway_approval() {
     let (env, client, _, _, _) = setup_env();
 
@@ -28,11 +27,13 @@ fn execute_fails_without_gateway_approval() {
     let source_address = String::from_str(&env, "source");
     let payload = Bytes::new(&env);
 
-    client.execute(&source_chain, &message_id, &source_address, &payload);
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ContractError::NotApproved
+    );
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")] // ContractError::InsufficientMessageLength
 fn execute_fails_with_invalid_message() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
@@ -56,11 +57,14 @@ fn execute_fails_with_invalid_message() {
 
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
-    client.execute(
-        &source_chain,
-        &message_id,
-        &source_address,
-        &invalid_payload,
+    assert_contract_err!(
+        client.try_execute(
+            &source_chain,
+            &message_id,
+            &source_address,
+            &invalid_payload,
+        ),
+        ContractError::InsufficientMessageLength
     );
 }
 
@@ -87,7 +91,7 @@ fn execute_fails_with_invalid_source_chain() {
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
     assert_contract_err!(
-        client.try_execute(&source_chain, &message_id, &source_address, &payload,),
+        client.try_execute(&source_chain, &message_id, &source_address, &payload),
         ContractError::NotHubChain
     );
 }
@@ -369,7 +373,6 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #18)")] // ContractError::TokenAlreadyDeployed
 fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
     register_chains(&env, &client);
@@ -427,5 +430,8 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
 
     client.execute(&source_chain, &first_message_id, &source_address, &payload);
 
-    client.execute(&source_chain, &second_message_id, &source_address, &payload);
+    assert_contract_err!(
+        client.try_execute(&source_chain, &second_message_id, &source_address, &payload),
+        ContractError::TokenAlreadyDeployed
+    );
 }
