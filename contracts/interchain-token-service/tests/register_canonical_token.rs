@@ -30,6 +30,18 @@ fn register_canonical_token_succeeds() {
 }
 
 #[test]
+fn register_canonical_token_fails_when_paused() {
+    let (env, client, _, _, _) = setup_env();
+
+    client.mock_all_auths().set_pause_status(&true);
+
+    assert_contract_err!(
+        client.try_register_canonical_token(&Address::generate(&env)),
+        ContractError::ContractPaused
+    );
+}
+
+#[test]
 fn register_canonical_token_fails_if_already_registered() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);

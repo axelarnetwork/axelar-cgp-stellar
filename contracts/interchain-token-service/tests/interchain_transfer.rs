@@ -1,7 +1,7 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, Bytes, String};
+use soroban_sdk::{Address, Bytes, BytesN, String};
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
@@ -38,6 +38,26 @@ fn interchain_transfer_send_succeeds() {
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTransferSentEvent,
     >(&env, -4));
+}
+
+#[test]
+fn interchain_transfer_send_fails_when_paused() {
+    let (env, client, _, _, _) = setup_env();
+
+    client.mock_all_auths().set_pause_status(&true);
+
+    assert_contract_err!(
+        client.try_interchain_transfer(
+            &Address::generate(&env),
+            &BytesN::from_array(&env, &[0u8; 32]),
+            &String::from_str(&env, ""),
+            &Bytes::from_hex(&env, ""),
+            &1,
+            &Some(Bytes::from_hex(&env, "")),
+            &setup_gas_token(&env, &Address::generate(&env))
+        ),
+        ContractError::ContractPaused
+    );
 }
 
 #[test]
