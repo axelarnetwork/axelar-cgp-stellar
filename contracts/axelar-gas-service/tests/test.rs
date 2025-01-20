@@ -143,9 +143,6 @@ fn pay_gas() {
         &Bytes::new(&env),
     );
 
-    assert_eq!(0, token_client.balance(&spender));
-    assert_eq!(gas_amount, token_client.balance(&contract_id));
-
     assert_last_emitted_event(
         &env,
         &contract_id,
@@ -155,11 +152,14 @@ fn pay_gas() {
             destination_chain,
             destination_address,
             env.crypto().keccak256(&payload),
-            spender,
+            spender.clone(),
             token,
         ),
         (Bytes::new(&env),),
     );
+
+    assert_eq!(0, token_client.balance(&spender));
+    assert_eq!(gas_amount, token_client.balance(&contract_id));
 }
 
 #[test]
@@ -223,9 +223,6 @@ fn add_gas() {
 
     client.add_gas(&sender, &message_id, &spender, &token);
 
-    assert_eq!(0, token_client.balance(&spender));
-    assert_eq!(gas_amount, token_client.balance(&contract_id));
-
     assert_last_emitted_event(
         &env,
         &contract_id,
@@ -233,11 +230,14 @@ fn add_gas() {
             Symbol::new(&env, "gas_added"),
             sender,
             message_id,
-            spender,
+            spender.clone(),
             token,
         ),
         (),
     );
+
+    assert_eq!(0, token_client.balance(&spender));
+    assert_eq!(gas_amount, token_client.balance(&contract_id));
 }
 
 #[test]
@@ -322,15 +322,19 @@ fn collect_fees() {
 
     client.collect_fees(&gas_collector, &token);
 
-    assert_eq!(refund_amount, token_client.balance(&gas_collector));
-    assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
-
     assert_last_emitted_event(
         &env,
         &contract_id,
-        (Symbol::new(&env, "gas_collected"), gas_collector, token),
+        (
+            Symbol::new(&env, "gas_collected"),
+            gas_collector.clone(),
+            token,
+        ),
         (),
     );
+
+    assert_eq!(refund_amount, token_client.balance(&gas_collector));
+    assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
 }
 
 #[test]
@@ -396,18 +400,18 @@ fn refund() {
 
     client.refund(&message_id, &receiver, &token);
 
-    assert_eq!(refund_amount, token_client.balance(&receiver));
-    assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
-
     assert_last_emitted_event(
         &env,
         &contract_id,
         (
             Symbol::new(&env, "gas_refunded"),
             message_id,
-            receiver,
+            receiver.clone(),
             token,
         ),
         (),
     );
+
+    assert_eq!(refund_amount, token_client.balance(&receiver));
+    assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
 }
