@@ -138,8 +138,11 @@ fn gmp_example() {
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
     let (signers, destination_gateway_client) = setup_gateway(&env);
-    let (_destination_gas_service_client, _destination_gas_collector, destination_gas_service_address) =
-        setup_gas_service(&env);
+    let (
+        _destination_gas_service_client,
+        _destination_gas_collector,
+        destination_gas_service_address,
+    ) = setup_gas_service(&env);
     let (_, destination_its_address) = setup_its(
         &env,
         &destination_gateway_client.address,
@@ -250,7 +253,12 @@ fn its_example() {
     let (signers, gateway_client) = setup_gateway(&env);
     let (gas_service_client, _, gas_service_address) = setup_gas_service(&env);
     let chain_name = String::from_str(&env, "chain_name");
-    let (source_its_client, _) = setup_its(&env, &gateway_client.address, &gas_service_address, &chain_name);
+    let (source_its_client, _) = setup_its(
+        &env,
+        &gateway_client.address,
+        &gas_service_address,
+        &chain_name,
+    );
     let source_chain = source_its_client.its_hub_chain_name();
     let source_address: String = source_its_client.its_hub_address();
 
@@ -258,7 +266,14 @@ fn its_example() {
     let deployer = Address::generate(&env);
     let (token_id, _) = setup_its_token(&env, &source_its_client, &deployer, amount);
 
-    let example_app_address = env.register(Example, (&gateway_client.address, &gas_service_client.address, &source_its_client.address));
+    let example_app_address = env.register(
+        Example,
+        (
+            &gateway_client.address,
+            &gas_service_client.address,
+            &source_its_client.address,
+        ),
+    );
     let destination_address = example_app_address.to_string_bytes();
     let original_source_chain = String::from_str(&env, "ethereum");
     source_its_client
