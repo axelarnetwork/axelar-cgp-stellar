@@ -1,9 +1,9 @@
 use soroban_sdk::testutils::{Address as _, BytesN as _};
-use soroban_sdk::{Address, BytesN, Env, Vec};
+use soroban_sdk::{vec, Address, BytesN, Env, Vec};
 use stellar_axelar_gateway::error::ContractError;
 use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
 use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
-use stellar_axelar_gateway::AxelarGateway;
+use stellar_axelar_gateway::{AxelarGateway, AxelarGatewayClient};
 use stellar_axelar_std::{assert_auth, assert_contract_err};
 
 mod utils;
@@ -11,7 +11,7 @@ use utils::setup_env;
 
 #[test]
 #[should_panic(expected = "Error(Contract, #13)")] // ContractError::InvalidSigners
-fn fail_initialization_with_empty_signer_set() {
+fn initialization_fails_with_empty_signer_set() {
     let env = Env::default();
     let owner = Address::generate(&env);
     let operator = Address::generate(&env);
@@ -37,7 +37,7 @@ fn fail_initialization_with_empty_signer_set() {
 
 #[test]
 #[should_panic(expected = "failed ED25519 verification")]
-fn fail_validate_proof_invalid_signatures() {
+fn validate_proof_fails_with_invalid_signatures() {
     let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let proof_hash: BytesN<32> = BytesN::random(&env);
@@ -49,7 +49,7 @@ fn fail_validate_proof_invalid_signatures() {
 }
 
 #[test]
-fn fail_validate_proof_empty_signatures() {
+fn validate_proof_fails_with_empty_signatures() {
     let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let msg_hash: BytesN<32> = BytesN::random(&env);
@@ -71,7 +71,7 @@ fn fail_validate_proof_empty_signatures() {
 }
 
 #[test]
-fn fail_validate_proof_threshold_not_met() {
+fn validate_proof_fails_if_threshold_not_met() {
     let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let mut total_weight = 0u128;
@@ -100,7 +100,7 @@ fn fail_validate_proof_threshold_not_met() {
 }
 
 #[test]
-fn fail_validate_proof_invalid_signer_set() {
+fn validate_proof_fails_with_invalid_signer_set() {
     let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let new_signers = generate_signers_set(&env, randint(1, 10), signers.domain_separator);
@@ -114,7 +114,7 @@ fn fail_validate_proof_invalid_signer_set() {
 }
 
 #[test]
-fn fail_validate_proof_threshold_overflow() {
+fn validate_proof_fails_on_threshold_overflow() {
     let (env, mut signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let last_index = signers.signers.signers.len() - 1;
@@ -134,7 +134,7 @@ fn fail_validate_proof_threshold_overflow() {
 }
 
 #[test]
-fn rotate_signers_fail_empty_signers() {
+fn rotate_signers_fails_with_empty_signers() {
     let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
 
     let empty_signers = WeightedSigners {
@@ -155,7 +155,7 @@ fn rotate_signers_fail_empty_signers() {
 }
 
 #[test]
-fn rotate_signers_fail_zero_weight() {
+fn rotate_signers_fails_with_zero_weight() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
 
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
@@ -178,7 +178,7 @@ fn rotate_signers_fail_zero_weight() {
 }
 
 #[test]
-fn rotate_signers_fail_weight_overflow() {
+fn rotate_signers_fails_on_weight_overflow() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
 
     let mut new_signers = generate_signers_set(&env, randint(3, 10), BytesN::random(&env));
@@ -201,7 +201,7 @@ fn rotate_signers_fail_weight_overflow() {
 }
 
 #[test]
-fn rotate_signers_fail_zero_threshold() {
+fn rotate_signers_fails_with_zero_threshold() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
 
@@ -219,7 +219,7 @@ fn rotate_signers_fail_zero_threshold() {
 }
 
 #[test]
-fn rotate_signers_fail_low_total_weight() {
+fn rotate_signers_fails_with_low_total_weight() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
 
@@ -247,7 +247,7 @@ fn rotate_signers_fail_low_total_weight() {
 }
 
 #[test]
-fn rotate_signers_fail_wrong_signer_order() {
+fn rotate_signers_fails_with_wrong_signer_order() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
 
     let min_signers = 2; // need at least 2 signers to test incorrect ordering
@@ -277,7 +277,7 @@ fn rotate_signers_fail_wrong_signer_order() {
 }
 
 #[test]
-fn rotate_signers_fail_duplicated_signers() {
+fn rotate_signers_fails_with_duplicated_signers() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
 
     let new_signers = generate_signers_set(&env, randint(1, 10), signers.domain_separator.clone());
@@ -301,7 +301,7 @@ fn rotate_signers_fail_duplicated_signers() {
 }
 
 #[test]
-fn rotate_signers_panics_on_outdated_signer_set() {
+fn rotate_signers_fails_with_outdated_signer_set() {
     let previous_signer_retention = randint(0, 5);
     let (env, original_signers, client) = setup_env(previous_signer_retention, randint(1, 10));
 
@@ -329,6 +329,42 @@ fn rotate_signers_panics_on_outdated_signer_set() {
             .mock_all_auths()
             .try_rotate_signers(&original_signers.signers, &proof, &true),
         ContractError::OutdatedSigners
+    );
+}
+
+#[test]
+fn rotate_signers_fails_with_insufficient_rotation_delay() {
+    let env = Env::default();
+    let previous_signers_retention = randint(0, 5);
+    let num_signers = randint(1, 10);
+    let owner = Address::generate(&env);
+    let operator = Address::generate(&env);
+    let signers = generate_signers_set(&env, num_signers, BytesN::random(&env));
+    let initial_signers = vec![&env, signers.signers.clone()];
+    let minimum_rotation_delay: u64 = 100;
+    let contract_id = env.register(
+        AxelarGateway,
+        (
+            owner,
+            operator,
+            &signers.domain_separator,
+            minimum_rotation_delay,
+            previous_signers_retention as u64,
+            initial_signers,
+        ),
+    );
+    let client = AxelarGatewayClient::new(&env, &contract_id);
+
+    assert!(env.ledger().timestamp() < minimum_rotation_delay);
+
+    let new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
+    let data_hash = new_signers.signers.signers_rotation_hash(&env);
+    let proof = generate_proof(&env, data_hash, signers);
+    assert_contract_err!(
+        client
+            .mock_all_auths()
+            .try_rotate_signers(&new_signers.signers, &proof, &false),
+        ContractError::InsufficientRotationDelay
     );
 }
 

@@ -1,16 +1,5 @@
 use soroban_sdk::{contracttype, Bytes, BytesN, String};
 
-#[contracttype]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(u32)]
-pub enum MessageType {
-    InterchainTransfer = 0,
-    DeployInterchainToken = 1,
-    DeployTokenManager = 2, // note, this case is not supported by the ITS hub
-    SendToHub = 3,
-    ReceiveFromHub = 4,
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Message {
     InterchainTransfer(InterchainTransfer),

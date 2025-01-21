@@ -18,7 +18,7 @@ use crate::storage_types::DataKey;
 pub struct Example;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum ExampleError {
     NotApproved = 1,
