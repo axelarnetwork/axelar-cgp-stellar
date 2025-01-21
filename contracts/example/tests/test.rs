@@ -36,7 +36,6 @@ fn setup_app<'a>(env: &Env, gateway: &Address, gas_service: &Address) -> Example
 #[test]
 fn gmp_example() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user: Address = Address::generate(&env);
 
@@ -75,9 +74,9 @@ fn gmp_example() {
         amount: gas_amount,
     };
 
-    asset_client.mint(&user, &gas_amount);
+    asset_client.mock_all_auths().mint(&user, &gas_amount);
 
-    source_app.send(
+    source_app.mock_all_auths().send(
         &user,
         &destination_chain,
         &destination_address,

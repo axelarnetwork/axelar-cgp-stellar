@@ -81,7 +81,6 @@ fn deploy_interchain_token_with_initial_supply_no_minter() {
 #[test]
 fn deploy_interchain_token_with_initial_supply_valid_minter() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter = Address::generate(&env);
@@ -89,7 +88,7 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
     let token_metadata = TokenMetadata::new(&env, "Test", "TEST", 6);
     let initial_supply = 100;
 
-    let token_id = client.deploy_interchain_token(
+    let token_id = client.mock_all_auths().deploy_interchain_token(
         &sender,
         &salt,
         &token_metadata,
@@ -109,7 +108,6 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
 #[test]
 fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter = Address::generate(&env);
@@ -120,7 +118,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let deploy_salt = client.interchain_token_deploy_salt(&sender, &salt);
     let expected_token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
 
-    let token_id = client.deploy_interchain_token(
+    let token_id = client.mock_all_auths().deploy_interchain_token(
         &sender,
         &salt,
         &token_metadata,
@@ -138,7 +136,6 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 #[test]
 fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter = Address::generate(&env);
@@ -146,7 +143,7 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
     let token_metadata = TokenMetadata::new(&env, "Test", "TEST", 6);
     let initial_supply = 0;
 
-    let token_id = client.deploy_interchain_token(
+    let token_id = client.mock_all_auths().deploy_interchain_token(
         &sender,
         &salt,
         &token_metadata,
@@ -165,9 +162,8 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
 }
 
 #[test]
-fn deploy_interchain_token_falis_zero_initial_supply_and_invalid_minter() {
+fn deploy_interchain_token_fails_zero_initial_supply_and_invalid_minter() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter: Option<Address> = Some(client.address.clone());
@@ -176,7 +172,7 @@ fn deploy_interchain_token_falis_zero_initial_supply_and_invalid_minter() {
     let initial_supply = 0;
 
     assert_contract_err!(
-        client.try_deploy_interchain_token(
+        client.mock_all_auths().try_deploy_interchain_token(
             &sender,
             &salt,
             &token_metadata,
@@ -190,7 +186,6 @@ fn deploy_interchain_token_falis_zero_initial_supply_and_invalid_minter() {
 #[test]
 fn deploy_interchain_token_zero_initial_supply_no_minter() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let sender = Address::generate(&env);
     let minter: Option<Address> = None;
@@ -198,8 +193,13 @@ fn deploy_interchain_token_zero_initial_supply_no_minter() {
     let token_metadata = TokenMetadata::new(&env, "Test", "TEST", 6);
     let initial_supply = 0;
 
-    let token_id =
-        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter);
+    let token_id = client.mock_all_auths().deploy_interchain_token(
+        &sender,
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
+    );
 
     let token_address = client.token_address(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
