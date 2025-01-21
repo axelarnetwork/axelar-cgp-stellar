@@ -6,7 +6,9 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, symbol_short, Address, Env, Symbol, Val, Vec,
 };
 use stellar_axelar_operators::error::ContractError;
+use stellar_axelar_operators::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
+use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::{assert_auth, assert_contract_err, assert_last_emitted_event};
 
 #[contract]
@@ -63,12 +65,7 @@ fn add_operator_succeeds() {
 
     assert_auth!(client.owner(), client.add_operator(&operator));
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (Symbol::new(&env, "operator_added"), operator.clone()),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<OperatorAddedEvent>(&env));
 
     assert!(client.is_operator(&operator));
 }
@@ -97,12 +94,7 @@ fn remove_operator_succeeds() {
 
     assert_auth!(client.owner(), client.remove_operator(&operator));
 
-    assert_last_emitted_event(
-        &env,
-        &client.address,
-        (Symbol::new(&env, "operator_removed"), operator.clone()),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<OperatorRemovedEvent>(&env));
 
     assert!(!client.is_operator(&operator));
 }

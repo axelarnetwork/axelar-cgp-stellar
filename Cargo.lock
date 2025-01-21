@@ -2008,8 +2008,10 @@ dependencies = [
 name = "stellar-axelar-operators"
 version = "0.1.0"
 dependencies = [
+ "goldie",
  "paste",
  "soroban-sdk",
+ "stellar-axelar-operators",
  "stellar-axelar-std",
 ]
 
