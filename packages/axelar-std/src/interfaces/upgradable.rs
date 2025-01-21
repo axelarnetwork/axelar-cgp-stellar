@@ -205,13 +205,12 @@ mod test {
         assert!(client.migration_data().is_none());
 
         assert_auth!(owner, client.migrate(&()));
+        goldie::assert!(events::fmt_last_emitted_event::<UpgradedEvent>(&env));
 
         assert_eq!(
             client.migration_data(),
             Some(String::from_str(&env, "migrated"))
         );
-
-        goldie::assert!(events::fmt_last_emitted_event::<UpgradedEvent>(&env))
     }
 
     #[test]
@@ -234,10 +233,9 @@ mod test {
         };
 
         assert_auth!(owner, client.migrate(&data));
+        goldie::assert!(events::fmt_last_emitted_event::<UpgradedEvent>(&env));
 
         assert_eq!(client.migration_data(), Some(data.data1));
-
-        goldie::assert!(events::fmt_last_emitted_event::<UpgradedEvent>(&env))
     }
 
     // Because migration happens on a contract loaded from WASM, code coverage analysis doesn't recognize

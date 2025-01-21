@@ -6,8 +6,8 @@ use stellar_axelar_gateway::event::{
 };
 #[cfg(any(test, feature = "testutils"))]
 use stellar_axelar_gateway::testutils::{
-    deterministic_rng, generate_proof, generate_signers_set, generate_signers_set_with_rng,
-    generate_test_message, generate_test_message_with_rng, get_approve_hash, randint,
+    generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
+    generate_test_message_with_rng, get_approve_hash, randint,
 };
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
@@ -17,6 +17,11 @@ use utils::setup_env;
 
 const DESTINATION_CHAIN: &str = "ethereum";
 const DESTINATION_ADDRESS: &str = "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59";
+
+fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
+    use rand::SeedableRng;
+    rand_chacha::ChaCha20Rng::seed_from_u64(42)
+}
 
 #[test]
 fn call_contract() {
@@ -31,7 +36,6 @@ fn call_contract() {
         user,
         client.call_contract(&user, &destination_chain, &destination_address, &payload)
     );
-
     goldie::assert!(events::fmt_last_emitted_event::<ContractCalledEvent>(&env));
 }
 
@@ -50,8 +54,6 @@ fn validate_message() {
         _,
     ) = generate_test_message(&env);
 
-    let prev_event_count = env.events().all().len();
-
     let approved = assert_auth!(
         contract_address,
         client.validate_message(
@@ -63,8 +65,7 @@ fn validate_message() {
         )
     );
     assert!(!approved);
-
-    assert_eq!(env.events().all().len(), prev_event_count);
+    assert_eq!(env.events().all().len(), 0);
 }
 
 #[test]
@@ -84,7 +85,6 @@ fn approve_message() {
     let proof = generate_proof(&env, data_hash, signers);
 
     client.approve_messages(&messages, &proof);
-
     goldie::assert!(events::fmt_last_emitted_event::<MessageApprovedEvent>(&env));
 
     let is_approved = client.is_message_approved(
@@ -125,7 +125,6 @@ fn execute_approved_message() {
         )
     );
     assert!(approved);
-
     goldie::assert!(events::fmt_last_emitted_event::<MessageExecutedEvent>(&env));
 
     let is_approved = client.is_message_approved(
@@ -182,10 +181,8 @@ fn approve_messages_skip_duplicate_message() {
     let proof = generate_proof(&env, data_hash, signers);
     client.approve_messages(&messages, &proof);
 
-    let prev_event_count = env.events().all().len();
-    assert!(client.try_approve_messages(&messages, &proof).is_ok());
-
-    assert_eq!(env.events().all().len(), prev_event_count);
+    client.approve_messages(&messages, &proof);
+    assert_eq!(env.events().all().len(), 0);
 }
 
 #[test]
@@ -203,7 +200,6 @@ fn rotate_signers() {
     let bypass_rotation_delay = false;
 
     client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
-
     goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 }
 
@@ -229,7 +225,6 @@ fn approve_messages_after_rotation() {
     let proof = generate_proof(&env, data_hash, new_signers);
 
     client.approve_messages(&messages, &proof);
-
     goldie::assert!(events::fmt_last_emitted_event::<MessageApprovedEvent>(&env));
 }
 
@@ -250,7 +245,6 @@ fn rotate_signers_bypass_rotation_delay() {
         client.operator(),
         client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay)
     );
-
     goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
 }
 

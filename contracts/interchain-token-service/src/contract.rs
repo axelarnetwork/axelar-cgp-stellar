@@ -1,6 +1,8 @@
 use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{
+    contract, contractimpl, vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
+};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::executable::AxelarExecutableInterface;
@@ -16,9 +18,8 @@ use crate::error::ContractError;
 use crate::event::{
     InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
     InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
-    TrustedChainRemovedEvent, TrustedChainSetEvent,
+    PauseStatusSetEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
-use crate::executable::InterchainTokenExecutableClient;
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
 use crate::storage_types::{DataKey, TokenIdConfigValue};
@@ -32,6 +33,7 @@ const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
 const PREFIX_INTERCHAIN_TOKEN_SALT: &str = "interchain-token-salt";
 const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
+const EXECUTE_WITH_TOKEN: &str = "execute_with_interchain_token";
 
 #[contract]
 #[derive(Operatable, Ownable, Upgradable)]
@@ -193,6 +195,10 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .token_manager_type
     }
 
+    fn is_paused(env: &Env) -> bool {
+        env.storage().instance().has(&DataKey::Paused)
+    }
+
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
         flow_limit::flow_limit(env, token_id)
     }
@@ -203,6 +209,20 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
     fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
         flow_limit::flow_in_amount(env, token_id)
+    }
+
+    fn set_pause_status(env: &Env, paused: bool) -> Result<(), ContractError> {
+        Self::owner(env).require_auth();
+
+        if paused {
+            env.storage().instance().set(&DataKey::Paused, &());
+        } else {
+            env.storage().instance().remove(&DataKey::Paused);
+        }
+
+        PauseStatusSetEvent { paused }.emit(env);
+
+        Ok(())
     }
 
     fn set_flow_limit(
@@ -223,6 +243,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         initial_supply: i128,
         minter: Option<Address>,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         caller.require_auth();
 
         let initial_minter = if initial_supply > 0 {
@@ -278,6 +300,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         destination_chain: String,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         caller.require_auth();
 
         let deploy_salt = Self::interchain_token_deploy_salt(env, caller.clone(), salt);
@@ -289,13 +313,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         env: &Env,
         token_address: Address,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
 
         ensure!(
             !env.storage()
                 .persistent()
-                .has(&DataKey::TokenIdConfigKey(token_id.clone())),
+                .has(&DataKey::TokenIdConfig(token_id.clone())),
             ContractError::TokenAlreadyRegistered
         );
 
@@ -325,6 +351,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         spender: Address,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address);
 
         let token_id =
@@ -343,6 +371,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         data: Option<Bytes>,
         gas_token: Token,
     ) -> Result<(), ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         ensure!(amount > 0, ContractError::InvalidAmount);
 
         ensure!(
@@ -472,6 +502,8 @@ impl InterchainTokenService {
         source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
+        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+
         let (source_chain, message) =
             Self::get_execute_params(env, source_chain, source_address, payload)?;
 
@@ -522,7 +554,7 @@ impl InterchainTokenService {
     fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
         env.storage()
             .persistent()
-            .set(&DataKey::TokenIdConfigKey(token_id), &token_data);
+            .set(&DataKey::TokenIdConfig(token_id), &token_data);
     }
 
     /// Retrieves the configuration value for the specified token ID.
@@ -540,7 +572,7 @@ impl InterchainTokenService {
     ) -> Result<TokenIdConfigValue, ContractError> {
         env.storage()
             .persistent()
-            .get::<_, TokenIdConfigValue>(&DataKey::TokenIdConfigKey(token_id))
+            .get::<_, TokenIdConfigValue>(&DataKey::TokenIdConfig(token_id))
             .ok_or(ContractError::InvalidTokenId)
     }
 
@@ -558,7 +590,7 @@ impl InterchainTokenService {
         token_id: BytesN<32>,
     ) -> Result<TokenIdConfigValue, ContractError> {
         let config = Self::token_id_config(env, token_id.clone())?;
-        extend_persistent_ttl(env, &DataKey::TokenIdConfigKey(token_id));
+        extend_persistent_ttl(env, &DataKey::TokenIdConfig(token_id));
         Ok(config)
     }
 
@@ -700,15 +732,23 @@ impl InterchainTokenService {
         let token_address = token_config_value.token_address;
 
         if let Some(payload) = data {
-            let executable = InterchainTokenExecutableClient::new(env, &destination_address);
-            executable.execute_with_interchain_token(
-                source_chain,
-                &message_id,
-                &source_address,
-                &payload,
-                &token_id,
-                &token_address,
-                &amount,
+            let call_data = vec![
+                &env,
+                source_chain.to_val(),
+                message_id.to_val(),
+                source_address.to_val(),
+                payload.to_val(),
+                token_id.to_val(),
+                token_address.to_val(),
+                amount.into_val(env),
+            ];
+
+            // Due to limitations of the soroban-sdk, there is no type-safe client for contract execution.
+            // The invocation will panic on error, so we can safely cast the return value to `()` and discard it.
+            env.invoke_contract::<()>(
+                &destination_address,
+                &Symbol::new(env, EXECUTE_WITH_TOKEN),
+                call_data,
             );
         }
 
