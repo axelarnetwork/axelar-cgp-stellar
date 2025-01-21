@@ -359,7 +359,7 @@ fn rotate_signers_fails_with_insufficient_rotation_delay() {
 
     let new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
     let data_hash = new_signers.signers.signers_rotation_hash(&env);
-    let proof = generate_proof(&env, data_hash, signers.clone());
+    let proof = generate_proof(&env, data_hash, signers);
     assert_contract_err!(
         client
             .mock_all_auths()

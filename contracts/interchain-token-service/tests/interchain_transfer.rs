@@ -11,7 +11,7 @@ use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
     let destination_chain = String::from_str(env, "ethereum");
     let destination_address = Bytes::from_hex(env, "4F4495243837681061C4743b74B3eEdf548D56A5");
-    let data = Some(Bytes::from_hex(&env, "abcd"));
+    let data = Some(Bytes::from_hex(env, "abcd"));
 
     (destination_chain, destination_address, data)
 }
