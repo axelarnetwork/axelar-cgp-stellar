@@ -1,7 +1,7 @@
 #![cfg(test)]
 extern crate std;
 
-use example::event::ExecutedEvent;
+use example::event::{ExecutedEvent, TokenReceivedEvent};
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
@@ -16,6 +16,10 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
+use stellar_interchain_token_service::event::{
+    InterchainTokenDeployedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
+    TrustedChainSetEvent,
+};
 use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
@@ -277,6 +281,8 @@ fn its_example() {
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
 
+    let trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+
     let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
         message: stellar_interchain_token_service::types::Message::InterchainTransfer(
@@ -313,9 +319,20 @@ fn its_example() {
         .gateway_client
         .approve_messages(&messages, &proof);
 
+    let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
+
     test_config
         .its_client
         .execute(&source_chain, &message_id, &source_address, &payload);
+
+    let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
+
+    goldie::assert!(vec![
+        trusted_chain_set_event,
+        message_approved_event,
+        token_received_event
+    ]
+    .join("\n\n"));
 
     let token = token::TokenClient::new(&env, &test_config.its_client.token_address(&token_id));
     assert_eq!(token.balance(&test_config.app.address), 0);
