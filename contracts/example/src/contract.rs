@@ -1,13 +1,12 @@
 use soroban_sdk::{
-    assert_with_error, contract, contracterror, contractimpl, token, Address, Bytes, BytesN, Env,
-    String,
+    contract, contracterror, contractimpl, token, Address, Bytes, BytesN, Env, String,
 };
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
 use stellar_axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::InterchainTokenExecutable;
+use stellar_axelar_std::{ensure, InterchainTokenExecutable};
 use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
@@ -81,7 +80,7 @@ impl CustomInterchainTokenExecutable for Example {
         token_address: Address,
         amount: i128,
     ) -> Result<(), Self::Error> {
-        Self::validate_amount(env, amount)?;
+        ensure!(amount >= 0, ExampleError::InvalidAmount);
 
         let destination_address = Address::from_string_bytes(&payload);
 
@@ -167,7 +166,7 @@ impl Example {
         caller: Address,
         token_id: BytesN<32>,
         destination_chain: String,
-        destination_address: Bytes,
+        destination_app_contract: Bytes,
         amount: i128,
         message: Option<Bytes>,
         gas_token: Token,
@@ -180,7 +179,7 @@ impl Example {
             &caller,
             &token_id,
             &destination_chain,
-            &destination_address,
+            &destination_app_contract,
             &amount,
             &message,
             &gas_token,
@@ -190,17 +189,11 @@ impl Example {
             sender: caller,
             token_id,
             destination_chain,
-            destination_address,
+            destination_app_contract,
             amount,
             message,
         }
         .emit(env);
-
-        Ok(())
-    }
-
-    pub fn validate_amount(env: &Env, amount: i128) -> Result<(), ExampleError> {
-        assert_with_error!(env, amount >= 0, ExampleError::InvalidAmount);
 
         Ok(())
     }

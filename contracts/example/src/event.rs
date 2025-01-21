@@ -1,4 +1,4 @@
-// TODO: #[cfg(any(test, feature = "testutils"))]
+#[cfg(any(test, feature = "testutils"))]
 extern crate std;
 
 use soroban_sdk::{Address, Bytes, BytesN, String};
@@ -30,7 +30,7 @@ pub struct TokenSentEvent {
     pub sender: Address,
     pub token_id: BytesN<32>,
     pub destination_chain: String,
-    pub destination_address: Bytes,
+    pub destination_app_contract: Bytes,
     pub amount: i128,
     #[data]
     pub message: Option<Bytes>,

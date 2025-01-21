@@ -1,6 +1,3 @@
-#![cfg(test)]
-extern crate std;
-
 use example::event::{ExecutedEvent, TokenReceivedEvent};
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
