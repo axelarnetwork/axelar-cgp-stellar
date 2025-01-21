@@ -161,6 +161,17 @@ fn set_flow_limit_succeeds() {
 }
 
 #[test]
+fn set_flow_limit_to_none_succeeds() {
+    let (_, client, _, token) = setup();
+
+    assert_eq!(client.flow_limit(&token.id).unwrap(), dummy_flow_limit());
+
+    client.mock_all_auths().set_flow_limit(&token.id, &None);
+
+    assert_eq!(client.flow_limit(&token.id), None);
+}
+
+#[test]
 fn zero_flow_limit_effectively_freezes_token() {
     let (env, client, gateway, token) = setup();
     let gas_token = setup_gas_token(&env, &token.deployer);
