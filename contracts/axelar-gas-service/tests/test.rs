@@ -3,7 +3,7 @@ extern crate std;
 
 use std::format;
 
-use soroban_sdk::testutils::Address as _;
+use soroban_sdk::testutils::{Address as _, StellarAssetContract};
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{bytes, Address, Bytes, Env, String, Symbol};
 use stellar_axelar_gas_service::error::ContractError;
@@ -24,6 +24,21 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     (env, contract_id, gas_collector, client)
 }
 
+fn setup_gas_config(
+    env: &Env,
+    gas_amount: i128,
+) -> (Address, Address, Token, StellarAssetContract) {
+    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
+    let spender: Address = Address::generate(&env);
+    let sender: Address = Address::generate(&env);
+    let token = Token {
+        address: asset.address(),
+        amount: gas_amount,
+    };
+
+    (spender, sender, token, asset)
+}
+
 fn message_id(env: &Env) -> String {
     String::from_str(
         env,
@@ -32,6 +47,14 @@ fn message_id(env: &Env) -> String {
             "0xfded3f55dec47250a52a8c0bb7038e72fa6ffaae33562f77cd2b629ef7fd424d", 0
         ),
     )
+}
+
+fn dummy_destination_data(env: &Env) -> (String, String) {
+    let destination_chain: String = String::from_str(&env, "ethereum");
+    let destination_address: String =
+        String::from_str(&env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+
+    (destination_chain, destination_address)
 }
 
 #[test]
@@ -50,19 +73,11 @@ fn register_gas_service() {
 fn fail_pay_gas_zero_amount() {
     let (env, _, _, client) = setup_env();
 
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
-
-    let spender: Address = Address::generate(&env);
-    let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 0;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, _) = setup_gas_config(&env, gas_amount);
+
     let payload = bytes!(&env, 0x1234);
-    let destination_chain: String = String::from_str(&env, "ethereum");
-    let destination_address: String =
-        String::from_str(&env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+    let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     assert_contract_err!(
         client.try_pay_gas(
@@ -82,19 +97,11 @@ fn fail_pay_gas_zero_amount() {
 fn fail_pay_gas_not_enough_user_balance() {
     let (env, _, _, client) = setup_env();
 
-    let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    let spender: Address = Address::generate(&env);
-    let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, asset) = setup_gas_config(&env, gas_amount);
 
     let payload = bytes!(&env, 0x1234);
-    let destination_chain: String = String::from_str(&env, "ethereum");
-    let destination_address: String =
-        String::from_str(&env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+    let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     StellarAssetClient::new(&env, &asset.address()).mint(&spender, &(gas_amount - 1));
 
@@ -115,20 +122,11 @@ fn fail_pay_gas_not_enough_user_balance() {
 fn pay_gas() {
     let (env, contract_id, _, client) = setup_env();
 
-    let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-
-    let spender: Address = Address::generate(&env);
-    let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, asset) = setup_gas_config(&env, gas_amount);
 
     let payload = bytes!(&env, 0x1234);
-    let destination_chain: String = String::from_str(&env, "ethereum");
-    let destination_address: String =
-        String::from_str(&env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+    let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     let token_client = TokenClient::new(&env, &asset.address());
     StellarAssetClient::new(&env, &asset.address()).mint(&spender, &gas_amount);
@@ -166,16 +164,9 @@ fn pay_gas() {
 fn fail_add_gas_zero_gas_amount() {
     let (env, _, _, client) = setup_env();
 
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
-
-    let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
-    let spender: Address = Address::generate(&env);
     let gas_amount: i128 = 0;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, _) = setup_gas_config(&env, gas_amount);
 
     assert_contract_err!(
         client.try_add_gas(&sender, &message_id, &spender, &token,),
@@ -187,15 +178,9 @@ fn fail_add_gas_zero_gas_amount() {
 fn fail_add_gas_not_enough_user_balance() {
     let (env, _, _, client) = setup_env();
 
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
-    let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
-    let spender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, asset) = setup_gas_config(&env, gas_amount);
 
     StellarAssetClient::new(&env, &asset.address()).mint(&sender, &(gas_amount - 1));
 
@@ -208,15 +193,9 @@ fn fail_add_gas_not_enough_user_balance() {
 fn add_gas() {
     let (env, contract_id, _, client) = setup_env();
 
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
-    let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
-    let spender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = Token {
-        address: asset.address(),
-        amount: gas_amount,
-    };
+    let (spender, sender, token, asset) = setup_gas_config(&env, gas_amount);
 
     let token_client = TokenClient::new(&env, &asset.address());
     StellarAssetClient::new(&env, &asset.address()).mint(&spender, &gas_amount);
