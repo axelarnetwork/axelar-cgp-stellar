@@ -5,7 +5,7 @@ use example::event::{ExecutedEvent, TokenReceivedEvent};
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_gateway::event::{ContractCalledEvent, MessageApprovedEvent};
@@ -16,10 +16,7 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
-use stellar_interchain_token_service::event::{
-    InterchainTokenDeployedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
-    TrustedChainSetEvent,
-};
+use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
@@ -53,10 +50,10 @@ fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
     let (signers, gateway_client) = setup_gateway(&env);
     let gas_service_client = setup_gas_service(&env);
     let its_client = setup_its(
-        &env,
+        env,
         &gateway_client.address,
         &gas_service_client.address,
-        &chain_name,
+        chain_name,
     );
     let app_address = env.register(
         Example,
@@ -224,7 +221,7 @@ fn gmp_example() {
     let contract_call_event = events::fmt_last_emitted_event::<ContractCalledEvent>(&env);
 
     // Axelar hub signs the message approval, Signing message approval for destination
-    let messages = soroban_sdk::vec![
+    let messages = vec![
         &env,
         Message {
             source_chain: source_chain.clone(),
@@ -251,9 +248,7 @@ fn gmp_example() {
 
     let executed_event = events::fmt_last_emitted_event::<ExecutedEvent>(&env);
 
-    goldie::assert!(
-        vec![contract_call_event, message_approved_event, executed_event,].join("\n\n")
-    );
+    goldie::assert!([contract_call_event, message_approved_event, executed_event].join("\n\n"));
 }
 
 #[test]
@@ -299,7 +294,7 @@ fn its_example() {
 
     let message_id = String::from_str(&env, "message-id");
 
-    let messages = soroban_sdk::vec![
+    let messages = vec![
         &env,
         Message {
             source_chain: source_chain.clone(),
@@ -327,7 +322,7 @@ fn its_example() {
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
-    goldie::assert!(vec![
+    goldie::assert!([
         trusted_chain_set_event,
         message_approved_event,
         token_received_event
