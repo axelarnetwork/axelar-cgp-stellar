@@ -5,11 +5,13 @@ use std::format;
 
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
-use soroban_sdk::{bytes, Address, Bytes, Env, String, Symbol};
+use soroban_sdk::{bytes, Address, Bytes, Env, String};
 use stellar_axelar_gas_service::error::ContractError;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_gas_service::event::{FeeCollectedEvent, GasAddedEvent, GasPaidEvent, RefundedEvent};
+use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{assert_auth_err, assert_contract_err, assert_last_emitted_event};
+use stellar_axelar_std::{assert_auth_err, assert_contract_err};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();
@@ -143,20 +145,7 @@ fn pay_gas() {
         &Bytes::new(&env),
     );
 
-    assert_last_emitted_event(
-        &env,
-        &contract_id,
-        (
-            Symbol::new(&env, "gas_paid"),
-            sender,
-            destination_chain,
-            destination_address,
-            env.crypto().keccak256(&payload),
-            spender.clone(),
-            token,
-        ),
-        (Bytes::new(&env),),
-    );
+    goldie::assert!(fmt_last_emitted_event::<GasPaidEvent>(&env));
 
     assert_eq!(0, token_client.balance(&spender));
     assert_eq!(gas_amount, token_client.balance(&contract_id));
@@ -223,18 +212,7 @@ fn add_gas() {
 
     client.add_gas(&sender, &message_id, &spender, &token);
 
-    assert_last_emitted_event(
-        &env,
-        &contract_id,
-        (
-            Symbol::new(&env, "gas_added"),
-            sender,
-            message_id,
-            spender.clone(),
-            token,
-        ),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<GasAddedEvent>(&env));
 
     assert_eq!(0, token_client.balance(&spender));
     assert_eq!(gas_amount, token_client.balance(&contract_id));
@@ -322,16 +300,7 @@ fn collect_fees() {
 
     client.collect_fees(&gas_collector, &token);
 
-    assert_last_emitted_event(
-        &env,
-        &contract_id,
-        (
-            Symbol::new(&env, "gas_collected"),
-            gas_collector.clone(),
-            token,
-        ),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<FeeCollectedEvent>(&env));
 
     assert_eq!(refund_amount, token_client.balance(&gas_collector));
     assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
@@ -400,17 +369,7 @@ fn refund() {
 
     client.refund(&message_id, &receiver, &token);
 
-    assert_last_emitted_event(
-        &env,
-        &contract_id,
-        (
-            Symbol::new(&env, "gas_refunded"),
-            message_id,
-            receiver.clone(),
-            token,
-        ),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<RefundedEvent>(&env));
 
     assert_eq!(refund_amount, token_client.balance(&receiver));
     assert_eq!(supply - refund_amount, token_client.balance(&contract_id));

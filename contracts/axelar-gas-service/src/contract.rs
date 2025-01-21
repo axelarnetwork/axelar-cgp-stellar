@@ -1,10 +1,11 @@
 use soroban_sdk::{contract, contractimpl, token, Address, Bytes, Env, String};
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
+use stellar_axelar_std::events::Event;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
-use crate::event;
+use crate::event::{FeeCollectedEvent, GasAddedEvent, GasPaidEvent, RefundedEvent};
 use crate::interface::AxelarGasServiceInterface;
 use crate::storage_types::DataKey;
 
@@ -50,16 +51,16 @@ impl AxelarGasServiceInterface for AxelarGasService {
             &token.amount,
         );
 
-        event::gas_paid(
-            &env,
+        GasPaidEvent {
             sender,
             destination_chain,
             destination_address,
-            payload,
+            payload_hash: env.crypto().keccak256(&payload).into(),
             spender,
             token,
             metadata,
-        );
+        }
+        .emit(&env);
 
         Ok(())
     }
@@ -81,7 +82,13 @@ impl AxelarGasServiceInterface for AxelarGasService {
             &token.amount,
         );
 
-        event::gas_added(&env, sender, message_id, spender, token);
+        GasAddedEvent {
+            sender,
+            message_id,
+            spender,
+            token,
+        }
+        .emit(&env);
 
         Ok(())
     }
@@ -102,7 +109,11 @@ impl AxelarGasServiceInterface for AxelarGasService {
         );
         token_client.transfer(&env.current_contract_address(), &receiver, &token.amount);
 
-        event::fee_collected(&env, gas_collector, token);
+        FeeCollectedEvent {
+            receiver,
+            token,
+        }
+        .emit(&env);
 
         extend_instance_ttl(&env);
 
@@ -118,7 +129,12 @@ impl AxelarGasServiceInterface for AxelarGasService {
             &token.amount,
         );
 
-        event::refunded(&env, message_id, receiver, token);
+        RefundedEvent {
+            message_id,
+            receiver,
+            token,
+        }
+        .emit(&env);
     }
 
     fn gas_collector(env: &Env) -> Address {
