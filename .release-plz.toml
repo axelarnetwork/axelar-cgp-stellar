@@ -29,10 +29,6 @@ Changes:
 [[package]]
 name = "example"
 release = false # don't process this package
-name = "stellar-axelar-std"
-release = false
-name = "stellar-axelar-std-derive"
-release = false
 
 [changelog]
 header = """# Changelog
