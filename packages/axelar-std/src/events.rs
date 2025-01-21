@@ -110,12 +110,13 @@ mod test {
 
     use soroban_sdk::testutils::Events;
     use soroban_sdk::xdr::Int32;
-    use soroban_sdk::{contract, BytesN, Env, IntoVal, String, Symbol, Topics, Val};
+    use soroban_sdk::{contract, BytesN, Env, IntoVal, String, Symbol};
+    use stellar_axelar_std_derive::IntoEvent;
 
     use crate::events::{Event, EventTestutils};
-    use crate::{events, impl_event_testutils};
+    use crate::events;
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
+    #[derive(Debug, PartialEq, Eq, Clone, IntoEvent)]
     struct TestEvent {
         topic1: Symbol,
         topic2: String,
@@ -123,18 +124,6 @@ mod test {
         data1: String,
         data2: BytesN<32>,
     }
-
-    impl Event for TestEvent {
-        fn topics(&self, _env: &Env) -> impl Topics + Debug {
-            (self.topic1.clone(), self.topic2.clone(), self.topic3)
-        }
-
-        fn data(&self, _env: &Env) -> impl IntoVal<Env, Val> + Debug {
-            (self.data1.clone(), self.data2.clone())
-        }
-    }
-
-    impl_event_testutils!(TestEvent, (Symbol, String, Int32), (String, BytesN<32>));
 
     #[contract]
     struct Contract;
