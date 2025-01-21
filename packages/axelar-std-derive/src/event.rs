@@ -8,21 +8,13 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let event_name = event_name_snake_case(input);
     let ((topic_idents, _), (data_idents, _)) = event_struct_fields(input);
 
-    let data_impl = if data_idents.is_empty() {
-        quote! {
-            fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
-                soroban_sdk::Vec::<soroban_sdk::Val>::new(env)
-            }
-        }
-    } else {
-        quote! {
-            fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
-                let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
-                    env,
-                    #(soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env)),*
-                ];
-                data
-            }
+    let data_impl = quote! {
+        fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
+            let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
+                env
+                #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env))*
+            ];
+            data
         }
     };
 
