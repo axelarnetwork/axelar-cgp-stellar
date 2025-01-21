@@ -44,8 +44,8 @@ struct TestConfig<'a> {
 }
 
 fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
-    let (signers, gateway_client) = setup_gateway(&env);
-    let gas_service_client = setup_gas_service(&env);
+    let (signers, gateway_client) = setup_gateway(env);
+    let gas_service_client = setup_gas_service(env);
     let its_client = setup_its(
         env,
         &gateway_client.address,
