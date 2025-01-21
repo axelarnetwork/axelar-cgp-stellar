@@ -7,7 +7,7 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
-testutils = []
+testutils = ["stellar-axelar-std/testutils"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
@@ -15,7 +15,6 @@ soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-std = { workspace = true }
-stellar-axelar-std-derive = { workspace = true }
 stellar-interchain-token-service = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
@@ -25,8 +24,8 @@ soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
-stellar-axelar-std-derive = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
+example = { workspace = true, features = ["testutils"] }
 
 [lints]
 workspace = true
