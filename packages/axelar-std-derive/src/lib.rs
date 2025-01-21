@@ -1,4 +1,4 @@
-//! Note: The tests are located in the `axelar-std` package instead of `axelar-std-derive`
+//! Note: The tests are located in the `stellar-axelar-std` package instead of `stellar-axelar-std-derive`
 //!
 //! This ensures compatibility and prevents cyclic dependency issues during testing and release.
 
