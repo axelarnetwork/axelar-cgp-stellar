@@ -179,7 +179,7 @@ fn execute_fails_without_gateway_approval() {
 }
 
 #[test]
-fn execute_fails_with_invalid_message() {
+fn execute_fails_with_invalid_payload_length() {
     let (env, client, gateway_client, _, signers) = setup_env();
 
     let message_id = String::from_str(&env, "test");
@@ -210,6 +210,56 @@ fn execute_fails_with_invalid_message() {
             &invalid_payload,
         ),
         ContractError::InsufficientMessageLength
+    );
+}
+
+#[test]
+fn execute_fails_with_invalid_message_type() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
+    let source_chain = client.its_hub_chain_name();
+    let source_address = client.its_hub_address();
+    let original_source_chain = String::from_str(&env, "ethereum");
+
+    let amount = 1000;
+    let deployer = Address::generate(&env);
+    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
+
+    let invalid_msg = HubMessage::SendToHub {
+        destination_chain: original_source_chain,
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address: recipient,
+            amount,
+            data: None,
+        }),
+    };
+    let message_id = String::from_str(&env, "test");
+    let payload = invalid_msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ContractError::InvalidMessageType
     );
 }
 
@@ -266,6 +316,50 @@ fn execute_fails_with_invalid_source_address() {
     assert_contract_err!(
         client.try_execute(&source_chain, &message_id, &source_address, &payload,),
         ContractError::NotHubAddress
+    );
+}
+
+#[test]
+fn execute_fails_with_untrusted_chain() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
+    let source_chain = client.its_hub_chain_name();
+    let source_address = client.its_hub_address();
+    let untrusted_chain = String::from_str(&env, "untrusted");
+    let token_id = BytesN::from_array(&env, &[1u8; 32]);
+
+    let msg = HubMessage::ReceiveFromHub {
+        source_chain: untrusted_chain,
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address: recipient,
+            amount: 1,
+            data: None,
+        }),
+    };
+    let message_id = String::from_str(&env, "test");
+    let payload = msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ContractError::UntrustedChain
     );
 }
 
