@@ -9,7 +9,7 @@ use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_gateway::event::ContractCalledEvent;
 use stellar_axelar_gateway::testutils::{
-    self, deterministic_rng, generate_proof, generate_test_message_with_rng, get_approve_hash,
+    self, generate_proof, get_approve_hash,
     TestSignerSet,
 };
 use stellar_axelar_gateway::types::Message;
@@ -159,7 +159,7 @@ fn gmp_example() {
     // Set cross-chain message params
     let source_address = source_app.address.to_string();
     let destination_address = destination_app.address.to_string();
-    let (_, payload) = generate_test_message_with_rng(&env, deterministic_rng());
+    let payload = Bytes::from_hex(&env, "dead");
     let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
     // Initiate cross-chain contract call, sending message from source to destination

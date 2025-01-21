@@ -1,16 +1,18 @@
-use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{assert_with_error, contract, contracterror, contractimpl, Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
 use stellar_axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
+use stellar_axelar_std::InterchainTokenExecutable;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
-use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface;
+use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
 use crate::storage_types::DataKey;
 
 #[contract]
+#[derive(InterchainTokenExecutable)]
 pub struct Example;
 
 #[contracterror]
@@ -19,6 +21,7 @@ pub struct Example;
 pub enum ExampleError {
     NotApproved = 1,
     InvalidItsAddress = 2,
+    InvalidAmount = 3,
 }
 
 impl_not_approved_error!(ExampleError);
@@ -53,15 +56,17 @@ impl AxelarExecutableInterface for Example {
 }
 
 #[contractimpl]
-impl InterchainTokenExecutableInterface for Example {
-    fn interchain_token_service(env: &Env) -> Address {
+impl CustomInterchainTokenExecutable for Example {
+    type Error = ExampleError;
+
+    fn __interchain_token_service(env: &Env) -> Address {
         env.storage()
             .instance()
             .get(&DataKey::InterchainTokenService)
             .expect("ITS not found")
     }
 
-    fn execute_with_interchain_token(
+    fn __authorized_execute_with_token(
         env: &Env,
         source_chain: String,
         message_id: String,
@@ -70,8 +75,8 @@ impl InterchainTokenExecutableInterface for Example {
         token_id: BytesN<32>,
         token_address: Address,
         amount: i128,
-    ) {
-        Self::validate(env);
+    ) -> Result<(), Self::Error> {
+        Self::validate_amount(env, amount)?;
 
         TokenReceivedEvent {
             source_chain,
@@ -83,6 +88,8 @@ impl InterchainTokenExecutableInterface for Example {
             amount,
         }
         .emit(env);
+
+        Ok(())
     }
 }
 
@@ -178,6 +185,12 @@ impl Example {
             message,
         }
         .emit(env);
+
+        Ok(())
+    }
+
+    pub fn validate_amount(env: &Env, amount: i128) -> Result<(), ExampleError> {
+        assert_with_error!(env, amount >= 0, ExampleError::InvalidAmount);
 
         Ok(())
     }
