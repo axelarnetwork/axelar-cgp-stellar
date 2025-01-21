@@ -2,7 +2,7 @@
 extern crate std;
 
 use soroban_sdk::testutils::{Address as _, BytesN as _, Ledger};
-use soroban_sdk::{Address, BytesN, Env, IntoVal as _, String, Symbol};
+use soroban_sdk::{Address, BytesN, Env, IntoVal as _, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_last_emitted_event};
 use stellar_interchain_token::{InterchainToken, InterchainTokenClient};
@@ -41,15 +41,20 @@ fn register_interchain_token() {
 
     let contract_id = env.register(
         InterchainToken,
-        (owner.clone(), minter.clone(), &token_id, token_metadata),
+        (
+            owner.clone(),
+            minter.clone(),
+            &token_id,
+            token_metadata.clone(),
+        ),
     );
 
     let token = InterchainTokenClient::new(&env, &contract_id);
 
     assert_eq!(token.token_id(), token_id);
-    assert_eq!(token.name(), String::from_str(&env, "name"));
-    assert_eq!(token.symbol(), String::from_str(&env, "symbol"));
-    assert_eq!(token.decimals(), 6);
+    assert_eq!(token.name(), token_metadata.name);
+    assert_eq!(token.symbol(), token_metadata.symbol);
+    assert_eq!(token.decimals(), token_metadata.decimal);
     assert_eq!(token.owner(), owner);
     assert!(token.is_minter(&owner));
     assert!(token.is_minter(&minter));

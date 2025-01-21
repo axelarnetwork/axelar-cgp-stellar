@@ -60,16 +60,11 @@ fn upgrade_fails_if_upgrading_to_the_same_version() {
     let dummy_data = String::from_str(&env, "");
     let original_version = String::from_str(&env, "0.1.0");
 
-    let dummy_client = DummyContractClient::new(&env, &contract_address);
-
     let upgrader = UpgraderClient::new(&env, &upgrader_address);
-
-    let upgrade_auth = mock_auth!(env, contract_owner, dummy_client.upgrade(dummy_hash));
-    let migrate_auth = mock_auth!(env, contract_owner, dummy_client.migrate(dummy_data));
 
     assert_contract_err!(
         upgrader
-            .mock_auths(&[upgrade_auth, migrate_auth])
+            .mock_all_auths_allowing_non_root_auth()
             .try_upgrade(
                 &contract_address,
                 &original_version,
