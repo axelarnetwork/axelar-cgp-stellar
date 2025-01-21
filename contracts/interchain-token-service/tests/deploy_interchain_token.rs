@@ -35,6 +35,24 @@ fn deploy_interchain_token_succeeds() {
 }
 
 #[test]
+fn deploy_interchain_token_fails_when_paused() {
+    let (env, client, _, _, _) = setup_env();
+
+    client.mock_all_auths().set_pause_status(&true);
+
+    assert_contract_err!(
+        client.try_deploy_interchain_token(
+            &Address::generate(&env),
+            &BytesN::from_array(&env, &[1; 32]),
+            &TokenMetadata::new(&env, "Test", "TEST", 6),
+            &1,
+            &None
+        ),
+        ContractError::ContractPaused
+    );
+}
+
+#[test]
 fn deploy_interchain_token_with_initial_supply_no_minter() {
     let (env, client, _, _, _) = setup_env();
 
