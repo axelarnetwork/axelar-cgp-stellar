@@ -2,7 +2,8 @@ mod utils;
 
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env, String};
-use stellar_axelar_std::mock_auth;
+use stellar_axelar_std::{assert_contract_err, mock_auth};
+use stellar_upgrader::error::ContractError;
 use stellar_upgrader::{Upgrader, UpgraderClient};
 use utils::{DataKey, DummyContract, DummyContractClient};
 
@@ -45,6 +46,38 @@ fn upgrade_and_migrate_are_atomic() {
         let data: String = env.storage().instance().get(&DataKey::Data).unwrap();
         assert_eq!(data, expected_data);
     });
+}
+
+#[test]
+fn upgrade_fails_if_upgrading_to_the_same_version() {
+    let env = Env::default();
+
+    let upgrader_address = env.register(Upgrader, ());
+
+    let contract_owner = Address::generate(&env);
+    let contract_address = env.register(DummyContract, (&contract_owner,));
+    let dummy_hash = BytesN::from_array(&env, &[1u8; 32]);
+    let dummy_data = String::from_str(&env, "");
+    let original_version = String::from_str(&env, "0.1.0");
+
+    let dummy_client = DummyContractClient::new(&env, &contract_address);
+
+    let upgrader = UpgraderClient::new(&env, &upgrader_address);
+
+    let upgrade_auth = mock_auth!(env, contract_owner, dummy_client.upgrade(dummy_hash));
+    let migrate_auth = mock_auth!(env, contract_owner, dummy_client.migrate(dummy_data));
+
+    assert_contract_err!(
+        upgrader
+            .mock_auths(&[upgrade_auth, migrate_auth])
+            .try_upgrade(
+                &contract_address,
+                &original_version,
+                &dummy_hash,
+                &soroban_sdk::vec![&env, dummy_data.to_val()],
+            ),
+        ContractError::SameVersion
+    );
 }
 
 #[test]
