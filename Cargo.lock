@@ -2045,6 +2045,7 @@ name = "stellar-interchain-token"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "goldie",
  "paste",
  "soroban-sdk",
  "soroban-token-sdk",
