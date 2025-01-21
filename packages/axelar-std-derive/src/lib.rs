@@ -10,6 +10,9 @@ use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 use upgradable::MigrationArgs;
 
+// Note: The tests are located in `axelar-std` instead of `axelar-std-derive`
+// due to a package dependency issue with `axelar-std`.
+
 #[proc_macro_derive(Operatable)]
 pub fn derive_operatable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
