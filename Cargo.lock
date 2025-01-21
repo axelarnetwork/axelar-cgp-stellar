@@ -2033,7 +2033,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "soroban-sdk",
- "stellar-axelar-std",
  "syn 2.0.87",
 ]
 
