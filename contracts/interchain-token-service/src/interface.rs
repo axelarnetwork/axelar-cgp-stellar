@@ -81,6 +81,9 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
     /// Returns the type of the token manager associated with the specified token ID.
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType;
 
+    /// Returns whether the contract is paused.
+    fn is_paused(env: &Env) -> bool;
+
     /// Returns the flow limit for the token associated with the specified token ID.
     /// Returns `None` if no limit is set.
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128>;
@@ -113,6 +116,11 @@ pub trait InterchainTokenServiceInterface: AxelarExecutableInterface {
         token_id: BytesN<32>,
         flow_limit: Option<i128>,
     ) -> Result<(), ContractError>;
+
+    /// Sets the pause status of the contract.
+    /// # Authorization
+    /// - Must be called by [`Self::owner`].
+    fn set_pause_status(env: &Env, paused: bool) -> Result<(), ContractError>;
 
     /// Deploys a new interchain token on the current chain with specified metadata and optional
     /// initial supply. If initial supply is provided, it is minted to the caller. The

@@ -155,10 +155,9 @@ fn set_flow_limit_succeeds() {
         client.operator(),
         client.set_flow_limit(&token_id, &Some(dummy_flow_limit()))
     );
+    goldie::assert!(events::fmt_last_emitted_event::<FlowLimitSetEvent>(&env));
 
     assert_eq!(client.flow_limit(&token_id), Some(dummy_flow_limit()));
-
-    goldie::assert!(events::fmt_last_emitted_event::<FlowLimitSetEvent>(&env));
 }
 
 #[test]
