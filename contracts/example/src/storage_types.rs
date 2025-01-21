@@ -5,4 +5,5 @@ use soroban_sdk::contracttype;
 pub enum DataKey {
     Gateway,
     GasService,
+    InterchainTokenService,
 }

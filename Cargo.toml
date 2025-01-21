@@ -15,6 +15,7 @@ alloy-sol-types = { version = "0.8.19", default-features = false, features = [
     "std",
 ] }
 cfg-if = { version = "1.0", default-features = false }
+example = { version = "^0.1.0", path = "contracts/example" }
 goldie = { version = "0.5.0", default-features = false }
 hex = { version = "0.4", default-features = false }
 paste = { version = "1.0", default-features = false }
