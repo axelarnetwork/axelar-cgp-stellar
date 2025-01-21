@@ -1,13 +1,14 @@
 #![cfg(test)]
 extern crate std;
 
+use example::event::ExecutedEvent;
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, FromVal, IntoVal, String, Symbol};
+use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
-use stellar_axelar_gateway::event::ContractCalledEvent;
+use stellar_axelar_gateway::event::{ContractCalledEvent, MessageApprovedEvent};
 use stellar_axelar_gateway::testutils::{self, generate_proof, get_approve_hash, TestSignerSet};
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
@@ -44,10 +45,7 @@ struct TestConfig<'a> {
     app: ExampleClient<'a>,
 }
 
-fn setup_app<'a>(
-    env: &Env,
-    chain_name: &String,
-) -> TestConfig<'a> {
+fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
     let (signers, gateway_client) = setup_gateway(&env);
     let gas_service_client = setup_gas_service(&env);
     let its_client = setup_its(
@@ -56,11 +54,14 @@ fn setup_app<'a>(
         &gas_service_client.address,
         &chain_name,
     );
-    let app_address = env.register(Example, (
-        &gateway_client.address,
-        &gas_service_client.address,
-        &its_client.address,
-    ));
+    let app_address = env.register(
+        Example,
+        (
+            &gateway_client.address,
+            &gas_service_client.address,
+            &its_client.address,
+        ),
+    );
     let app = ExampleClient::new(env, &app_address);
 
     TestConfig {
@@ -171,7 +172,11 @@ fn gmp_example() {
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(&user, &source_test_config.gas_service_client.address, gas_token.amount)
+        asset_client.transfer(
+            &user,
+            &source_test_config.gas_service_client.address,
+            gas_token.amount
+        )
     );
 
     let source_gas_service_client = source_test_config.gas_service_client;
@@ -212,10 +217,10 @@ fn gmp_example() {
     let message_id = String::from_str(&env, "test");
 
     // Confirming message from source Axelar gateway
-    goldie::assert!(events::fmt_last_emitted_event::<ContractCalledEvent>(&env));
+    let contract_call_event = events::fmt_last_emitted_event::<ContractCalledEvent>(&env);
 
     // Axelar hub signs the message approval, Signing message approval for destination
-    let messages = vec![
+    let messages = soroban_sdk::vec![
         &env,
         Message {
             source_chain: source_chain.clone(),
@@ -229,10 +234,22 @@ fn gmp_example() {
     let proof = generate_proof(&env, data_hash, destination_test_config.signers);
 
     // Submitting signed message approval to destination Axelar gateway
-    destination_test_config.gateway_client.approve_messages(&messages, &proof);
+    destination_test_config
+        .gateway_client
+        .approve_messages(&messages, &proof);
+
+    let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
     // Executing message on destination app
-    destination_test_config.app.execute(&source_chain, &message_id, &source_address, &payload);
+    destination_test_config
+        .app
+        .execute(&source_chain, &message_id, &source_address, &payload);
+
+    let executed_event = events::fmt_last_emitted_event::<ExecutedEvent>(&env);
+
+    goldie::assert!(
+        vec![contract_call_event, message_approved_event, executed_event,].join("\n\n")
+    );
 }
 
 #[test]
@@ -247,16 +264,18 @@ fn its_example() {
     let source_address: String = test_config.its_client.its_hub_address();
 
     let amount = 1000;
-    let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &test_config.its_client, &deployer, amount);
+    let token_id = setup_its_token(
+        &env,
+        &test_config.its_client,
+        &Address::generate(&env),
+        amount,
+    );
 
-    let destination_address = test_config.app.address.to_string_bytes();
     let original_source_chain = String::from_str(&env, "ethereum");
-    test_config.its_client
+    test_config
+        .its_client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
-
-    let data = Address::generate(&env).to_string_bytes();
 
     let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -264,33 +283,39 @@ fn its_example() {
             stellar_interchain_token_service::types::InterchainTransfer {
                 token_id: token_id.clone(),
                 source_address: user,
-                destination_address,
+                destination_address: test_config.app.address.to_string_bytes(),
                 amount,
-                data: Some(data),
+                data: Some(Address::generate(&env).to_string_bytes()),
             },
         ),
     };
     let payload = msg.abi_encode(&env).unwrap();
-    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
     let message_id = String::from_str(&env, "test");
 
-    let messages = vec![
+    let messages = soroban_sdk::vec![
         &env,
         Message {
             source_chain: source_chain.clone(),
             message_id: message_id.clone(),
             source_address: source_address.clone(),
             contract_address: test_config.its_client.address.clone(),
-            payload_hash,
+            payload_hash: env.crypto().keccak256(&payload).into(),
         },
     ];
-    let data_hash = get_approve_hash(&env, messages.clone());
-    let proof = generate_proof(&env, data_hash, test_config.signers);
+    let proof = generate_proof(
+        &env,
+        get_approve_hash(&env, messages.clone()),
+        test_config.signers,
+    );
 
-    test_config.gateway_client.approve_messages(&messages, &proof);
+    test_config
+        .gateway_client
+        .approve_messages(&messages, &proof);
 
-    test_config.its_client.execute(&source_chain, &message_id, &source_address, &payload);
+    test_config
+        .its_client
+        .execute(&source_chain, &message_id, &source_address, &payload);
 
     let token = token::TokenClient::new(&env, &test_config.its_client.token_address(&token_id));
     assert_eq!(token.balance(&test_config.app.address), 0);
