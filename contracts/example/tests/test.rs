@@ -136,15 +136,27 @@ fn gmp_example() {
 
     // Setup source Axelar gateway
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
-    let source_test_config = setup_app(&env, &source_chain);
+    let TestConfig {
+        signers: _,
+        gateway_client: _,
+        gas_service_client: source_gas_service_client,
+        its_client: _,
+        app: source_app,
+    } = setup_app(&env, &source_chain);
 
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
-    let destination_test_config = setup_app(&env, &destination_chain);
+    let TestConfig {
+        signers: destination_signers,
+        gateway_client: destination_gateway_client,
+        gas_service_client: _,
+        its_client: _,
+        app: destination_app,
+    } = setup_app(&env, &destination_chain);
 
     // Set cross-chain message params
-    let source_address = source_test_config.app.address.to_string();
-    let destination_address = destination_test_config.app.address.to_string();
+    let source_address = source_app.address.to_string();
+    let destination_address = destination_app.address.to_string();
     let payload = Bytes::from_hex(&env, "dead");
     let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
@@ -159,7 +171,7 @@ fn gmp_example() {
 
     asset_client.mock_all_auths().mint(&user, &gas_amount);
 
-    source_test_config.app.mock_all_auths().send(
+    source_app.mock_all_auths().send(
         &user,
         &destination_chain,
         &destination_address,
@@ -170,20 +182,16 @@ fn gmp_example() {
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(
-            &user,
-            &source_test_config.gas_service_client.address,
-            gas_token.amount
-        )
+        asset_client.transfer(&user, &source_gas_service_client.address, gas_token.amount)
     );
 
-    let source_gas_service_client = source_test_config.gas_service_client;
+    let source_gas_service_client = source_gas_service_client;
 
     let pay_gas_auth = auth_invocation!(
         &env,
         user,
         source_gas_service_client.pay_gas(
-            source_test_config.app.address.clone(),
+            source_app.address.clone(),
             destination_chain.clone(),
             destination_address.clone(),
             payload.clone(),
@@ -194,7 +202,7 @@ fn gmp_example() {
         transfer_auth
     );
 
-    let source_app = source_test_config.app;
+    let source_app = source_app;
 
     let send_auth = auth_invocation!(
         &env,
@@ -224,24 +232,20 @@ fn gmp_example() {
             source_chain: source_chain.clone(),
             message_id: message_id.clone(),
             source_address: source_address.clone(),
-            contract_address: destination_test_config.app.address.clone(),
+            contract_address: destination_app.address.clone(),
             payload_hash,
         },
     ];
     let data_hash = get_approve_hash(&env, messages.clone());
-    let proof = generate_proof(&env, data_hash, destination_test_config.signers);
+    let proof = generate_proof(&env, data_hash, destination_signers);
 
     // Submitting signed message approval to destination Axelar gateway
-    destination_test_config
-        .gateway_client
-        .approve_messages(&messages, &proof);
+    destination_gateway_client.approve_messages(&messages, &proof);
 
     let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
     // Executing message on destination app
-    destination_test_config
-        .app
-        .execute(&source_chain, &message_id, &source_address, &payload);
+    destination_app.execute(&source_chain, &message_id, &source_address, &payload);
 
     let executed_event = events::fmt_last_emitted_event::<ExecutedEvent>(&env);
 
@@ -255,25 +259,27 @@ fn its_example() {
     let user = Address::generate(&env).to_string_bytes();
 
     let chain_name = String::from_str(&env, "chain_name");
-    let test_config = setup_app(&env, &chain_name);
-    let source_chain = test_config.its_client.its_hub_chain_name();
-    let source_address: String = test_config.its_client.its_hub_address();
+    let TestConfig {
+        signers,
+        gateway_client,
+        gas_service_client: _,
+        its_client,
+        app: example_app,
+    } = setup_app(&env, &chain_name);
+    let source_chain = its_client.its_hub_chain_name();
+    let source_address: String = its_client.its_hub_address();
 
     let amount = 1000;
-    let token_id = setup_its_token(
-        &env,
-        &test_config.its_client,
-        &Address::generate(&env),
-        amount,
-    );
+    let token_id = setup_its_token(&env, &its_client, &Address::generate(&env), amount);
 
     let original_source_chain = String::from_str(&env, "ethereum");
-    test_config
-        .its_client
+    its_client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
 
     let trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+
+    let data = Some(Address::generate(&env).to_string_bytes());
 
     let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -281,9 +287,9 @@ fn its_example() {
             stellar_interchain_token_service::types::InterchainTransfer {
                 token_id: token_id.clone(),
                 source_address: user,
-                destination_address: test_config.app.address.to_string_bytes(),
+                destination_address: example_app.address.to_string_bytes(),
                 amount,
-                data: Some(Address::generate(&env).to_string_bytes()),
+                data: data.clone(),
             },
         ),
     };
@@ -297,25 +303,17 @@ fn its_example() {
             source_chain: source_chain.clone(),
             message_id: message_id.clone(),
             source_address: source_address.clone(),
-            contract_address: test_config.its_client.address.clone(),
+            contract_address: its_client.address.clone(),
             payload_hash: env.crypto().keccak256(&payload).into(),
         },
     ];
-    let proof = generate_proof(
-        &env,
-        get_approve_hash(&env, messages.clone()),
-        test_config.signers,
-    );
+    let proof = generate_proof(&env, get_approve_hash(&env, messages.clone()), signers);
 
-    test_config
-        .gateway_client
-        .approve_messages(&messages, &proof);
+    gateway_client.approve_messages(&messages, &proof);
 
     let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
-    test_config
-        .its_client
-        .execute(&source_chain, &message_id, &source_address, &payload);
+    its_client.execute(&source_chain, &message_id, &source_address, &payload);
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
@@ -326,6 +324,9 @@ fn its_example() {
     ]
     .join("\n\n"));
 
-    let token = token::TokenClient::new(&env, &test_config.its_client.token_address(&token_id));
-    assert_eq!(token.balance(&test_config.app.address), 0);
+    let token = token::TokenClient::new(&env, &its_client.token_address(&token_id));
+    assert_eq!(token.balance(&example_app.address), 0);
+
+    let recipient_address = Address::from_string_bytes(&data.unwrap());
+    assert_eq!(token.balance(&recipient_address), amount);
 }

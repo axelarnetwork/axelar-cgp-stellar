@@ -95,10 +95,10 @@ impl CustomInterchainTokenExecutable for Example {
             source_chain,
             message_id,
             source_address,
-            payload,
             token_id,
             token_address,
             amount,
+            payload,
         }
         .emit(env);
 
@@ -168,7 +168,7 @@ impl Example {
         destination_chain: String,
         destination_app_contract: Bytes,
         amount: i128,
-        message: Option<Bytes>,
+        recipient: Option<Bytes>,
         gas_token: Token,
     ) -> Result<(), ExampleError> {
         caller.require_auth();
@@ -181,7 +181,7 @@ impl Example {
             &destination_chain,
             &destination_app_contract,
             &amount,
-            &message,
+            &recipient,
             &gas_token,
         );
 
@@ -191,7 +191,7 @@ impl Example {
             destination_chain,
             destination_app_contract,
             amount,
-            message,
+            recipient,
         }
         .emit(env);
 
