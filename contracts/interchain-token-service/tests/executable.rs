@@ -14,11 +14,10 @@ mod test {
     use core::fmt::Debug;
 
     use soroban_sdk::{
-        contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
-        String, Symbol, Topics, Val,
+        contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, String,
     };
     use stellar_axelar_std::events::Event;
-    use stellar_axelar_std::{ensure, impl_event_testutils, InterchainTokenExecutable};
+    use stellar_axelar_std::{ensure, InterchainTokenExecutable, IntoEvent};
     use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 
     #[contract]
@@ -32,7 +31,7 @@ mod test {
         Message,
     }
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, IntoEvent)]
     pub struct ExecutedEvent {
         pub source_chain: String,
         pub message_id: String,
@@ -42,30 +41,6 @@ mod test {
         pub token_address: Address,
         pub amount: i128,
     }
-
-    impl Event for ExecutedEvent {
-        fn topics(&self, env: &Env) -> impl Topics + Debug {
-            (
-                Symbol::new(env, "executed"),
-                self.source_chain.to_val(),
-                self.message_id.to_val(),
-                self.source_address.to_val(),
-                self.token_id.to_val(),
-                self.token_address.to_val(),
-                self.amount,
-            )
-        }
-
-        fn data(&self, _env: &Env) -> impl IntoVal<Env, Val> + Debug {
-            (self.payload.to_val(),)
-        }
-    }
-
-    impl_event_testutils!(
-        ExecutedEvent,
-        (Symbol, String, String, Bytes, BytesN<32>, Address, i128),
-        (Bytes)
-    );
 
     #[contracterror]
     pub enum ContractError {
