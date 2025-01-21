@@ -61,7 +61,6 @@ impl AxelarExecutableInterface for Example {
     }
 }
 
-#[contractimpl]
 impl CustomInterchainTokenExecutable for Example {
     type Error = ExampleError;
 
