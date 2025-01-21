@@ -1,5 +1,6 @@
 use soroban_sdk::{Address, Bytes, BytesN, String};
-use stellar_axelar_std::{types::Token, IntoEvent};
+use stellar_axelar_std::types::Token;
+use stellar_axelar_std::IntoEvent;
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
 pub struct GasPaidEvent {

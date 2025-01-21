@@ -1,7 +1,8 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
-use stellar_axelar_std::{events::Event, IntoEvent};
+use stellar_axelar_std::events::Event;
+use stellar_axelar_std::IntoEvent;
 use stellar_axelar_std_derive::{Ownable, Upgradable};
 
 #[contracterror]
@@ -17,7 +18,7 @@ pub enum ContractError {
 pub struct Contract;
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
-struct MigratedEvent {}
+pub struct MigratedEvent {}
 
 #[contractimpl]
 impl Contract {

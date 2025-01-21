@@ -8,8 +8,7 @@ use soroban_sdk::{
 use stellar_axelar_operators::error::ContractError;
 use stellar_axelar_operators::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
-use stellar_axelar_std::events::fmt_last_emitted_event;
-use stellar_axelar_std::events::Event;
+use stellar_axelar_std::events::{fmt_last_emitted_event, Event};
 use stellar_axelar_std::{assert_auth, assert_contract_err, IntoEvent};
 
 #[contract]
