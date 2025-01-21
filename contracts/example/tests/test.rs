@@ -15,9 +15,9 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
+use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
 
-const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
 const ITS_HUB_ADDRESS: &str = "hub_address";
 const SOURCE_CHAIN_NAME: &str = "source";
 const DESTINATION_CHAIN_NAME: &str = "destination";
@@ -27,13 +27,13 @@ fn setup_gateway<'a>(env: &Env) -> (TestSignerSet, AxelarGatewayClient<'a>) {
     (signers, client)
 }
 
-fn setup_gas_service<'a>(env: &Env) -> (AxelarGasServiceClient<'a>, Address, Address) {
+fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     let owner: Address = Address::generate(env);
     let gas_collector: Address = Address::generate(env);
     let gas_service_address = env.register(AxelarGasService, (&owner, &gas_collector));
     let gas_service_client = AxelarGasServiceClient::new(env, &gas_service_address);
 
-    (gas_service_client, gas_collector, gas_service_address)
+    gas_service_client
 }
 
 fn setup_app<'a>(
@@ -53,7 +53,7 @@ fn setup_its<'a>(
     gateway: &Address,
     gas_service: &Address,
     chain_name: &String,
-) -> (InterchainTokenServiceClient<'a>, Address) {
+) -> InterchainTokenServiceClient<'a> {
     let owner = Address::generate(env);
     let operator = Address::generate(env);
     let its_hub_address = String::from_str(env, ITS_HUB_ADDRESS);
@@ -78,7 +78,7 @@ fn setup_its<'a>(
 
     let its_client = InterchainTokenServiceClient::new(env, &its_address);
 
-    (its_client, its_address)
+    its_client
 }
 
 fn setup_its_token(
@@ -86,7 +86,7 @@ fn setup_its_token(
     client: &InterchainTokenServiceClient,
     sender: &Address,
     supply: i128,
-) -> (BytesN<32>, Address) {
+) -> BytesN<32> {
     let salt = BytesN::from_array(env, &[1u8; 32]);
     let token_metadata = TokenMetadata {
         name: String::from_str(env, "Test"),
@@ -102,9 +102,7 @@ fn setup_its_token(
         &None,
     );
 
-    let token_address = client.token_address(&token_id);
-
-    (token_id, token_address)
+    token_id
 }
 
 #[test]
@@ -116,41 +114,35 @@ fn gmp_example() {
     // Setup source Axelar gateway
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
     let (_, source_gateway_client) = setup_gateway(&env);
-    let source_gateway_address = source_gateway_client.address;
-    let (source_gas_service_client, _source_gas_collector, source_gas_service_address) =
-        setup_gas_service(&env);
-    let (_, source_its_address) = setup_its(
+    let source_gas_service_client = setup_gas_service(&env);
+    let source_its_client = setup_its(
         &env,
-        &source_gateway_address,
-        &source_gas_service_address,
+        &source_gateway_client.address,
+        &source_gas_service_client.address,
         &source_chain,
     );
     let source_app = setup_app(
         &env,
-        &source_gateway_address,
-        &source_gas_service_address,
-        &source_its_address,
+        &source_gateway_client.address,
+        &source_gas_service_client.address,
+        &source_its_client.address,
     );
 
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
     let (signers, destination_gateway_client) = setup_gateway(&env);
-    let (
-        _destination_gas_service_client,
-        _destination_gas_collector,
-        destination_gas_service_address,
-    ) = setup_gas_service(&env);
-    let (_, destination_its_address) = setup_its(
+    let destination_gas_service_client = setup_gas_service(&env);
+    let destination_its_client = setup_its(
         &env,
         &destination_gateway_client.address,
-        &destination_gas_service_address,
+        &destination_gas_service_client.address,
         &destination_chain,
     );
     let destination_app = setup_app(
         &env,
         &destination_gateway_client.address,
-        &destination_gas_service_address,
-        &destination_its_address,
+        &destination_gas_service_client.address,
+        &destination_its_client.address,
     );
 
     // Set cross-chain message params
@@ -181,7 +173,7 @@ fn gmp_example() {
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(&user, source_gas_service_address, gas_token.amount)
+        asset_client.transfer(&user, &source_gas_service_client.address, gas_token.amount)
     );
 
     let pay_gas_auth = auth_invocation!(
@@ -248,12 +240,12 @@ fn its_example() {
     let user = Address::generate(&env).to_string_bytes();
 
     let (signers, gateway_client) = setup_gateway(&env);
-    let (gas_service_client, _, gas_service_address) = setup_gas_service(&env);
+    let gas_service_client = setup_gas_service(&env);
     let chain_name = String::from_str(&env, "chain_name");
-    let (source_its_client, _) = setup_its(
+    let source_its_client = setup_its(
         &env,
         &gateway_client.address,
-        &gas_service_address,
+        &gas_service_client.address,
         &chain_name,
     );
     let source_chain = source_its_client.its_hub_chain_name();
@@ -261,7 +253,7 @@ fn its_example() {
 
     let amount = 1000;
     let deployer = Address::generate(&env);
-    let (token_id, _) = setup_its_token(&env, &source_its_client, &deployer, amount);
+    let token_id = setup_its_token(&env, &source_its_client, &deployer, amount);
 
     let example_app_address = env.register(
         Example,

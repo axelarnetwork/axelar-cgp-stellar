@@ -9,9 +9,8 @@ use stellar_axelar_gateway::testutils::{
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::types::Token;
+use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
-
-const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("../testdata/interchain_token.wasm");
 
 pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     let owner: Address = Address::generate(env);
