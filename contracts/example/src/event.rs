@@ -19,11 +19,8 @@ pub struct TokenReceivedEvent {
     pub source_address: Bytes,
     #[data]
     pub payload: Bytes,
-    #[data]
     pub token_id: BytesN<32>,
-    #[data]
     pub token_address: Address,
-    #[data]
     pub amount: i128,
 }
 
@@ -32,9 +29,7 @@ pub struct TokenSentEvent {
     pub sender: Address,
     pub token_id: BytesN<32>,
     pub destination_chain: String,
-    #[data]
     pub destination_address: Bytes,
-    #[data]
     pub amount: i128,
     #[data]
     pub message: Option<Bytes>,

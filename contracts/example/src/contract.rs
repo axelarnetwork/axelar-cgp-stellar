@@ -1,10 +1,13 @@
-use soroban_sdk::{assert_with_error, contract, contracterror, contractimpl, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{
+    assert_with_error, contract, contracterror, contractimpl, token, Address, Bytes, BytesN, Env,
+    String,
+};
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
 use stellar_axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
-use stellar_axelar_std::InterchainTokenExecutable;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
+use stellar_axelar_std::InterchainTokenExecutable;
 use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
@@ -31,7 +34,10 @@ impl AxelarExecutableInterface for Example {
     type Error = ExampleError;
 
     fn gateway(env: &Env) -> Address {
-        env.storage().instance().get(&DataKey::Gateway).unwrap()
+        env.storage()
+            .instance()
+            .get(&DataKey::Gateway)
+            .expect("gateway not found")
     }
 
     fn execute(
@@ -78,6 +84,15 @@ impl CustomInterchainTokenExecutable for Example {
     ) -> Result<(), Self::Error> {
         Self::validate_amount(env, amount)?;
 
+        let destination_address = Address::from_string_bytes(&payload);
+
+        let token = token::TokenClient::new(env, &token_address);
+        token.transfer(
+            &env.current_contract_address(),
+            &destination_address,
+            &amount,
+        );
+
         TokenReceivedEvent {
             source_chain,
             message_id,
@@ -111,7 +126,10 @@ impl Example {
     }
 
     pub fn gas_service(env: &Env) -> Address {
-        env.storage().instance().get(&DataKey::GasService).unwrap()
+        env.storage()
+            .instance()
+            .get(&DataKey::GasService)
+            .expect("gas service not found")
     }
 
     pub fn send(
@@ -157,16 +175,9 @@ impl Example {
     ) -> Result<(), ExampleError> {
         caller.require_auth();
 
-        let interchain_token_service = env
-            .storage()
-            .instance()
-            .get(&DataKey::InterchainTokenService)
-            .ok_or(ExampleError::InvalidItsAddress)?;
+        let client = InterchainTokenServiceClient::new(env, &Self::interchain_token_service(env));
 
-        let interchain_token_service_client =
-            InterchainTokenServiceClient::new(env, &interchain_token_service);
-
-        interchain_token_service_client.interchain_transfer(
+        client.interchain_transfer(
             &caller,
             &token_id,
             &destination_chain,

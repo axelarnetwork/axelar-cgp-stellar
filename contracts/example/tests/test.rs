@@ -4,14 +4,11 @@ extern crate std;
 use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, FromVal, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_gateway::event::ContractCalledEvent;
-use stellar_axelar_gateway::testutils::{
-    self, generate_proof, get_approve_hash,
-    TestSignerSet,
-};
+use stellar_axelar_gateway::testutils::{self, generate_proof, get_approve_hash, TestSignerSet};
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
@@ -280,7 +277,7 @@ fn its_example() {
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
 
-    let data = Bytes::from_hex(&env, "dead");
+    let data = Address::generate(&env).to_string_bytes();
 
     let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -317,5 +314,5 @@ fn its_example() {
     source_its_client.execute(&source_chain, &message_id, &source_address, &payload);
 
     let token = token::TokenClient::new(&env, &source_its_client.token_address(&token_id));
-    assert_eq!(token.balance(&example_app_address), amount);
+    assert_eq!(token.balance(&example_app_address), 0);
 }
