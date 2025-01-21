@@ -291,7 +291,7 @@ fn its_example() {
     };
     let payload = msg.abi_encode(&env).unwrap();
 
-    let message_id = String::from_str(&env, "test");
+    let message_id = String::from_str(&env, "message-id");
 
     let messages = soroban_sdk::vec![
         &env,
