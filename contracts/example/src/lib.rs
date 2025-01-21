@@ -1,7 +1,6 @@
 #![no_std]
 
 #[cfg(any(test, feature = "testutils"))]
-#[macro_use]
 extern crate std;
 
 mod contract;

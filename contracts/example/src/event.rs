@@ -1,6 +1,3 @@
-#[cfg(any(test, feature = "testutils"))]
-extern crate std;
-
 use soroban_sdk::{Address, Bytes, BytesN, String};
 use stellar_axelar_std::IntoEvent;
 
