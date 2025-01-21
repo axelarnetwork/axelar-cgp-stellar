@@ -29,8 +29,8 @@ fn setup_gateway<'a>(env: &Env) -> (TestSignerSet, AxelarGatewayClient<'a>) {
 fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     let owner: Address = Address::generate(env);
     let gas_collector: Address = Address::generate(env);
-    let gas_service_address = env.register(AxelarGasService, (&owner, &gas_collector));
-    let gas_service_client = AxelarGasServiceClient::new(env, &gas_service_address);
+    let gas_service = env.register(AxelarGasService, (&owner, &gas_collector));
+    let gas_service_client = AxelarGasServiceClient::new(env, &gas_service);
 
     gas_service_client
 }
@@ -52,7 +52,7 @@ fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
         &gas_service_client.address,
         chain_name,
     );
-    let app_address = env.register(
+    let app = env.register(
         Example,
         (
             &gateway_client.address,
@@ -60,7 +60,7 @@ fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
             &its_client.address,
         ),
     );
-    let app = ExampleClient::new(env, &app_address);
+    let app = ExampleClient::new(env, &app);
 
     TestConfig {
         signers,
@@ -80,12 +80,12 @@ fn setup_its<'a>(
     let owner = Address::generate(env);
     let operator = Address::generate(env);
     let its_hub_address = String::from_str(env, ITS_HUB_ADDRESS);
-    let native_token_address = Address::generate(env);
+    let native_token = Address::generate(env);
     let interchain_token_wasm_hash = env
         .deployer()
         .upload_contract_wasm(INTERCHAIN_TOKEN_WASM_HASH);
 
-    let its_address = env.register(
+    let its = env.register(
         InterchainTokenService,
         (
             &owner,
@@ -94,12 +94,12 @@ fn setup_its<'a>(
             gas_service,
             its_hub_address,
             chain_name.clone(),
-            native_token_address,
+            native_token,
             interchain_token_wasm_hash,
         ),
     );
 
-    let its_client = InterchainTokenServiceClient::new(env, &its_address);
+    let its_client = InterchainTokenServiceClient::new(env, &its);
 
     its_client
 }
@@ -137,11 +137,9 @@ fn gmp_example() {
     // Setup source Axelar gateway
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
     let TestConfig {
-        signers: _,
-        gateway_client: _,
         gas_service_client: source_gas_service_client,
-        its_client: _,
         app: source_app,
+        ..
     } = setup_app(&env, &source_chain);
 
     // Setup destination Axelar gateway
@@ -149,9 +147,8 @@ fn gmp_example() {
     let TestConfig {
         signers: destination_signers,
         gateway_client: destination_gateway_client,
-        gas_service_client: _,
-        its_client: _,
         app: destination_app,
+        ..
     } = setup_app(&env, &destination_chain);
 
     // Set cross-chain message params
@@ -262,9 +259,9 @@ fn its_example() {
     let TestConfig {
         signers,
         gateway_client,
-        gas_service_client: _,
         its_client,
         app: example_app,
+        ..
     } = setup_app(&env, &chain_name);
     let source_chain = its_client.its_hub_chain_name();
     let source_address: String = its_client.its_hub_address();
@@ -327,6 +324,6 @@ fn its_example() {
     let token = token::TokenClient::new(&env, &its_client.token_address(&token_id));
     assert_eq!(token.balance(&example_app.address), 0);
 
-    let recipient_address = Address::from_string_bytes(&data.unwrap());
-    assert_eq!(token.balance(&recipient_address), amount);
+    let recipient = Address::from_string_bytes(&data.unwrap());
+    assert_eq!(token.balance(&recipient), amount);
 }
