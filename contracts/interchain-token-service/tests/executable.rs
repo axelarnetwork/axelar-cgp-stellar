@@ -36,10 +36,11 @@ mod test {
         pub source_chain: String,
         pub message_id: String,
         pub source_address: Bytes,
-        pub payload: Bytes,
         pub token_id: BytesN<32>,
         pub token_address: Address,
         pub amount: i128,
+        #[data]
+        pub payload: Bytes,
     }
 
     #[contracterror]

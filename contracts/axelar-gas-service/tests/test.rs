@@ -8,7 +8,7 @@ use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{bytes, Address, Bytes, Env, String};
 use stellar_axelar_gas_service::error::ContractError;
 use stellar_axelar_gas_service::event::{
-    FeeCollectedEvent, GasAddedEvent, GasPaidEvent, RefundedEvent,
+    GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent,
 };
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_std::events::fmt_last_emitted_event;
@@ -302,7 +302,7 @@ fn collect_fees() {
 
     client.collect_fees(&gas_collector, &token);
 
-    goldie::assert!(fmt_last_emitted_event::<FeeCollectedEvent>(&env));
+    goldie::assert!(fmt_last_emitted_event::<GasCollectedEvent>(&env));
 
     assert_eq!(refund_amount, token_client.balance(&gas_collector));
     assert_eq!(supply - refund_amount, token_client.balance(&contract_id));
@@ -371,7 +371,7 @@ fn refund() {
 
     client.refund(&message_id, &receiver, &token);
 
-    goldie::assert!(fmt_last_emitted_event::<RefundedEvent>(&env));
+    goldie::assert!(fmt_last_emitted_event::<GasRefundedEvent>(&env));
 
     assert_eq!(refund_amount, token_client.balance(&receiver));
     assert_eq!(supply - refund_amount, token_client.balance(&contract_id));

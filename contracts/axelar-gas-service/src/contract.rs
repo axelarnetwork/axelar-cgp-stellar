@@ -5,7 +5,7 @@ use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
-use crate::event::{FeeCollectedEvent, GasAddedEvent, GasPaidEvent, RefundedEvent};
+use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
 use crate::interface::AxelarGasServiceInterface;
 use crate::storage_types::DataKey;
 
@@ -109,7 +109,7 @@ impl AxelarGasServiceInterface for AxelarGasService {
         );
         token_client.transfer(&env.current_contract_address(), &receiver, &token.amount);
 
-        FeeCollectedEvent { receiver, token }.emit(&env);
+        GasCollectedEvent { receiver, token }.emit(&env);
 
         extend_instance_ttl(&env);
 
@@ -125,7 +125,7 @@ impl AxelarGasServiceInterface for AxelarGasService {
             &token.amount,
         );
 
-        RefundedEvent {
+        GasRefundedEvent {
             message_id,
             receiver,
             token,

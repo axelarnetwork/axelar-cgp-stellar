@@ -23,16 +23,14 @@ pub struct GasAddedEvent {
 }
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
-#[event_name("gas_refunded")]
-pub struct RefundedEvent {
+pub struct GasRefundedEvent {
     pub message_id: String,
     pub receiver: Address,
     pub token: Token,
 }
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
-#[event_name("gas_collected")]
-pub struct FeeCollectedEvent {
+pub struct GasCollectedEvent {
     pub receiver: Address,
     pub token: Token,
 }
