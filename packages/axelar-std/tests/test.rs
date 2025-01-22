@@ -134,3 +134,105 @@ mod upgradable {
         assert_auth!(owner, client.migrate(&()));
     }
 }
+
+mod into_event {
+    use soroban_sdk::{Address, String};
+    use stellar_axelar_std::events::{fmt_last_emitted_event, Event};
+    use stellar_axelar_std_derive::IntoEvent;
+
+    use super::*;
+
+    #[contract]
+    pub struct IntoEventTest;
+
+    #[contractimpl]
+    impl IntoEventTest {
+        pub fn __constructor(env: &Env, owner: Address) {
+            stellar_axelar_std::interfaces::set_owner(env, &owner);
+        }
+
+        pub fn transfer_emission(env: &Env, from: Address, to: Address, amount: String) {
+            TransferredEvent { from, to, amount }.emit(env);
+        }
+
+        pub fn multi_data_emission(
+            env: &Env,
+            topic1: String,
+            data1: String,
+            topic2: Address,
+            data2: String,
+        ) {
+            MultiDataEvent {
+                topic1,
+                data1,
+                topic2,
+                data2,
+            }
+            .emit(env);
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, IntoEvent)]
+    struct TransferredEvent {
+        from: Address,
+        to: Address,
+        #[data]
+        amount: String,
+    }
+
+    #[test]
+    fn event_transfer_emission_succeeds() {
+        let env = Env::default();
+
+        let owner = Address::generate(&env);
+        let contract_id = env.register(IntoEventTest, (owner,));
+        let client = IntoEventTestClient::new(&env, &contract_id);
+
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        let amount = String::from_str(&env, "100");
+
+        client.transfer_emission(&from, &to, &amount);
+
+        TransferredEvent { from, to, amount }.emit(&env);
+
+        goldie::assert!(fmt_last_emitted_event::<TransferredEvent>(&env));
+    }
+
+    #[derive(Debug, PartialEq, Eq, IntoEvent)]
+    #[event_name("emitted_data")]
+    struct MultiDataEvent {
+        topic1: String,
+        #[data]
+        data1: String,
+        topic2: Address,
+        #[data]
+        data2: String,
+    }
+
+    #[test]
+    fn event_custom_multiple_topics_and_data_succeeds() {
+        let env = Env::default();
+
+        let owner = Address::generate(&env);
+        let contract_id = env.register(IntoEventTest, (owner,));
+        let client = IntoEventTestClient::new(&env, &contract_id);
+
+        let topic1 = String::from_str(&env, "topic-1");
+        let data1 = String::from_str(&env, "data-1");
+        let topic2 = Address::generate(&env);
+        let data2 = String::from_str(&env, "data-2");
+
+        client.multi_data_emission(&topic1, &data1, &topic2, &data2);
+
+        MultiDataEvent {
+            topic1: topic1.clone(),
+            data1: data1.clone(),
+            topic2: topic2.clone(),
+            data2: data2.clone(),
+        }
+        .emit(&env);
+
+        goldie::assert!(fmt_last_emitted_event::<MultiDataEvent>(&env));
+    }
+}
