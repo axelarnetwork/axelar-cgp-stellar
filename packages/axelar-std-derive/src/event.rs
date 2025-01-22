@@ -97,7 +97,6 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
 
             #schema_impl
         }
-
     }
 }
 
