@@ -2000,7 +2000,6 @@ dependencies = [
  "rand",
  "rand_chacha",
  "soroban-sdk",
- "stellar-axelar-gateway",
  "stellar-axelar-std",
 ]
 
@@ -2011,7 +2010,6 @@ dependencies = [
  "goldie",
  "paste",
  "soroban-sdk",
- "stellar-axelar-operators",
  "stellar-axelar-std",
 ]
 
@@ -2067,7 +2065,6 @@ dependencies = [
  "stellar-axelar-gateway",
  "stellar-axelar-std",
  "stellar-interchain-token",
- "stellar-interchain-token-service",
 ]
 
 [[package]]

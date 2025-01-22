@@ -4,7 +4,6 @@ use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
-use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::storage_types::DataKey;
 
 #[contract]
@@ -41,8 +40,6 @@ impl AxelarOperators {
 
         extend_instance_ttl(&env);
 
-        OperatorAddedEvent { operator: account }.emit(&env);
-
         Ok(())
     }
 
@@ -60,8 +57,6 @@ impl AxelarOperators {
         );
 
         env.storage().instance().remove(&key);
-
-        OperatorRemovedEvent { operator: account }.emit(&env);
 
         Ok(())
     }
