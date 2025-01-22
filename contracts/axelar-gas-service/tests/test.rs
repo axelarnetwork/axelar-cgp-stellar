@@ -13,7 +13,7 @@ use stellar_axelar_gas_service::event::{
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, auth_invocation};
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();
