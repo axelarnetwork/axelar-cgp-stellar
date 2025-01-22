@@ -3,6 +3,7 @@ mod utils;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gateway::testutils::approve_gateway_messages;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
@@ -11,12 +12,11 @@ use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
+use stellar_interchain_token_service::testutils::setup_its_token;
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use utils::{
-    approve_gateway_messages, register_chains, setup_env, setup_its_token, TokenMetadataExt,
-};
+use utils::{setup_env, TokenMetadataExt};
 
 #[test]
 fn interchain_transfer_message_execute_succeeds() {
@@ -72,7 +72,9 @@ fn interchain_transfer_message_execute_succeeds() {
 #[test]
 fn deploy_interchain_token_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
@@ -447,7 +449,9 @@ fn deploy_interchain_token_message_execute_fails_invalid_token_metadata() {
 #[should_panic(expected = "Error(Value, InvalidInput)")]
 fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let source_chain = client.its_hub_chain_name();
     let source_address = client.its_hub_address();
@@ -498,7 +502,9 @@ fn deploy_interchain_token_message_execute_fails_invalid_minter_address() {
 #[test]
 fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
     let (env, client, gateway_client, _, signers) = setup_env();
-    register_chains(&env, &client);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
