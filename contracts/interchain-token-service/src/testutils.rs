@@ -1,4 +1,3 @@
-use crate::{InterchainTokenService, InterchainTokenServiceClient};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::{Address, BytesN, Env, IntoVal, String, Vec};
@@ -10,6 +9,8 @@ use stellar_axelar_gateway::testutils::{
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::types::Token;
+
+use crate::{InterchainTokenService, InterchainTokenServiceClient};
 
 #[cfg(any(test, feature = "testutils"))]
 pub const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
