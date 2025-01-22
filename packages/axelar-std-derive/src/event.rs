@@ -9,26 +9,24 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let ((topic_field_idents, topic_types), (data_field_idents, data_types)) =
         event_struct_fields(input);
 
-    // Convert the type references into token streams
     let topic_type_tokens = topic_types.iter().map(|ty| quote!(#ty));
     let data_type_tokens = data_types.iter().map(|ty| quote!(#ty));
 
-    let topics_impl = quote! {
-        fn topics(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::Topics + core::fmt::Debug {
-            (
+    let emit_impl = quote! {
+        fn emit(self, env: &soroban_sdk::Env) {
+            use soroban_sdk::IntoVal;
+
+            let topics = (
                 soroban_sdk::Symbol::new(env, #event_name),
                 #(soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&self.#topic_field_idents, env),)*
-            )
-        }
-    };
+            );
 
-    let data_impl = quote! {
-        fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
             let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
                 env
                 #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_field_idents, env))*
             ];
-            data
+
+            env.events().publish(topics, data);
         }
     };
 
@@ -70,9 +68,7 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
 
     quote! {
         impl stellar_axelar_std::events::Event for #name {
-            #topics_impl
-
-            #data_impl
+            #emit_impl
 
             #from_event_impl
         }

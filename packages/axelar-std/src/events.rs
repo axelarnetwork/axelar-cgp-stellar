@@ -1,17 +1,11 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{Env, IntoVal, Topics, Val, Vec};
+use soroban_sdk::{Env, Val, Vec};
 #[cfg(any(test, feature = "testutils"))]
 pub use testutils::*;
 
 pub trait Event: Debug + PartialEq + Sized {
-    fn topics(&self, env: &Env) -> impl Topics + Debug;
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug;
-
-    fn emit(self, env: &Env) {
-        env.events().publish(self.topics(env), self.data(env));
-    }
+    fn emit(self, env: &Env);
 
     fn from_event(env: &Env, topics: Vec<Val>, data: Val) -> Self;
 }
