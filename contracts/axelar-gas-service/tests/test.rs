@@ -13,7 +13,7 @@ use stellar_axelar_gas_service::event::{
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err};
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, mock_auth};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();
@@ -111,7 +111,28 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
-    client.mock_all_auths().pay_gas(
+    let transfer_token_auth = mock_auth!(
+        env,
+        spender,
+        token.transfer(spender, client.address, token.amount)
+    );
+
+    let pay_gas_auth = mock_auth!(
+        env,
+        spender,
+        client.pay_gas(
+            sender,
+            destination_chain,
+            destination_address,
+            payload,
+            spender,
+            token,
+            Bytes::new(&env)
+        ),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
+    client.mock_auths(&[pay_gas_auth]).pay_gas(
         &sender,
         &destination_chain,
         &destination_address,
@@ -135,7 +156,28 @@ fn pay_gas() {
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
-    client.mock_all_auths().pay_gas(
+    let transfer_token_auth = mock_auth!(
+        env,
+        spender,
+        token.transfer(spender, client.address, token.amount)
+    );
+
+    let pay_gas_auth = mock_auth!(
+        env,
+        spender,
+        client.pay_gas(
+            sender,
+            destination_chain,
+            destination_address,
+            payload,
+            spender,
+            token,
+            Bytes::new(&env)
+        ),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
+    client.mock_auths(&[pay_gas_auth]).pay_gas(
         &sender,
         &destination_chain,
         &destination_address,
@@ -297,7 +339,22 @@ fn collect_fees() {
         amount: refund_amount,
     };
 
-    client.mock_all_auths().collect_fees(&gas_collector, &token);
+    let transfer_token_auth = mock_auth!(
+        env,
+        gas_collector,
+        token.transfer(gas_collector, client.address, token.amount)
+    );
+
+    let collect_fees_auth = mock_auth!(
+        env,
+        gas_collector,
+        client.collect_fees(&gas_collector, &token),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
+    client
+        .mock_auths(&[collect_fees_auth])
+        .collect_fees(&gas_collector, &token);
 
     goldie::assert!(fmt_last_emitted_event::<GasCollectedEvent>(&env));
 
@@ -330,7 +387,7 @@ fn refund_fails_without_authorization() {
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #10)")] // "balance is not sufficient to spend"
 fn refund_fails_with_insufficient_balance() {
-    let (env, contract_id, _, client) = setup_env();
+    let (env, contract_id, gas_collector, client) = setup_env();
 
     let supply: i128 = 1;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
@@ -347,8 +404,21 @@ fn refund_fails_with_insufficient_balance() {
 
     let message_id = message_id(&env);
 
+    let transfer_token_auth = mock_auth!(
+        env,
+        gas_collector,
+        token.transfer(gas_collector, client.address, token.amount)
+    );
+
+    let refund_auth = mock_auth!(
+        env,
+        gas_collector,
+        client.refund(&message_id, &receiver, &token),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
     client
-        .mock_all_auths()
+        .mock_auths(&[refund_auth])
         .refund(&message_id, &receiver, &token)
 }
 

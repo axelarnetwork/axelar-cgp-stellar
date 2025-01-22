@@ -68,6 +68,10 @@ fn deploy_interchain_token_with_initial_supply_no_minter() {
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -2));
+
     let token_address = client.token_address(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
@@ -95,6 +99,10 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
             &Some(minter.clone()),
         )
     );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -4));
 
     let token_address = client.token_address(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
@@ -127,6 +135,10 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
         )
     );
 
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -4));
+
     assert_eq!(token_id, expected_token_id);
     assert_eq!(
         client.token_manager_type(&token_id),
@@ -152,6 +164,10 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
             &Some(minter.clone()),
         )
     );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -1));
 
     let token_address = client.token_address(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
