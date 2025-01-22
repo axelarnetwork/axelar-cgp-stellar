@@ -13,7 +13,7 @@ use stellar_axelar_gas_service::event::{
 use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{assert_auth_err, assert_contract_err};
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, auth_invocation};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();
@@ -26,18 +26,17 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     (env, contract_id, gas_collector, client)
 }
 
-fn setup_gas_token(env: &Env, gas_amount: i128) -> Token {
+fn mint_gas_token(env: &Env, recipient: &Address, gas_amount: i128, mint_amount: i128) -> Token {
     let asset = env.register_stellar_asset_contract_v2(Address::generate(env));
+
+    StellarAssetClient::new(env, &asset.address())
+        .mock_all_auths()
+        .mint(recipient, &mint_amount);
+
     Token {
         address: asset.address(),
         amount: gas_amount,
     }
-}
-
-fn mint_gas_token(env: &Env, asset: &Address, recipient: &Address, amount: &i128) {
-    StellarAssetClient::new(env, asset)
-        .mock_all_auths()
-        .mint(recipient, amount);
 }
 
 fn message_id(env: &Env) -> String {
@@ -76,7 +75,11 @@ fn pay_gas_fails_with_zero_amount() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 0;
-    let token = setup_gas_token(&env, gas_amount);
+    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
+    let token = Token {
+        address: asset.address(),
+        amount: gas_amount,
+    };
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
@@ -96,30 +99,27 @@ fn pay_gas_fails_with_zero_amount() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #10)")] // "balance is not sufficient to spend"
 fn pay_gas_fails_with_insufficient_user_balance() {
     let (env, _, _, client) = setup_env();
 
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let token = setup_gas_token(&env, gas_amount);
-    mint_gas_token(&env, &token.address, &spender, &(gas_amount - 1));
+    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount - 1);
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
-    assert!(client
-        .mock_all_auths()
-        .try_pay_gas(
-            &sender,
-            &destination_chain,
-            &destination_address,
-            &payload,
-            &spender,
-            &token,
-            &Bytes::new(&env),
-        )
-        .is_err());
+    client.mock_all_auths().pay_gas(
+        &sender,
+        &destination_chain,
+        &destination_address,
+        &payload,
+        &spender,
+        &token,
+        &Bytes::new(&env),
+    );
 }
 
 #[test]
@@ -129,9 +129,8 @@ fn pay_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = setup_gas_token(&env, gas_amount);
+    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount);
     let token_client = TokenClient::new(&env, &token.address);
-    mint_gas_token(&env, &token.address, &spender, &gas_amount);
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
@@ -160,7 +159,11 @@ fn add_gas_fails_with_zero_gas_amount() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 0;
-    let token = setup_gas_token(&env, gas_amount);
+    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
+    let token = Token {
+        address: asset.address(),
+        amount: gas_amount,
+    };
 
     assert_contract_err!(
         client
@@ -171,6 +174,7 @@ fn add_gas_fails_with_zero_gas_amount() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #10)")] // "balance is not sufficient to spend"
 fn add_gas_fails_with_insufficient_user_balance() {
     let (env, _, _, client) = setup_env();
 
@@ -178,13 +182,11 @@ fn add_gas_fails_with_insufficient_user_balance() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 2;
-    let token = setup_gas_token(&env, gas_amount);
-    mint_gas_token(&env, &token.address, &spender, &(gas_amount - 1));
+    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount - 1);
 
-    assert!(client
+    client
         .mock_all_auths()
-        .try_add_gas(&sender, &message_id, &spender, &token,)
-        .is_err());
+        .add_gas(&sender, &message_id, &spender, &token);
 }
 
 #[test]
@@ -194,9 +196,8 @@ fn add_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = setup_gas_token(&env, gas_amount);
+    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount);
     let token_client = TokenClient::new(&env, &token.address);
-    mint_gas_token(&env, &token.address, &spender, &gas_amount);
 
     let message_id = message_id(&env);
     client
@@ -210,12 +211,14 @@ fn add_gas() {
 }
 
 #[test]
-fn collect_fees_fails_with_zero_refund_amount() {
+fn collect_fees_fails_with_zero_amount() {
     let (env, contract_id, gas_collector, client) = setup_env();
 
     let supply: i128 = 1000;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let refund_amount = 0;
     let token = Token {
@@ -237,7 +240,9 @@ fn collect_fees_fails_with_insufficient_balance() {
 
     let supply: i128 = 5;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let refund_amount = 10;
     let token = Token {
@@ -259,7 +264,9 @@ fn collect_fees_fails_without_authorization() {
 
     let supply: i128 = 1000;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let refund_amount = 1;
     let token = Token {
@@ -278,7 +285,9 @@ fn collect_fees() {
 
     let supply: i128 = 1000;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let token_client = TokenClient::new(&env, &asset.address());
 
@@ -302,7 +311,9 @@ fn refund_fails_without_authorization() {
 
     let supply: i128 = 1000;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let receiver: Address = Address::generate(&env);
     let refund_amount: i128 = 1;
@@ -317,12 +328,15 @@ fn refund_fails_without_authorization() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #10)")] // "balance is not sufficient to spend"
 fn refund_fails_with_insufficient_balance() {
     let (env, contract_id, _, client) = setup_env();
 
     let supply: i128 = 1;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let receiver: Address = Address::generate(&env);
     let refund_amount: i128 = 2;
@@ -333,10 +347,9 @@ fn refund_fails_with_insufficient_balance() {
 
     let message_id = message_id(&env);
 
-    assert!(client
+    client
         .mock_all_auths()
-        .try_refund(&message_id, &receiver, &token)
-        .is_err());
+        .refund(&message_id, &receiver, &token)
 }
 
 #[test]
@@ -345,7 +358,9 @@ fn refund() {
 
     let supply: i128 = 1000;
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    mint_gas_token(&env, &asset.address(), &contract_id, &supply);
+    StellarAssetClient::new(&env, &asset.address())
+        .mock_all_auths()
+        .mint(&contract_id, &supply);
 
     let token_client = TokenClient::new(&env, &asset.address());
 
@@ -358,9 +373,10 @@ fn refund() {
 
     let message_id = message_id(&env);
 
-    client
-        .mock_all_auths()
-        .refund(&message_id, &receiver, &token);
+    assert_auth!(
+        &client.gas_collector(),
+        client.refund(&message_id, &receiver, &token)
+    );
 
     goldie::assert!(fmt_last_emitted_event::<GasRefundedEvent>(&env));
 
