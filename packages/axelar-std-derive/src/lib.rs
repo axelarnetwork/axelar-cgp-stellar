@@ -132,7 +132,7 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 /// # mod test {
 /// use core::fmt::Debug;
 /// use stellar_axelar_std::events::Event;
-/// use stellar_axelar_std_derive::IntoEvent;
+/// use stellar_axelar_std::IntoEvent;
 /// use soroban_sdk::{Address, contract, contractimpl, Env, String};
 ///
 /// #[derive(Debug, PartialEq, IntoEvent)]
