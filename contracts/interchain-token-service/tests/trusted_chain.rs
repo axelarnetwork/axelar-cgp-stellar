@@ -1,11 +1,9 @@
-#[allow(dead_code)]
-mod utils;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, String};
+use soroban_sdk::{Address, IntoVal, String};
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{TrustedChainRemovedEvent, TrustedChainSetEvent};
-use utils::setup_env;
+use stellar_interchain_token_service::testutils::setup_env;
 
 #[test]
 fn set_trusted_address() {

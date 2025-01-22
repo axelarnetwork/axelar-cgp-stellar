@@ -1,11 +1,12 @@
-mod utils;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, Bytes, String};
+use soroban_sdk::{Address, Bytes, IntoVal, String};
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::assert_contract_err;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_interchain_token_service::error::ContractError;
-use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
+use stellar_interchain_token_service::testutils::{
+    register_chains, setup_env, setup_gas_token, setup_its_token,
+};
 
 #[test]
 fn send_directly_to_hub_chain_fails() {

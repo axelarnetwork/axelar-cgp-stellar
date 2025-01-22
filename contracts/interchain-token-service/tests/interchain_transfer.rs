@@ -1,12 +1,12 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String};
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTransferSentEvent;
-use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
+use stellar_interchain_token_service::testutils::{
+    register_chains, setup_env, setup_gas_token, setup_its_token,
+};
 
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
     let destination_chain = String::from_str(env, "ethereum");

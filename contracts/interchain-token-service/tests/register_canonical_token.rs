@@ -1,14 +1,12 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{Address, BytesN};
+use soroban_sdk::{Address, BytesN, IntoVal};
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTokenIdClaimedEvent;
+use stellar_interchain_token_service::testutils::setup_env;
 use stellar_interchain_token_service::types::TokenManagerType;
-use utils::setup_env;
 
 #[test]
 fn register_canonical_token_succeeds() {

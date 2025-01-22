@@ -1,7 +1,5 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::address::AddressExt;
@@ -11,11 +9,11 @@ use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{
     InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
 };
+use stellar_interchain_token_service::testutils::{
+    approve_gateway_messages, register_chains, setup_env, setup_its_token, TokenMetadataExt,
+};
 use stellar_interchain_token_service::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
-};
-use utils::{
-    approve_gateway_messages, register_chains, setup_env, setup_its_token, TokenMetadataExt,
 };
 
 #[test]
