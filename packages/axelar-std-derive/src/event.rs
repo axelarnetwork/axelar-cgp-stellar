@@ -6,32 +6,63 @@ use syn::{DeriveInput, LitStr, Type};
 pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let event_name = event_name_snake_case(input);
-    let ((topic_idents, _), (data_idents, _)) = event_struct_fields(input);
+    let ((topic_field_idents, topic_types), (data_field_idents, data_types)) = event_struct_fields(input);
 
     let data_impl = quote! {
         fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
             let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
                 env
-                #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env))*
+                #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_field_idents, env))*
             ];
             data
         }
     };
 
     quote! {
+        impl TryFrom<(soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> for #name {
+            type Error = ();
+
+            fn try_from((topics, data): (soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> core::result::Result<Self, Self::Error> {
+                use soroban_sdk::TryFromVal;
+
+                let env = topics.env;
+
+                let mut i = 1;
+
+                #(
+                    let #topic_field_idents = <#topic_types>::try_from_val(env, &topics.get(i)
+                    .expect("the number of topics does not match this function's definition"))
+                    .expect("given topic value does not match the expected type");
+
+                    i += 1;
+                )*
+
+                let data = soroban_sdk::Vec::<soroban_sdk::Val>::try_from_val(env, data)
+
+                let mut i = 0;
+                #(
+                    let #data_field_idents = <#data_types>::try_from_val(env, &data.get(i)
+                        .expect("the number of data entries does not match this function's definition"))
+                        .expect("given data value does not match the expected type");
+                    i += 1;
+                )
+
+                #name {
+                    #(#topic_field_idents,)*
+                    #(#data_field_idents,)*
+                };
+            }
+        }
+
         impl stellar_axelar_std::events::Event for #name {
             fn topics(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::Topics + core::fmt::Debug {
                 (
                     soroban_sdk::Symbol::new(env, #event_name),
-                    #(soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&self.#topic_idents, env),)*
+                    #(soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&self.#topic_field_idents, env),)*
                 )
             }
 
             #data_impl
-
-            fn emit(self, env: &soroban_sdk::Env) {
-                env.events().publish(self.topics(env), self.data(env));
-            }
         }
     }
 }

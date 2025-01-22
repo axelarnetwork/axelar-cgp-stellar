@@ -4,13 +4,10 @@ use soroban_sdk::{Env, IntoVal, Topics, Val, Vec};
 #[cfg(any(test, feature = "testutils"))]
 pub use testutils::*;
 
-pub trait Event: Debug + PartialEq + Sized {
+pub trait Event: Debug + PartialEq + Sized + TryFrom<(Vec<Val>, Val)> {
     fn topics(&self, env: &Env) -> impl Topics + Debug;
 
-    /// A default empty tuple/vector is used for event data, since majority of events only use topics.
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
+    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug;
 
     fn emit(self, env: &Env) {
         env.events().publish(self.topics(env), self.data(env));
@@ -25,20 +22,14 @@ mod testutils {
     use crate::events::Event;
 
     pub trait EventTestutils: Event {
-        fn matches(self, env: &Env, event: &(Address, Vec<Val>, Val)) -> bool;
-
-        fn standardized_fmt(
-            env: &Env,
-            event: &(soroban_sdk::Address, soroban_sdk::Vec<Val>, Val),
-        ) -> std::string::String;
+        // fn from_event(env: &Env, topics: Vec<Val>, data: Val) -> Self;
     }
 
     pub fn fmt_last_emitted_event<E>(env: &Env) -> std::string::String
     where
         E: EventTestutils,
     {
-        let event = env.events().all().last().expect("no event found");
-        E::standardized_fmt(env, &event)
+        fmt_emitted_event_at_idx::<E>(env, -1)
     }
 
     pub fn fmt_emitted_event_at_idx<E>(env: &Env, mut idx: i32) -> std::string::String
@@ -49,12 +40,14 @@ mod testutils {
             idx += env.events().all().len() as i32;
         }
 
-        let event = env
+        let (contract_id, topics, data) = env
             .events()
             .all()
             .get(idx as u32)
             .expect("no event found at the given index");
-        E::standardized_fmt(env, &event)
+
+        let event = E::from((topics, data));
+        std::format!("{:?}\n\n{:#?}", contract_id, event)
     }
 }
 
