@@ -19,13 +19,9 @@ pub trait Event: Debug + PartialEq + Sized {
 #[cfg(any(test, feature = "testutils"))]
 mod testutils {
     use soroban_sdk::testutils::Events;
-    use soroban_sdk::{Address, Env, Val, Vec};
+    use soroban_sdk::Env;
 
     use crate::events::Event;
-
-    // pub trait EventTestutils: Event {
-    //     // fn from_event(env: &Env, topics: Vec<Val>, data: Val) -> Self;
-    // }
 
     pub fn fmt_last_emitted_event<E>(env: &Env) -> std::string::String
     where
@@ -48,7 +44,7 @@ mod testutils {
             .get(idx as u32)
             .expect("no event found at the given index");
 
-        let event = E::from_event(env, (topics, data));
+        let event = E::from_event(env, topics, data);
         std::format!("{:?}\n\n{:#?}", contract_id, event)
     }
 }

@@ -2,6 +2,7 @@ use heck::ToSnakeCase;
 use proc_macro2::Ident;
 use quote::quote;
 use syn::{DeriveInput, LitStr, Type};
+
 pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let event_name = event_name_snake_case(input);
@@ -39,7 +40,7 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
             let event_name = soroban_sdk::Symbol::try_from_val(env, &topics.get(0)
                 .expect("missing event name in topics"))
                 .expect("invalid event name type");
-            assert_eq!(event_name.to_string(), #event_name, "event name mismatch");
+            assert_eq!(event_name, soroban_sdk::Symbol::new(env, #event_name), "event name mismatch");
 
             let mut topic_idx = 1;
             #(
