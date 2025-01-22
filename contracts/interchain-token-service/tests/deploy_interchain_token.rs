@@ -1,7 +1,7 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, BytesN, Env};
+use soroban_sdk::{Address, BytesN, Env, IntoVal};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};

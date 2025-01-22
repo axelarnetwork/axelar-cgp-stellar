@@ -2,13 +2,15 @@ mod utils;
 
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Bytes, BytesN, Env, String};
+use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTransferSentEvent;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
-use utils::{setup_env, setup_gas_token, setup_its_token};
+use stellar_interchain_token_service::testutils::setup_its_token;
+use utils::setup_env;
 
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
     let destination_chain = String::from_str(env, "ethereum");
@@ -81,6 +83,9 @@ fn interchain_transfer_send_fails_when_paused() {
 #[should_panic(expected = "burn, Error(Contract, #9)")]
 fn interchain_transfer_send_fails_on_insufficient_balance() {
     let (env, client, _, _, _) = setup_env();
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let amount = 1000;
     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
@@ -100,6 +105,9 @@ fn interchain_transfer_send_fails_on_insufficient_balance() {
 #[test]
 fn interchain_transfer_fails_on_zero_amount() {
     let (env, client, _, _, _) = setup_env();
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let amount = 0;
     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
@@ -122,6 +130,9 @@ fn interchain_transfer_fails_on_zero_amount() {
 #[test]
 fn interchain_transfer_fails_on_empty_destination_address() {
     let (env, client, _, _, _) = setup_env();
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let amount = 1000;
     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
@@ -145,6 +156,9 @@ fn interchain_transfer_fails_on_empty_destination_address() {
 #[test]
 fn interchain_transfer_fails_on_empty_data() {
     let (env, client, _, _, _) = setup_env();
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let amount = 1000;
     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
@@ -168,6 +182,9 @@ fn interchain_transfer_fails_on_empty_data() {
 #[test]
 fn interchain_transfer_fails_with_invalid_token() {
     let (env, client, _, _, _) = setup_env();
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let amount = 1000;
     let (sender, gas_token, _) = setup_sender(&env, &client, amount);
