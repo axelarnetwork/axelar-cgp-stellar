@@ -1,9 +1,11 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{contractclient, Address, Env};
-use stellar_axelar_std_derive::IntoEvent;
 
+use crate as stellar_axelar_std;
+use crate::events::Event;
 use crate::interfaces::storage;
+use crate::IntoEvent;
 
 #[contractclient(name = "OperatableClient")]
 pub trait OperatableInterface {

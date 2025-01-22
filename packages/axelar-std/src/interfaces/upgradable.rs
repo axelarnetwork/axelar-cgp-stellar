@@ -1,13 +1,11 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{
-    contractclient, BytesN, Env, FromVal, IntoVal, String, Val,
-};
-use crate::IntoEvent;
+use soroban_sdk::{contractclient, BytesN, Env, FromVal, String, Val};
 
-use crate::ensure;
+use crate as stellar_axelar_std;
 use crate::events::Event;
 use crate::interfaces::{storage, OwnableInterface};
+use crate::{ensure, IntoEvent};
 
 #[contractclient(name = "UpgradableClient")]
 pub trait UpgradableInterface: OwnableInterface {
@@ -37,10 +35,12 @@ pub fn upgrade<T: OwnableInterface>(env: &Env, new_wasm_hash: BytesN<32>) {
     start_migration(env);
 }
 
+/// Migrate the contract to a new version after an upgrade.
+///
 /// This function checks that the caller can authenticate as the owner of the contract,
 /// then runs the custom_migration and finalizes the migration.
 /// An event is emitted when the migration, and with it the overall upgrade, is complete.
-/// Migration can only be run once, after the [upgrade] function has been called.
+/// Migration can only be run once, after the [`upgrade`] function has been called.
 pub fn migrate<T: UpgradableInterface>(
     env: &Env,
     custom_migration: impl FnOnce(),
