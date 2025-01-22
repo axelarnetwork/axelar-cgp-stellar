@@ -3,10 +3,12 @@ mod utils;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Bytes, BytesN, Env, String};
 use stellar_axelar_std::traits::BytesExt;
+use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTransferSentEvent;
-use utils::{register_chains, setup_env, setup_gas_token, setup_its_token};
+use stellar_interchain_token_service::InterchainTokenServiceClient;
+use utils::{setup_env, setup_gas_token, setup_its_token};
 
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
     let destination_chain = String::from_str(env, "ethereum");
@@ -16,15 +18,24 @@ fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
     (destination_chain, destination_address, data)
 }
 
+fn setup_tokens(
+    env: &Env,
+    client: &InterchainTokenServiceClient,
+    amount: i128,
+) -> (Address, Token, BytesN<32>) {
+    let sender: Address = Address::generate(env);
+    let gas_token = setup_gas_token(env, &sender);
+    let token_id = setup_its_token(env, client, &sender, amount);
+
+    (sender, gas_token, token_id)
+}
+
 #[test]
 fn interchain_transfer_send_succeeds() {
     let (env, client, _, _, _) = setup_env();
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 1000;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
-
+    let (sender, gas_token, token_id) = setup_tokens(&env, &client, amount);
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
     client
@@ -70,13 +81,9 @@ fn interchain_transfer_send_fails_when_paused() {
 #[should_panic(expected = "burn, Error(Contract, #9)")]
 fn interchain_transfer_send_fails_on_insufficient_balance() {
     let (env, client, _, _, _) = setup_env();
-    register_chains(&env, &client);
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 1000;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
-
+    let (sender, gas_token, token_id) = setup_tokens(&env, &client, amount);
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
     client.mock_all_auths().interchain_transfer(
@@ -93,13 +100,9 @@ fn interchain_transfer_send_fails_on_insufficient_balance() {
 #[test]
 fn interchain_transfer_fails_on_zero_amount() {
     let (env, client, _, _, _) = setup_env();
-    register_chains(&env, &client);
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 0;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
-
+    let (sender, gas_token, token_id) = setup_tokens(&env, &client, amount);
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
     assert_contract_err!(
@@ -119,13 +122,9 @@ fn interchain_transfer_fails_on_zero_amount() {
 #[test]
 fn interchain_transfer_fails_on_empty_destination_address() {
     let (env, client, _, _, _) = setup_env();
-    register_chains(&env, &client);
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 1000;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
-
+    let (sender, gas_token, token_id) = setup_tokens(&env, &client, amount);
     let (destination_chain, _, data) = dummy_transfer_params(&env);
     let empty_address = Bytes::new(&env);
 
@@ -146,13 +145,9 @@ fn interchain_transfer_fails_on_empty_destination_address() {
 #[test]
 fn interchain_transfer_fails_on_empty_data() {
     let (env, client, _, _, _) = setup_env();
-    register_chains(&env, &client);
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 1000;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
-
+    let (sender, gas_token, token_id) = setup_tokens(&env, &client, amount);
     let (destination_chain, destination_address, _) = dummy_transfer_params(&env);
     let empty_data = Some(Bytes::new(&env));
 
@@ -173,11 +168,9 @@ fn interchain_transfer_fails_on_empty_data() {
 #[test]
 fn interchain_transfer_fails_with_invalid_token() {
     let (env, client, _, _, _) = setup_env();
-    register_chains(&env, &client);
 
-    let sender: Address = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
     let amount = 1000;
+    let (sender, gas_token, _) = setup_tokens(&env, &client, amount);
     let invalid_token_id = BytesN::from_array(&env, &[1u8; 32]);
 
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
