@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{contractclient, Address, Env};
-use crate::IntoEvent;
+use stellar_axelar_std_derive::IntoEvent;
 
 use crate::interfaces::storage;
 
