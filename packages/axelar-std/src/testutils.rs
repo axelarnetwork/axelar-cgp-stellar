@@ -1,49 +1,6 @@
 #![cfg(any(test, feature = "testutils"))]
 extern crate std;
 
-use soroban_sdk::testutils::Events;
-use soroban_sdk::{vec, Address, Env, IntoVal, Val, Vec};
-
-/// Asserts that the event at `event_index` in the environment's emitted events is the expected event.
-///
-/// If `event_index` is negative, the length of events will be added to it, i.e it'll be indexed from the end.
-pub fn assert_emitted_event<U, V>(
-    env: &Env,
-    mut event_index: i32,
-    contract_id: &Address,
-    topics: U,
-    data: V,
-) where
-    U: IntoVal<Env, Vec<Val>>,
-    V: IntoVal<Env, Val>,
-{
-    let events = env.events().all();
-    if event_index.is_negative() {
-        event_index += events.len() as i32;
-    }
-
-    assert!(
-        event_index < events.len() as i32,
-        "event {} not found, only {} events were emitted",
-        event_index + 1,
-        events.len()
-    );
-
-    let event = events.get(event_index as u32).unwrap();
-
-    assert_eq!(event.0, contract_id.clone());
-    assert_eq!(event.1, topics.into_val(env));
-    assert_eq!(vec![env, event.2], vec![env, data.into_val(env)]);
-}
-
-pub fn assert_last_emitted_event<U, V>(env: &Env, contract_id: &Address, topics: U, data: V)
-where
-    U: IntoVal<Env, Vec<Val>>,
-    V: IntoVal<Env, Val>,
-{
-    assert_emitted_event(env, -1, contract_id, topics, data);
-}
-
 /// Helper macro for building and verifying authorization chains in Soroban contract tests.
 ///
 /// Used to verify that contract calls require the correct sequence of authorizations.

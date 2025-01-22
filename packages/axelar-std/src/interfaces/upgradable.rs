@@ -1,13 +1,12 @@
 use core::fmt::Debug;
 
 use soroban_sdk::{
-    contractclient, symbol_short, BytesN, Env, FromVal, IntoVal, String, Topics, Val,
+    contractclient, BytesN, Env, FromVal, IntoVal, String, Val,
 };
+use stellar_axelar_std_derive::IntoEvent;
 
 use crate::ensure;
 use crate::events::Event;
-#[cfg(any(test, feature = "testutils"))]
-use crate::impl_event_testutils;
 use crate::interfaces::{storage, OwnableInterface};
 
 #[contractclient(name = "UpgradableClient")]
@@ -84,23 +83,11 @@ fn complete_migration(env: &Env) {
         .remove(&storage::migrating::DataKey::Interfaces_Migrating);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
 pub struct UpgradedEvent {
+    #[data]
     version: String,
 }
-
-impl Event for UpgradedEvent {
-    fn topics(&self, _env: &Env) -> impl Topics + Debug {
-        (symbol_short!("upgraded"),)
-    }
-
-    fn data(&self, _env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        (self.version.to_val(),)
-    }
-}
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(UpgradedEvent, (soroban_sdk::Symbol), (String));
 
 pub enum MigrationError {
     NotAllowed,

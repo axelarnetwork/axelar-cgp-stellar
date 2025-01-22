@@ -1,10 +1,9 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
+use soroban_sdk::{contractclient, Address, Env, IntoVal};
+use stellar_axelar_std_derive::IntoEvent;
 
 use crate::events::Event;
-#[cfg(any(test, feature = "testutils"))]
-use crate::impl_event_testutils;
 use crate::interfaces::storage;
 
 #[contractclient(name = "OwnableClient")]
@@ -46,28 +45,11 @@ pub fn set_owner(env: &Env, owner: &Address) {
         .set(&storage::owner::DataKey::Interfaces_Owner, owner);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
 pub struct OwnershipTransferredEvent {
     pub previous_owner: Address,
     pub new_owner: Address,
 }
-
-impl Event for OwnershipTransferredEvent {
-    fn topics(&self, env: &Env) -> impl Topics + Debug {
-        (
-            Symbol::new(env, "ownership_transferred"),
-            self.previous_owner.to_val(),
-            self.new_owner.to_val(),
-        )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
-}
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(OwnershipTransferredEvent, (Symbol, Address, Address), ());
 
 #[cfg(test)]
 mod test {

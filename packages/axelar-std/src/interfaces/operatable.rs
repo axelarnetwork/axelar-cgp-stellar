@@ -1,10 +1,9 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{contractclient, Address, Env, IntoVal, Symbol, Topics, Val, Vec};
+use soroban_sdk::{contractclient, Address, Env, IntoVal};
+use stellar_axelar_std_derive::IntoEvent;
 
 use crate::events::Event;
-#[cfg(any(test, feature = "testutils"))]
-use crate::impl_event_testutils;
 use crate::interfaces::storage;
 
 #[contractclient(name = "OperatableClient")]
@@ -46,28 +45,11 @@ pub fn set_operator(env: &Env, operator: &Address) {
         .set(&storage::operator::DataKey::Interfaces_Operator, operator);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
 pub struct OperatorshipTransferredEvent {
     pub previous_operator: Address,
     pub new_operator: Address,
 }
-
-impl Event for OperatorshipTransferredEvent {
-    fn topics(&self, env: &Env) -> impl Topics + Debug {
-        (
-            Symbol::new(env, "operatorship_transferred"),
-            self.previous_operator.to_val(),
-            self.new_operator.to_val(),
-        )
-    }
-
-    fn data(&self, env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        Vec::<Val>::new(env)
-    }
-}
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(OperatorshipTransferredEvent, (Symbol, Address, Address), ());
 
 #[cfg(test)]
 mod test {
