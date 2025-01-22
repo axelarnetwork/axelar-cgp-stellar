@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.1.0...stellar-axelar-std-v0.1.1)
+
+### 🧪 Testing
+
+- *(axelar-std)* Add derive macro unit tests ([#170](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/170)) - ([f52dded](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/f52ddede4fef910361a306d47b2f248cd3897923))
+
+### Contributors
+
+* @nbayindirli
+
 ## [0.1.0]
 
 ### ⛰️ Features
