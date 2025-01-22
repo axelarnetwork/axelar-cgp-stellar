@@ -1,8 +1,10 @@
+mod utils;
+
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, IntoVal};
 use stellar_axelar_std::{assert_auth, assert_auth_err, events};
 use stellar_interchain_token_service::event::PauseStatusSetEvent;
-use stellar_interchain_token_service::testutils::setup_env;
+use utils::setup_env;
 
 #[test]
 fn pause_succeeds() {

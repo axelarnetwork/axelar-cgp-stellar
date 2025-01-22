@@ -1,6 +1,9 @@
+mod utils;
+
 use soroban_sdk::testutils::{Address as _, Ledger as _};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String};
-use stellar_axelar_gateway::testutils::TestSignerSet;
+use stellar_axelar_gas_service::testutils::setup_gas_token;
+use stellar_axelar_gateway::testutils::{approve_gateway_messages, TestSignerSet};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
@@ -8,11 +11,10 @@ use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::FlowLimitSetEvent;
-use stellar_interchain_token_service::testutils::{
-    approve_gateway_messages, register_chains, setup_env, setup_gas_token, setup_its_token,
-};
+use stellar_interchain_token_service::testutils::setup_its_token;
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
 use stellar_interchain_token_service::InterchainTokenServiceClient;
+use utils::setup_env;
 
 struct GatewayConfig<'a> {
     client: AxelarGatewayClient<'a>,
@@ -53,7 +55,9 @@ fn setup<'a>() -> (
 ) {
     let (env, client, gateway_client, _, signers) = setup_env();
 
-    register_chains(&env, &client);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&client.its_hub_chain_name());
 
     let supply = i128::MAX;
     let deployer = Address::generate(&env);

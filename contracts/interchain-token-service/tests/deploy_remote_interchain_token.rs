@@ -1,11 +1,14 @@
+mod utils;
+
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
-use stellar_interchain_token_service::testutils::{setup_env, setup_gas_token, TokenMetadataExt};
 use stellar_interchain_token_service::types::{DeployInterchainToken, HubMessage, Message};
+use utils::{setup_env, TokenMetadataExt};
 
 #[test]
 fn deploy_remote_interchain_token_succeeds() {
