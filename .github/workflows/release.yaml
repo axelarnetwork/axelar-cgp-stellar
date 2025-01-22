@@ -6,7 +6,8 @@ on:
   pull_request:
     branches:
       - main
-      - 'releases/**'
+      - "releases/**"
+      - "release/**"
     types: [closed]
 
   workflow_dispatch:
@@ -14,7 +15,6 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-
   # Publishes a release in case the release isn't published
   publish-release:
     name: Publish releases
@@ -38,7 +38,7 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-  
+
       # Creates git tags and publishes the crates of the new releases
       - name: Publish release
         id: publish-release
