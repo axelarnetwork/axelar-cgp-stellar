@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use soroban_sdk::{
     contractclient, BytesN, Env, FromVal, IntoVal, String, Val,
 };
-use stellar_axelar_std_derive::IntoEvent;
+use crate::IntoEvent;
 
 use crate::ensure;
 use crate::events::Event;

@@ -1,9 +1,8 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{contractclient, Address, Env, IntoVal};
-use stellar_axelar_std_derive::IntoEvent;
+use soroban_sdk::{contractclient, Address, Env};
+use crate::IntoEvent;
 
-use crate::events::Event;
 use crate::interfaces::storage;
 
 #[contractclient(name = "OperatableClient")]
