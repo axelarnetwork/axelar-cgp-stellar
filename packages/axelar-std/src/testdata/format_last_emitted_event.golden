@@ -1,3 +1,3 @@
 contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
-topics: (Symbol(topic1), String(topic2), 10)
+topics: (Symbol(test), Symbol(topic1), String(topic2), 10)
 data: (String(data1), BytesN<32>(3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3))
