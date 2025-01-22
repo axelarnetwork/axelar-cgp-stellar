@@ -1,3 +1,5 @@
+use core::fmt::Debug;
+
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
