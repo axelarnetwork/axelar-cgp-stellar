@@ -12,10 +12,8 @@ use stellar_axelar_std::types::Token;
 
 use crate::{InterchainTokenService, InterchainTokenServiceClient};
 
-#[cfg(any(test, feature = "testutils"))]
 pub const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
 
-#[cfg(any(test, feature = "testutils"))]
 pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     let owner: Address = Address::generate(env);
     let gas_collector: Address = Address::generate(env);
@@ -25,7 +23,6 @@ pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     gas_service_client
 }
 
-#[cfg(any(test, feature = "testutils"))]
 pub fn setup_its<'a>(
     env: &Env,
     gateway: &AxelarGatewayClient,
@@ -61,7 +58,6 @@ pub fn setup_its<'a>(
     InterchainTokenServiceClient::new(env, &contract_id)
 }
 
-#[cfg(any(test, feature = "testutils"))]
 pub fn setup_env<'a>() -> (
     Env,
     InterchainTokenServiceClient<'a>,
@@ -79,7 +75,6 @@ pub fn setup_env<'a>() -> (
     (env, client, gateway_client, gas_service_client, signers)
 }
 
-#[cfg(any(test, feature = "testutils"))]
 #[allow(dead_code)]
 pub fn setup_gas_token(env: &Env, sender: &Address) -> Token {
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(env));
@@ -96,7 +91,6 @@ pub fn setup_gas_token(env: &Env, sender: &Address) -> Token {
     gas_token
 }
 
-#[cfg(any(test, feature = "testutils"))]
 #[allow(dead_code)]
 pub fn setup_its_token(
     env: &Env,
@@ -122,7 +116,6 @@ pub fn setup_its_token(
     token_id
 }
 
-#[cfg(any(test, feature = "testutils"))]
 #[allow(dead_code)]
 pub fn register_chains(_env: &Env, client: &InterchainTokenServiceClient) {
     client
@@ -130,7 +123,6 @@ pub fn register_chains(_env: &Env, client: &InterchainTokenServiceClient) {
         .set_trusted_chain(&client.its_hub_chain_name());
 }
 
-#[cfg(any(test, feature = "testutils"))]
 #[allow(dead_code)]
 pub fn approve_gateway_messages(
     env: &Env,
@@ -143,7 +135,6 @@ pub fn approve_gateway_messages(
     gateway_client.approve_messages(&messages, &proof);
 }
 
-#[cfg(any(test, feature = "testutils"))]
 #[allow(dead_code)]
 pub trait TokenMetadataExt {
     fn new(env: &Env, name: &str, symbol: &str, decimal: u32) -> Self;
