@@ -9,13 +9,18 @@ publish = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+testutils = ["stellar-axelar-std/testutils"]
+
 [dependencies]
 soroban-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
+goldie = { workspace = true }
 paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-operators = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [lints]
