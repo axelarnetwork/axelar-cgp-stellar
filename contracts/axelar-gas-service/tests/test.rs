@@ -23,7 +23,7 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
 }
 
 fn setup_gas_token(env: &Env, gas_amount: i128) -> Token {
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
+    let asset = env.register_stellar_asset_contract_v2(Address::generate(env));
     Token {
         address: asset.address(),
         amount: gas_amount,
@@ -47,9 +47,9 @@ fn message_id(env: &Env) -> String {
 }
 
 fn dummy_destination_data(env: &Env) -> (String, String) {
-    let destination_chain: String = String::from_str(&env, "ethereum");
+    let destination_chain: String = String::from_str(env, "ethereum");
     let destination_address: String =
-        String::from_str(&env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+        String::from_str(env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
 
     (destination_chain, destination_address)
 }
