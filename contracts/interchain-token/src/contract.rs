@@ -6,12 +6,13 @@ use soroban_sdk::{
 use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
+use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::OwnableInterface;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
 use crate::error::ContractError;
-use crate::event;
+use crate::event::{MinterAddedEvent, MinterRemovedEvent};
 use crate::interface::InterchainTokenInterface;
 use crate::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
 
@@ -117,7 +118,7 @@ impl InterchainTokenInterface for InterchainToken {
 
         extend_instance_ttl(env);
 
-        event::add_minter(env, minter);
+        MinterAddedEvent { minter }.emit(env);
     }
 
     fn remove_minter(env: &Env, minter: Address) {
@@ -129,7 +130,7 @@ impl InterchainTokenInterface for InterchainToken {
 
         extend_instance_ttl(env);
 
-        event::remove_minter(env, minter);
+        MinterRemovedEvent { minter }.emit(env);
     }
 }
 
