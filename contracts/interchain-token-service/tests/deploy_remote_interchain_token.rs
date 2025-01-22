@@ -94,6 +94,23 @@ fn deploy_remote_interchain_token_succeeds() {
 }
 
 #[test]
+fn deploy_remote_interchain_token_fails_when_paused() {
+    let (env, client, _, _, _) = setup_env();
+
+    client.mock_all_auths().set_pause_status(&true);
+
+    assert_contract_err!(
+        client.try_deploy_remote_interchain_token(
+            &Address::generate(&env),
+            &BytesN::from_array(&env, &[1; 32]),
+            &String::from_str(&env, "ethereum"),
+            &setup_gas_token(&env, &Address::generate(&env))
+        ),
+        ContractError::ContractPaused
+    );
+}
+
+#[test]
 fn deploy_remote_interchain_token_fails_untrusted_chain() {
     let (env, client, _, _, _) = setup_env();
 

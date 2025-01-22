@@ -8,6 +8,9 @@ pub mod executable;
 mod interface;
 pub mod types;
 
+#[cfg(any(test, feature = "testutils"))]
+pub mod testutils;
+
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {
         pub use interface::{InterchainTokenServiceClient, InterchainTokenServiceInterface};

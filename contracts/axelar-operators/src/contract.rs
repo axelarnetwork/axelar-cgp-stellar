@@ -1,9 +1,11 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, Val, Vec};
+use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event;
+use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
 use crate::storage_types::DataKey;
 
@@ -40,7 +42,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
         extend_instance_ttl(&env);
 
-        event::add_operator(&env, account);
+        OperatorAddedEvent { operator: account }.emit(&env);
+
         Ok(())
     }
 
@@ -56,7 +59,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
         env.storage().instance().remove(&key);
 
-        event::remove_operator(&env, account);
+        OperatorRemovedEvent { operator: account }.emit(&env);
+
         Ok(())
     }
 

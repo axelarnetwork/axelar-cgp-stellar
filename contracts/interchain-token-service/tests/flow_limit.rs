@@ -155,10 +155,24 @@ fn set_flow_limit_succeeds() {
         client.operator(),
         client.set_flow_limit(&token_id, &Some(dummy_flow_limit()))
     );
+    goldie::assert!(events::fmt_last_emitted_event::<FlowLimitSetEvent>(&env));
 
     assert_eq!(client.flow_limit(&token_id), Some(dummy_flow_limit()));
+}
 
+#[test]
+fn set_flow_limit_to_none_succeeds() {
+    let (env, client, _, token) = setup();
+
+    assert_eq!(client.flow_limit(&token.id), Some(dummy_flow_limit()));
+
+    assert_auth!(
+        client.operator(),
+        client.set_flow_limit(&token.id, &None::<i128>)
+    );
     goldie::assert!(events::fmt_last_emitted_event::<FlowLimitSetEvent>(&env));
+
+    assert_eq!(client.flow_limit(&token.id), None);
 }
 
 #[test]

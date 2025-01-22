@@ -1,6 +1,9 @@
 #![no_std]
 
-mod event;
+#[cfg(any(test, feature = "testutils"))]
+extern crate std;
+
+pub mod event;
 mod storage_types;
 
 mod contract;

@@ -5,11 +5,9 @@ use rand::distributions::{Alphanumeric, DistString};
 use rand::Rng;
 use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Symbol, Vec};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::traits::IntoVec;
-use stellar_axelar_std::{assert_last_emitted_event, assert_ok};
 
-use crate::auth::{self, epoch};
 use crate::types::{
     CommandType, Message, Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners,
 };
@@ -53,11 +51,6 @@ pub fn get_approve_hash(env: &Env, messages: Vec<Message>) -> BytesN<32> {
     env.crypto()
         .keccak256(&(CommandType::ApproveMessages, messages).to_xdr(env))
         .into()
-}
-
-pub fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
-    use rand::SeedableRng;
-    rand_chacha::ChaCha20Rng::seed_from_u64(42)
 }
 
 pub fn generate_test_message(env: &Env) -> (Message, Bytes) {
@@ -188,23 +181,4 @@ pub fn generate_proof(env: &Env, data_hash: BytesN<32>, signer_set: TestSignerSe
         threshold: signer_set.signers.threshold,
         nonce: signer_set.signers.nonce,
     }
-}
-
-pub fn rotate_signers(env: &Env, contract_id: &Address, new_signers: TestSignerSet) {
-    let mut epoch_val: u64 = 0;
-    env.as_contract(contract_id, || {
-        epoch_val = epoch(env) + 1;
-        assert_ok!(auth::rotate_signers(env, &new_signers.signers, false));
-    });
-
-    assert_last_emitted_event(
-        env,
-        contract_id,
-        (
-            Symbol::new(env, "signers_rotated"),
-            epoch_val,
-            new_signers.signers.hash(env),
-        ),
-        (),
-    );
 }

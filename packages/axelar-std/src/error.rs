@@ -135,14 +135,18 @@ macro_rules! assert_auth {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::IntoVal;
 
+        // Evaluate the expression before the method call.
+        // If the expression itself called the contract, e.g. client.owner(),
+        // then this will prevent events from being reset when checking the auth after the call.
+        let caller = $caller.clone();
+
         // Paste is used to concatenate the method name with the `try_` prefix
         paste::paste! {
         let result = $client
             .mock_auths(&[$crate::mock_auth!(
                 $client.env,
-                $caller,
-                $client.$method($($arg),*),
-                &[]
+                caller,
+                $client.$method($($arg),*)
             )])
             .[<try_ $method>]($($arg),*);
         }
@@ -160,7 +164,7 @@ macro_rules! assert_auth {
         assert_eq!(
             $client.env.auths(),
             std::vec![(
-                $caller.clone(),
+                caller,
                 soroban_sdk::testutils::AuthorizedInvocation {
                     function: soroban_sdk::testutils::AuthorizedFunction::Contract((
                         $client.address.clone(),
@@ -181,13 +185,14 @@ macro_rules! assert_auth_err {
     ($caller:expr, $client:ident . $method:ident ( $($arg:expr),* $(,)? )) => {{
         use soroban_sdk::xdr::{ScError, ScErrorCode, ScVal};
 
+        let caller = $caller.clone();
+
         paste::paste! {
         let call_result = $client
             .mock_auths(&[$crate::mock_auth!(
                 $client.env,
-                $caller,
-                $client.$method($($arg),*),
-                &[]
+                caller,
+                $client.$method($($arg),*)
             )])
             .[<try_ $method>]($($arg),*);
         }
@@ -229,6 +234,6 @@ macro_rules! mock_auth {
         $caller:expr,
         $client:ident . $method:ident ( $($arg:expr),* $(,)? )
     ) => {{
-        mock_auth!($env, $caller, $client.$method($($arg),*), &[])
+        $crate::mock_auth!($env, $caller, $client.$method($($arg),*), &[])
     }};
 }
