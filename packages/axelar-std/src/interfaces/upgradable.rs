@@ -1,14 +1,11 @@
 use core::fmt::Debug;
 
-use soroban_sdk::{
-    contractclient, symbol_short, BytesN, Env, FromVal, IntoVal, String, Topics, Val,
-};
+use soroban_sdk::{contractclient, BytesN, Env, FromVal, String, Val};
 
-use crate::ensure;
+use crate as stellar_axelar_std;
 use crate::events::Event;
-#[cfg(any(test, feature = "testutils"))]
-use crate::impl_event_testutils;
 use crate::interfaces::{storage, OwnableInterface};
+use crate::{ensure, IntoEvent};
 
 #[contractclient(name = "UpgradableClient")]
 pub trait UpgradableInterface: OwnableInterface {
@@ -38,10 +35,12 @@ pub fn upgrade<T: OwnableInterface>(env: &Env, new_wasm_hash: BytesN<32>) {
     start_migration(env);
 }
 
+/// Migrate the contract to a new version after an upgrade.
+///
 /// This function checks that the caller can authenticate as the owner of the contract,
 /// then runs the custom_migration and finalizes the migration.
 /// An event is emitted when the migration, and with it the overall upgrade, is complete.
-/// Migration can only be run once, after the [upgrade] function has been called.
+/// Migration can only be run once, after the [`upgrade`] function has been called.
 pub fn migrate<T: UpgradableInterface>(
     env: &Env,
     custom_migration: impl FnOnce(),
@@ -84,23 +83,11 @@ fn complete_migration(env: &Env) {
         .remove(&storage::migrating::DataKey::Interfaces_Migrating);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
 pub struct UpgradedEvent {
+    #[data]
     version: String,
 }
-
-impl Event for UpgradedEvent {
-    fn topics(&self, _env: &Env) -> impl Topics + Debug {
-        (symbol_short!("upgraded"),)
-    }
-
-    fn data(&self, _env: &Env) -> impl IntoVal<Env, Val> + Debug {
-        (self.version.to_val(),)
-    }
-}
-
-#[cfg(any(test, feature = "testutils"))]
-impl_event_testutils!(UpgradedEvent, (soroban_sdk::Symbol), (String));
 
 pub enum MigrationError {
     NotAllowed,
