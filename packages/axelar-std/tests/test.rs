@@ -226,10 +226,10 @@ mod into_event {
         client.multi_data_emission(&topic1, &data1, &topic2, &data2);
 
         MultiDataEvent {
-            topic1: topic1.clone(),
-            data1: data1.clone(),
-            topic2: topic2.clone(),
-            data2: data2.clone(),
+            topic1,
+            data1,
+            topic2,
+            data2,
         }
         .emit(&env);
 
