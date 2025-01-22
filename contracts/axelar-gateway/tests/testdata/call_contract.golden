@@ -1,9 +1,17 @@
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
-
 ContractCalledEvent {
     caller: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4),
     destination_chain: String(ethereum),
     destination_address: String(0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59),
     payload_hash: BytesN<32>(86, 87, 13, 226, 135, 215, 60, 209, 203, 96, 146, 187, 143, 222, 230, 23, 57, 116, 149, 95, 222, 243, 69, 174, 87, 158, 233, 244, 117, 234, 116, 50),
     payload: Bytes(18, 52),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+
+contract_called {
+    #[topic] caller: Address,
+    #[topic] destination_chain: String,
+    #[topic] destination_address: String,
+    #[topic] payload_hash: BytesN < 32 >,
+    #[data]  payload: Bytes,
 }

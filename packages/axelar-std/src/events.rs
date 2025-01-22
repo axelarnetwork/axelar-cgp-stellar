@@ -8,6 +8,8 @@ pub trait Event: Debug + PartialEq + Sized {
     fn emit(self, env: &Env);
 
     fn from_event(env: &Env, topics: Vec<Val>, data: Val) -> Self;
+
+    fn schema(env: &Env) -> &'static str;
 }
 
 #[cfg(any(test, feature = "testutils"))]
@@ -39,7 +41,7 @@ mod testutils {
             .expect("no event found at the given index");
 
         let event = E::from_event(env, topics, data);
-        std::format!("{:?}\n\n{:#?}", contract_id, event)
+        std::format!("{:#?}\n\n{:?}\n\n{}", event, contract_id, E::schema(env))
     }
 }
 

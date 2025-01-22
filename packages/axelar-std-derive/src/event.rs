@@ -66,12 +66,38 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
         }
     };
 
+    let schema_impl = quote! {
+        fn schema(env: &soroban_sdk::Env) -> &'static str {
+            concat!(
+                #event_name, " {\n",
+                #(
+                    "    #[topic] ",
+                    stringify!(#topic_field_idents),
+                    ": ",
+                    stringify!(#topic_types),
+                    ",\n",
+                )*
+                #(
+                    "    #[data]  ",
+                    stringify!(#data_field_idents),
+                    ": ",
+                    stringify!(#data_types),
+                    ",\n",
+                )*
+                "}"
+            )
+        }
+    };
+
     quote! {
         impl stellar_axelar_std::events::Event for #name {
             #emit_impl
 
             #from_event_impl
+
+            #schema_impl
         }
+
     }
 }
 
