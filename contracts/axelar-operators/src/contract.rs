@@ -4,7 +4,6 @@ use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
-use crate::event;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
 use crate::storage_types::DataKey;
