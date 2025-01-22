@@ -1,5 +1,3 @@
-use core::fmt::Debug;
-
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
@@ -57,7 +55,7 @@ pub fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct MigrationArgs {
     migration_data: Option<Type>,
 }
