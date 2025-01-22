@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, Bytes, BytesN, Env, IntoVal, String};
+use soroban_sdk::{Address, Bytes, BytesN, Env, String};
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
