@@ -170,14 +170,14 @@ pub fn derive_into_event(input: TokenStream) -> TokenStream {
 
     let event_impl = event::derive_event_impl(&input);
 
-    #[cfg(any(test, feature = "testutils"))]
-    let event_impl = {
-        let event_test_impl = event::derive_event_testutils_impl(&input);
-        quote! {
-            #event_impl
-            #event_test_impl
-        }
-    };
+    // #[cfg(any(test, feature = "testutils"))]
+    // let event_impl = {
+    //     let event_test_impl = event::derive_event_testutils_impl(&input);
+    //     quote! {
+    //         #event_impl
+    //         #event_test_impl
+    //     }
+    // };
 
     event_impl.into()
 }
