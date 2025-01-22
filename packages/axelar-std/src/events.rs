@@ -57,3 +57,55 @@ mod testutils {
         E::standardized_fmt(env, &event)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use core::fmt::Debug;
+
+    use soroban_sdk::xdr::Int32;
+    use soroban_sdk::{contract, contractimpl, BytesN, Env, String, Symbol};
+    use stellar_axelar_std_derive::IntoEvent;
+    use stellar_axelar_std::events::Event;
+
+    use crate as stellar_axelar_std;
+    use crate::events::fmt_last_emitted_event;
+
+    #[derive(Debug, PartialEq, Eq, IntoEvent)]
+    struct TestEvent {
+        topic1: Symbol,
+        topic2: String,
+        topic3: Int32,
+        #[data]
+        data1: String,
+        #[data]
+        data2: BytesN<32>,
+    }
+
+    #[contract]
+    struct Contract;
+
+    #[contractimpl]
+    impl Contract {
+        pub fn test(env: &Env) {
+            TestEvent {
+                topic1: Symbol::new(env, "topic1"),
+                topic2: String::from_str(env, "topic2"),
+                topic3: 10,
+                data1: String::from_str(env, "data1"),
+                data2: BytesN::from_array(env, &[3; 32]),
+            }
+            .emit(env);
+        }
+    }
+
+    #[test]
+    fn format_last_emitted_event() {
+        let env = Env::default();
+
+        let contract = env.register(Contract, ());
+        let client = ContractClient::new(&env, &contract);
+
+        client.test();
+        goldie::assert!(fmt_last_emitted_event::<TestEvent>(&env));
+    }
+}
