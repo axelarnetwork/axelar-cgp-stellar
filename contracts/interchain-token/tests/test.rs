@@ -2,9 +2,11 @@
 extern crate std;
 
 use soroban_sdk::testutils::{Address as _, BytesN as _, Ledger};
-use soroban_sdk::{Address, BytesN, Env, IntoVal as _, Symbol};
+use soroban_sdk::{Address, BytesN, Env, IntoVal as _};
 use soroban_token_sdk::metadata::TokenMetadata;
-use stellar_axelar_std::{assert_auth, assert_auth_err, assert_last_emitted_event};
+use stellar_axelar_std::events::fmt_last_emitted_event;
+use stellar_axelar_std::{assert_auth, assert_auth_err};
+use stellar_interchain_token::event::{MinterAddedEvent, MinterRemovedEvent};
 use stellar_interchain_token::{InterchainToken, InterchainTokenClient};
 
 fn setup_token_metadata(env: &Env, name: &str, symbol: &str, decimal: u32) -> TokenMetadata {
@@ -341,12 +343,7 @@ fn add_minter_succeeds() {
 
     assert_auth!(owner, token.add_minter(&minter2));
 
-    assert_last_emitted_event(
-        &env,
-        &token.address,
-        (Symbol::new(&env, "minter_added"), minter2.clone()),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<MinterAddedEvent>(&env));
 
     assert_auth!(minter2, token.mint_from(&minter2, &user, &amount));
     assert_eq!(token.balance(&user), amount);
@@ -376,12 +373,7 @@ fn remove_minter() {
 
     assert_auth!(owner, token.remove_minter(&minter1));
 
-    assert_last_emitted_event(
-        &env,
-        &token.address,
-        (Symbol::new(&env, "minter_removed"), minter1.clone()),
-        (),
-    );
+    goldie::assert!(fmt_last_emitted_event::<MinterRemovedEvent>(&env));
 
     assert_auth_err!(minter1, token.mint_from(&minter1, &user, &amount));
 }

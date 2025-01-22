@@ -1,11 +1,12 @@
-use soroban_sdk::{Address, Env, Symbol};
+use soroban_sdk::Address;
+use stellar_axelar_std::IntoEvent;
 
-pub fn add_minter(env: &Env, minter: Address) {
-    let topics = (Symbol::new(env, "minter_added"), minter);
-    env.events().publish(topics, ());
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct MinterAddedEvent {
+    pub minter: Address,
 }
 
-pub fn remove_minter(env: &Env, minter: Address) {
-    let topics = (Symbol::new(env, "minter_removed"), minter);
-    env.events().publish(topics, ());
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct MinterRemovedEvent {
+    pub minter: Address,
 }

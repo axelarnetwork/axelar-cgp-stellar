@@ -1,3 +1,7 @@
+//! Note: The tests are located in the `stellar-axelar-std` package instead of `stellar-axelar-std-derive`
+//!
+//! This ensures compatibility and prevents cyclic dependency issues during testing and release.
+
 mod event;
 mod its_executable;
 mod operatable;
@@ -13,7 +17,7 @@ use upgradable::MigrationArgs;
 /// Implements the Operatable interface for a Soroban contract.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, Address, Env};
 /// use stellar_axelar_std_derive::Operatable;
@@ -41,7 +45,7 @@ pub fn derive_operatable(input: TokenStream) -> TokenStream {
 /// Implements the Ownable interface for a Soroban contract.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, Address, Env};
 /// use stellar_axelar_std_derive::Ownable;
@@ -71,7 +75,7 @@ pub fn derive_ownable(input: TokenStream) -> TokenStream {
 /// A `ContractError` error type must be defined in scope, and have a `MigrationNotAllowed` variant.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// # mod test {
 /// # use soroban_sdk::{contract, contractimpl, contracterror, Address, Env};
 /// use stellar_axelar_std_derive::{Ownable, Upgradable};
@@ -124,11 +128,11 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 /// The event name can be specified with `#[event_name(...)]` or will default to the struct name in snake_case (minus "Event" suffix).
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// # mod test {
 /// use core::fmt::Debug;
 /// use stellar_axelar_std::events::Event;
-/// use stellar_axelar_std_derive::IntoEvent;
+/// use stellar_axelar_std::IntoEvent;
 /// use soroban_sdk::{Address, contract, contractimpl, Env, String};
 ///
 /// #[derive(Debug, PartialEq, IntoEvent)]

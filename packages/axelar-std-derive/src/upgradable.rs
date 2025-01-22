@@ -55,7 +55,7 @@ pub fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct MigrationArgs {
     migration_data: Option<Type>,
 }

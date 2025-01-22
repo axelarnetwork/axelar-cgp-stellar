@@ -846,10 +846,14 @@ checksum = "b90ca2580b73ab6a1f724b76ca11ab632df820fd6040c336200d2c1df7b3c82c"
 name = "example"
 version = "0.1.0"
 dependencies = [
+ "example",
+ "goldie",
  "soroban-sdk",
+ "soroban-token-sdk",
  "stellar-axelar-gas-service",
  "stellar-axelar-gateway",
  "stellar-axelar-std",
+ "stellar-interchain-token-service",
 ]
 
 [[package]]
@@ -1977,6 +1981,7 @@ name = "stellar-axelar-gas-service"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "goldie",
  "paste",
  "soroban-sdk",
  "stellar-axelar-std",
@@ -2003,8 +2008,10 @@ dependencies = [
 name = "stellar-axelar-operators"
 version = "0.1.0"
 dependencies = [
+ "goldie",
  "paste",
  "soroban-sdk",
+ "stellar-axelar-operators",
  "stellar-axelar-std",
 ]
 
@@ -2017,6 +2024,7 @@ dependencies = [
  "paste",
  "soroban-sdk",
  "soroban-token-sdk",
+ "stellar-axelar-std",
  "stellar-axelar-std-derive",
 ]
 
@@ -2029,7 +2037,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "soroban-sdk",
- "stellar-axelar-std",
  "syn 2.0.87",
 ]
 
@@ -2038,6 +2045,7 @@ name = "stellar-interchain-token"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "goldie",
  "paste",
  "soroban-sdk",
  "soroban-token-sdk",
