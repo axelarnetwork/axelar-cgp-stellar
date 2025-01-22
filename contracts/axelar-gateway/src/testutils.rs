@@ -182,3 +182,14 @@ pub fn generate_proof(env: &Env, data_hash: BytesN<32>, signer_set: TestSignerSe
         nonce: signer_set.signers.nonce,
     }
 }
+
+pub fn approve_gateway_messages(
+    env: &Env,
+    gateway_client: &AxelarGatewayClient,
+    signers: TestSignerSet,
+    messages: Vec<Message>,
+) {
+    let data_hash = get_approve_hash(env, messages.clone());
+    let proof = generate_proof(env, data_hash, signers);
+    gateway_client.approve_messages(&messages, &proof);
+}
