@@ -57,7 +57,7 @@ mod into_event {
 
     #[contractimpl]
     impl Contract {
-        pub fn __constructor() {}
+        pub const fn __constructor() {}
 
         pub fn empty(env: &Env) {
             EmptyEvent.emit(env);
