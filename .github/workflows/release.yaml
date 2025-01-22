@@ -14,15 +14,13 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-
   # Publishes a release in case the release isn't published
   publish-release:
     name: Publish releases
 
     # Add checks to see if the merged PR is a release.
     if: |
-      ((github.event.pull_request.merged == true) &&
-      contains(github.event.pull_request.labels.*.name, 'release'))
+      (github.event.pull_request.merged == true)
 
     runs-on: blacksmith-2vcpu-ubuntu-2204
 
@@ -38,7 +36,7 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-  
+
       # Creates git tags and publishes the crates of the new releases
       - name: Publish release
         id: publish-release
