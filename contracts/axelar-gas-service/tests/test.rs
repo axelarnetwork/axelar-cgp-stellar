@@ -52,8 +52,7 @@ fn message_id(env: &Env) -> String {
 
 fn dummy_destination_data(env: &Env) -> (String, String) {
     let destination_chain: String = String::from_str(env, "ethereum");
-    let destination_address: String =
-        String::from_str(env, "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59");
+    let destination_address = Address::generate(env).to_string();
 
     (destination_chain, destination_address)
 }
