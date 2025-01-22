@@ -64,8 +64,8 @@ mod test {
 
     use soroban_sdk::xdr::Int32;
     use soroban_sdk::{contract, contractimpl, BytesN, Env, String, Symbol};
-    use stellar_axelar_std_derive::IntoEvent;
     use stellar_axelar_std::events::Event;
+    use stellar_axelar_std_derive::IntoEvent;
 
     use crate as stellar_axelar_std;
     use crate::events::fmt_last_emitted_event;
