@@ -8,8 +8,8 @@ use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTransferSentEvent;
-use stellar_interchain_token_service::InterchainTokenServiceClient;
 use stellar_interchain_token_service::testutils::setup_its_token;
+use stellar_interchain_token_service::InterchainTokenServiceClient;
 use utils::setup_env;
 
 fn dummy_transfer_params(env: &Env) -> (String, Bytes, Option<Bytes>) {
