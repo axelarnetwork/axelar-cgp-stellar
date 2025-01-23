@@ -1,7 +1,7 @@
-#[allow(dead_code)]
 mod utils;
+
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, String};
+use soroban_sdk::{Address, IntoVal, String};
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::{TrustedChainRemovedEvent, TrustedChainSetEvent};
@@ -33,13 +33,12 @@ fn set_trusted_chain_fails_if_not_owner() {
 #[test]
 fn set_trusted_chain_fails_if_already_set() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let chain = String::from_str(&env, "chain");
-    client.set_trusted_chain(&chain);
+    client.mock_all_auths().set_trusted_chain(&chain);
 
     assert_contract_err!(
-        client.try_set_trusted_chain(&chain),
+        client.mock_all_auths().try_set_trusted_chain(&chain),
         ContractError::TrustedChainAlreadySet
     );
 }
@@ -64,14 +63,13 @@ fn remove_trusted_chain() {
 #[test]
 fn remove_trusted_chain_fails_if_not_set() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let chain = String::from_str(&env, "chain");
 
     assert!(!client.is_trusted_chain(&chain));
 
     assert_contract_err!(
-        client.try_remove_trusted_chain(&chain),
+        client.mock_all_auths().try_remove_trusted_chain(&chain),
         ContractError::TrustedChainNotSet
     );
 }

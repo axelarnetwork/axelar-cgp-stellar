@@ -112,7 +112,6 @@ fn transfer_ownership() {
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
 fn transfer_fails_with_negative_amount() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -120,14 +119,13 @@ fn transfer_fails_with_negative_amount() {
 
     let (token, _owner, _minter) = setup_token(&env);
 
-    token.transfer(&user1, &user2, &amount);
+    token.mock_all_auths().transfer(&user1, &user2, &amount);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #9)")] // InsufficientBalance
 fn transfer_fails_with_insufficient_balance() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -135,7 +133,7 @@ fn transfer_fails_with_insufficient_balance() {
 
     let (token, _owner, _minter) = setup_token(&env);
 
-    token.transfer(&user1, &user2, &amount);
+    token.mock_all_auths().transfer(&user1, &user2, &amount);
 }
 
 #[test]
@@ -160,7 +158,6 @@ fn transfer() {
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
 fn transfer_from_fails_with_negative_amount() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -180,14 +177,15 @@ fn transfer_from_fails_with_negative_amount() {
     );
     assert_eq!(token.allowance(&user1, &user2), 500_i128);
 
-    token.transfer_from(&user2, &user1, &user3, &amount);
+    token
+        .mock_all_auths()
+        .transfer_from(&user2, &user1, &user3, &amount);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
 fn transfer_from_fails_without_approval() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -198,14 +196,15 @@ fn transfer_from_fails_without_approval() {
     assert_auth!(minter, token.mint_from(&minter, &user1, &1000_i128));
     assert_eq!(token.balance(&user1), 1000_i128);
 
-    token.transfer_from(&user2, &user1, &user3, &400_i128);
+    token
+        .mock_all_auths()
+        .transfer_from(&user2, &user1, &user3, &400_i128);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
 fn transfer_from_fails_with_insufficient_allowance() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -224,7 +223,9 @@ fn transfer_from_fails_with_insufficient_allowance() {
     );
     assert_eq!(token.allowance(&user1, &user2), 100_i128);
 
-    token.transfer_from(&user2, &user1, &user3, &400_i128);
+    token
+        .mock_all_auths()
+        .transfer_from(&user2, &user1, &user3, &400_i128);
 }
 
 #[test]
@@ -381,7 +382,6 @@ fn remove_minter() {
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
 fn burn_fails_with_negative_amount() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user = Address::generate(&env);
 
@@ -393,14 +393,13 @@ fn burn_fails_with_negative_amount() {
 
     let burn_amount = -1;
 
-    token.burn(&user, &burn_amount);
+    token.mock_all_auths().burn(&user, &burn_amount);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #9)")] // InsufficientBalance
 fn burn_fails_with_insufficient_balance() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user = Address::generate(&env);
 
@@ -412,7 +411,7 @@ fn burn_fails_with_insufficient_balance() {
 
     let burn_amount = 2000;
 
-    token.burn(&user, &burn_amount);
+    token.mock_all_auths().burn(&user, &burn_amount);
 }
 
 #[test]
@@ -435,7 +434,6 @@ fn burn_succeeds() {
 #[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
 fn burn_from_fails_with_negative_amount() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -443,14 +441,15 @@ fn burn_from_fails_with_negative_amount() {
 
     let burn_amount = -1;
 
-    token.burn_from(&user2, &user1, &burn_amount);
+    token
+        .mock_all_auths()
+        .burn_from(&user2, &user1, &burn_amount);
 }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
 fn burn_from_fails_without_approval() {
     let env = Env::default();
-    env.mock_all_auths();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
@@ -462,7 +461,9 @@ fn burn_from_fails_without_approval() {
 
     let burn_amount = 500;
 
-    token.burn_from(&user2, &user1, &burn_amount);
+    token
+        .mock_all_auths()
+        .burn_from(&user2, &user1, &burn_amount);
 }
 
 #[test]

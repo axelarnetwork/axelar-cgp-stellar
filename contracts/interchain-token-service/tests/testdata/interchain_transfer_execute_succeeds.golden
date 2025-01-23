@@ -1,3 +1,21 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N)
-topics: (Symbol(executed), String(ethereum), String(test), Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 89, 82, 69, 53), BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149), Contract(CBQXZFUKGANX4DCFGMAEZNEIZ6KEN5RRIUPP25SRMZ6WGLVGFAFT5XSD), 1000)
-data: (Bytes(222, 173))
+ExecutedEvent {
+    source_chain: String(ethereum),
+    message_id: String(test),
+    source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 89, 82, 69, 53),
+    token_id: BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149),
+    token_address: Contract(CBQXZFUKGANX4DCFGMAEZNEIZ6KEN5RRIUPP25SRMZ6WGLVGFAFT5XSD),
+    amount: 1000,
+    payload: Bytes(222, 173),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N)
+
+executed {
+    #[topic] source_chain: String,
+    #[topic] message_id: String,
+    #[topic] source_address: Bytes,
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] amount: i128,
+    #[data]  payload: Bytes,
+}

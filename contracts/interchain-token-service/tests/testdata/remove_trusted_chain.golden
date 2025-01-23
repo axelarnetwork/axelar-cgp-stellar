@@ -1,3 +1,9 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(trusted_chain_removed), String(chain))
-data: ()
+TrustedChainRemovedEvent {
+    chain: String(chain),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+trusted_chain_removed {
+    #[topic] chain: String,
+}

@@ -1,3 +1,21 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(token_deployment_started), BytesN<32>(247, 214, 168, 250, 162, 27, 103, 121, 206, 126, 141, 252, 22, 96, 17, 104, 179, 98, 104, 231, 160, 3, 162, 197, 137, 24, 18, 183, 248, 208, 163, 109), Contract(CCGZAZST4ZRJ6VF32SF3JQYKSDKDHJ3BITGC7SQNXCQW3K7MH7DJA42S), String(ethereum), String(name), String(symbol), 255, None)
-data: ()
+InterchainTokenDeploymentStartedEvent {
+    token_id: BytesN<32>(247, 214, 168, 250, 162, 27, 103, 121, 206, 126, 141, 252, 22, 96, 17, 104, 179, 98, 104, 231, 160, 3, 162, 197, 137, 24, 18, 183, 248, 208, 163, 109),
+    token_address: Contract(CCGZAZST4ZRJ6VF32SF3JQYKSDKDHJ3BITGC7SQNXCQW3K7MH7DJA42S),
+    destination_chain: String(ethereum),
+    name: String(name),
+    symbol: String(symbol),
+    decimals: 255,
+    minter: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_deployment_started {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] destination_chain: String,
+    #[topic] name: String,
+    #[topic] symbol: String,
+    #[topic] decimals: u32,
+    #[topic] minter: Option < Address >,
+}

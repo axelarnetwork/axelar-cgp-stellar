@@ -1,3 +1,9 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(pause_status_set), false)
-data: ()
+PauseStatusSetEvent {
+    paused: false,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+pause_status_set {
+    #[topic] paused: bool,
+}

@@ -1,14 +1,15 @@
 mod utils;
 
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
+use soroban_sdk::{token, vec, Address, Bytes, BytesN, IntoVal, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth_err, events};
+use stellar_interchain_token_service::testutils::setup_its_token;
 use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
-use utils::{setup_env, setup_its_token};
+use utils::setup_env;
 
 mod test {
     use core::fmt::Debug;
@@ -111,7 +112,7 @@ fn interchain_transfer_execute_succeeds() {
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address: String = client.its_hub_address();
+    let source_address = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);
@@ -201,7 +202,7 @@ fn interchain_transfer_execute_fails_if_payload_is_len_one() {
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address: String = client.its_hub_address();
+    let source_address = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);

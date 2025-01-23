@@ -34,7 +34,7 @@ pub fn initialize_auth(
     ensure!(!initial_signers.is_empty(), ContractError::EmptySigners);
 
     for signers in initial_signers.into_iter() {
-        rotate_signers(&env, &signers, false)?;
+        rotate_signers(&env, signers, false)?;
     }
 
     Ok(())
@@ -78,10 +78,10 @@ pub fn validate_proof(
 
 pub fn rotate_signers(
     env: &Env,
-    new_signers: &WeightedSigners,
+    new_signers: WeightedSigners,
     enforce_rotation_delay: bool,
 ) -> Result<(), ContractError> {
-    validate_signers(env, new_signers)?;
+    validate_signers(env, &new_signers)?;
 
     update_rotation_timestamp(env, enforce_rotation_delay)?;
 
@@ -108,6 +108,7 @@ pub fn rotate_signers(
     SignersRotatedEvent {
         epoch: new_epoch,
         signers_hash: new_signers_hash,
+        signers: new_signers,
     }
     .emit(env);
 

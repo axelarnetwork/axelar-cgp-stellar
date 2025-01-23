@@ -1,3 +1,19 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(interchain_transfer_received), String(ethereum), BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149), Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 88, 73, 55, 78), Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5), 1000)
-data: (None)
+InterchainTransferReceivedEvent {
+    source_chain: String(ethereum),
+    token_id: BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149),
+    source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 88, 73, 55, 78),
+    destination_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
+    amount: 1000,
+    data: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+interchain_transfer_received {
+    #[topic] source_chain: String,
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] source_address: Bytes,
+    #[topic] destination_address: Address,
+    #[topic] amount: i128,
+    #[data]  data: Option < Bytes >,
+}

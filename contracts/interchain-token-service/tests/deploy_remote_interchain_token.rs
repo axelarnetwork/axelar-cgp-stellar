@@ -3,11 +3,12 @@ mod utils;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
+use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
 use stellar_interchain_token_service::error::ContractError;
 use stellar_interchain_token_service::event::InterchainTokenDeploymentStartedEvent;
 use stellar_interchain_token_service::types::{DeployInterchainToken, HubMessage, Message};
-use utils::{setup_env, setup_gas_token, TokenMetadataExt};
+use utils::{setup_env, TokenMetadataExt};
 
 #[test]
 fn deploy_remote_interchain_token_succeeds() {
@@ -145,7 +146,6 @@ fn deploy_remote_interchain_token_fails_untrusted_chain() {
 #[test]
 fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
@@ -154,7 +154,12 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     let destination_chain = String::from_str(&env, "ethereum");
 
     assert_contract_err!(
-        client.try_deploy_remote_interchain_token(&spender, &salt, &destination_chain, &gas_token),
+        client.mock_all_auths().try_deploy_remote_interchain_token(
+            &spender,
+            &salt,
+            &destination_chain,
+            &gas_token
+        ),
         ContractError::InvalidTokenId
     );
 }
