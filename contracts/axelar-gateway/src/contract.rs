@@ -191,7 +191,7 @@ impl AxelarGatewayInterface for AxelarGateway {
             ContractError::NotLatestSigners
         );
 
-        auth::rotate_signers(&env, &signers, !bypass_rotation_delay)?;
+        auth::rotate_signers(&env, signers, !bypass_rotation_delay)?;
 
         Ok(())
     }
