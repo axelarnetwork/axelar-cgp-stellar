@@ -15,7 +15,6 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// Mints new tokens from a specified minter to a specified address.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `minter` - The address of the minter.
     /// * `to` - The address to which the tokens will be minted.
     /// * `amount` - The amount of tokens to be minted.
@@ -39,11 +38,7 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// Adds a new minter to the Interchain Token contract.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `minter` - The address to be added as a minter.
-    ///
-    /// # Returns
-    /// - `()`
     ///
     /// # Authorization
     /// - Must be called by [`Self::owner`].
@@ -52,11 +47,7 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// Removes a new minter from the Interchain Token contract.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `minter` - The address to be added as a minter.
-    ///
-    /// # Returns
-    /// - `()`
     ///
     /// # Authorization
     /// - Must be called by [`Self::owner`].

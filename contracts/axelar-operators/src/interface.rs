@@ -13,7 +13,6 @@ pub trait AxelarOperatorsInterface {
     /// The operator is authorized to execute specific functions (e.g. setting flow limits) for a contract.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `account` - The address to be added as an operator.
     ///
     /// # Returns
@@ -31,7 +30,6 @@ pub trait AxelarOperatorsInterface {
     /// The address is no longer authorized to execute specific operator functions (e.g. setting flow limits) for a contract.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `account` - The address to be removed as an operator.
     ///
     /// # Returns
@@ -47,7 +45,6 @@ pub trait AxelarOperatorsInterface {
     /// Execute a function on a contract as an operator.
     ///
     /// # Arguments
-    /// * `env` - The environment in which the contract is executed.
     /// * `operator` - The address of the operator executing the function.
     /// * `contract` - The address of the contract on which the function will be executed.
     /// * `func` - The symbol representing the function to be executed.

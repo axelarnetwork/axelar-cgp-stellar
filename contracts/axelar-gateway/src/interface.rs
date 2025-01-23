@@ -9,14 +9,49 @@ use crate::AxelarGatewayMessagingInterface;
 pub trait AxelarGatewayInterface:
     AxelarGatewayMessagingInterface + UpgradableInterface + OwnableInterface + OperatableInterface
 {
-    /// Approves a collection of messages.
+    /// Approves a collection of messages with the provided proof.
+    ///
+    /// This function allows the approval of multiple messages using a cryptographic proof.
+    /// It ensures that the messages are not empty and prevents replay attacks by checking 
+    /// if the messages have already been approved or executed.
+    ///
+    /// # Arguments
+    /// * `messages` - A vector of messages to be approved.
+    /// * `proof` - The cryptographic proof used to validate the approval.
+    ///
+    /// # Returns
+    /// - `Ok(())`
+    ///
+    /// # Errors
+    /// - `ContractError::EmptyMessages`: If the provided messages vector is empty.
+    /// - Any error propagated from `auth::validate_proof`.
     fn approve_messages(
         env: Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError>;
 
-    // TODO: add docstring about how bypass_rotation_delay supposed to be used.
+    /// Rotates the signers for the contract.
+    ///
+    /// This function allows the rotation of signers for the contract. 
+    /// It validates the provided proof and ensures that the signers are the latest.
+    /// If `bypass_rotation_delay` is set to true, the `operator` must authorize the rotation.
+    ///
+    /// # Arguments
+    /// * `signers` - The new set of weighted signers to be rotated in.
+    /// * `proof` - The cryptographic proof used to validate the rotation.
+    /// * `bypass_rotation_delay` - A boolean indicating whether to bypass the rotation delay.
+    ///
+    /// # Returns
+    /// - `Ok(())`
+    ///
+    /// # Errors
+    /// - `ContractError::NotLatestSigners`: If the provided signers are not the latest and `bypass_rotation_delay` is false.
+    /// - Any error propagated from `auth::validate_proof`.
+    ///
+    /// # Authorization
+    /// - The `operator` must authenticate if `bypass_rotation_delay` is true.
+
     fn rotate_signers(
         env: Env,
         signers: WeightedSigners,
@@ -33,7 +68,8 @@ pub trait AxelarGatewayInterface:
     /// Returns the signers hash by epoch.
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError>;
 
-    /// Validate the `proof` for `data_hash` created by the signers. Returns a boolean indicating if the proof was created by the latest signers.
+    /// Validate the `proof` for `data_hash` created by the signers. 
+    /// Returns a boolean indicating if the proof was created by the latest signers.
     fn validate_proof(
         env: &Env,
         data_hash: BytesN<32>,
