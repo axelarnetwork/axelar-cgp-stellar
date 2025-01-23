@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_gateway::testutils::{approve_gateway_messages, TestSignerSet};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
