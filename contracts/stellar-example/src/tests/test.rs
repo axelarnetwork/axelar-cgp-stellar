@@ -1,5 +1,3 @@
-use example::event::{ExecutedEvent, TokenReceivedEvent};
-use example::{Example, ExampleClient};
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
@@ -13,6 +11,8 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
+use stellar_example::event::{ExecutedEvent, TokenReceivedEvent};
+use stellar_example::{Example, ExampleClient};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
