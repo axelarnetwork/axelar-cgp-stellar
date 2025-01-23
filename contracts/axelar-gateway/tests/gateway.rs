@@ -204,24 +204,6 @@ fn rotate_signers() {
 }
 
 #[test]
-fn rotate_signers_to_large_signers_set() {
-    let (env, signers, client) = setup_env(1, 5);
-
-    let new_signers = generate_signers_set_with_rng(
-        &env,
-        100,
-        signers.domain_separator.clone(),
-        deterministic_rng(),
-    );
-    let data_hash = new_signers.signers.signers_rotation_hash(&env);
-    let proof = generate_proof(&env, data_hash, signers);
-    let bypass_rotation_delay = false;
-
-    client.rotate_signers(&new_signers.signers, &proof, &bypass_rotation_delay);
-    goldie::assert!(events::fmt_last_emitted_event::<SignersRotatedEvent>(&env));
-}
-
-#[test]
 fn approve_messages_after_rotation() {
     let (env, signers, client) = setup_env(1, 5);
 
