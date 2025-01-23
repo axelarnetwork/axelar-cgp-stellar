@@ -1,13 +1,12 @@
 use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::{vec, Address, BytesN, Env, Vec};
-use stellar_axelar_gateway::error::ContractError;
-use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
-use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
-use stellar_axelar_gateway::{AxelarGateway, AxelarGatewayClient};
 use stellar_axelar_std::{assert_auth, assert_contract_err};
 
-mod utils;
-use utils::setup_env;
+use super::utils::setup_env;
+use crate::error::ContractError;
+use crate::testutils::{generate_proof, generate_signers_set, randint};
+use crate::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
+use crate::{AxelarGateway, AxelarGatewayClient};
 
 #[test]
 #[should_panic(expected = "Error(Contract, #13)")] // ContractError::InvalidSigners

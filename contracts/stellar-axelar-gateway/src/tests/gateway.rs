@@ -1,19 +1,18 @@
 use soroban_sdk::testutils::{Address as _, Events};
 use soroban_sdk::{bytes, vec, Address, BytesN, String};
-use stellar_axelar_gateway::error::ContractError;
-use stellar_axelar_gateway::event::{
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
+
+use super::utils::setup_env;
+use crate::error::ContractError;
+use crate::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
 };
 #[cfg(any(test, feature = "testutils"))]
-use stellar_axelar_gateway::testutils::{
+use crate::testutils::{
     generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
     generate_test_message_with_rng, get_approve_hash, randint,
 };
-use stellar_axelar_gateway::types::Message;
-use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
-
-mod utils;
-use utils::setup_env;
+use crate::types::Message;
 
 const DESTINATION_CHAIN: &str = "ethereum";
 const DESTINATION_ADDRESS: &str = "0x4EFE356BEDeCC817cb89B4E9b796dB8bC188DC59";

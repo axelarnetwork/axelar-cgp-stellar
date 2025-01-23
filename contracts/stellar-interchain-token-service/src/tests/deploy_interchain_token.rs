@@ -1,15 +1,14 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env, IntoVal};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
-use stellar_interchain_token_service::error::ContractError;
-use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
-use stellar_interchain_token_service::types::TokenManagerType;
-use utils::{setup_env, TokenMetadataExt};
+
+use super::utils::{setup_env, TokenMetadataExt};
+use crate::error::ContractError;
+use crate::event::InterchainTokenDeployedEvent;
+use crate::types::TokenManagerType;
 
 fn dummy_token_params(env: &Env) -> (Address, BytesN<32>, TokenMetadata) {
     let sender = Address::generate(env);

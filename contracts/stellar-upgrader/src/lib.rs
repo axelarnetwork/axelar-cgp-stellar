@@ -6,3 +6,6 @@ mod contract;
 pub mod error;
 
 pub use contract::{Upgrader, UpgraderClient};
+
+#[cfg(test)]
+mod tests;

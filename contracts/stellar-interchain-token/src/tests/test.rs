@@ -6,8 +6,9 @@ use soroban_sdk::{Address, BytesN, Env, IntoVal as _};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::{assert_auth, assert_auth_err};
-use stellar_interchain_token::event::{MinterAddedEvent, MinterRemovedEvent};
-use stellar_interchain_token::{InterchainToken, InterchainTokenClient};
+
+use crate::event::{MinterAddedEvent, MinterRemovedEvent};
+use crate::{InterchainToken, InterchainTokenClient};
 
 fn setup_token_metadata(env: &Env, name: &str, symbol: &str, decimal: u32) -> TokenMetadata {
     TokenMetadata {

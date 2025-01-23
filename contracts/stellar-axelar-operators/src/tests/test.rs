@@ -5,11 +5,12 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{
     contract, contracterror, contractimpl, symbol_short, Address, Env, Symbol, Val, Vec,
 };
-use stellar_axelar_operators::error::ContractError;
-use stellar_axelar_operators::event::{OperatorAddedEvent, OperatorRemovedEvent};
-use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use stellar_axelar_std::events::{fmt_last_emitted_event, Event};
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, IntoEvent};
+
+use crate::error::ContractError;
+use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
+use crate::{AxelarOperators, AxelarOperatorsClient};
 
 #[contract]
 pub struct TestTarget;

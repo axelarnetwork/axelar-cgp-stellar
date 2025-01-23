@@ -1,7 +1,9 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{contract, contractimpl, Address, Env, String};
-use stellar_axelar_std::events::{fmt_last_emitted_event, Event};
-use stellar_axelar_std::IntoEvent;
+
+use crate as stellar_axelar_std;
+use crate::events::{fmt_last_emitted_event, Event};
+use crate::IntoEvent;
 
 #[contract]
 pub struct Contract;
