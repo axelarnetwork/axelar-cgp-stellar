@@ -2,6 +2,8 @@
 name = "stellar-example"
 version = "0.1.0"
 edition = { workspace = true }
+description = "Contract related to Stellar Example."
+license = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
