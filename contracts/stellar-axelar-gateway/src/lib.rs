@@ -19,6 +19,13 @@ compile_error!("'testutils' feature is not supported on 'wasm' target");
 #[cfg(any(test, feature = "testutils"))]
 pub mod testutils;
 
+#[cfg(test)]
+mod tests {
+    mod auth;
+    mod gateway;
+    mod utils;
+}
+
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {
         pub use interface::{AxelarGatewayClient, AxelarGatewayInterface};

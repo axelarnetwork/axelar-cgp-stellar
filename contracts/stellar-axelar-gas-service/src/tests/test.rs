@@ -6,14 +6,13 @@ use std::format;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{bytes, Address, Bytes, Env, String};
-use stellar_axelar_gas_service::error::ContractError;
-use stellar_axelar_gas_service::event::{
-    GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent,
-};
-use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
 use stellar_axelar_std::events::fmt_last_emitted_event;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, mock_auth};
+
+use crate::error::ContractError;
+use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
+use crate::{AxelarGasService, AxelarGasServiceClient};
 
 fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     let env = Env::default();

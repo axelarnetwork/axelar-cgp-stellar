@@ -4,8 +4,9 @@ use stellar_axelar_gas_service::testutils::setup_gas_service;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::testutils::{setup_gateway, TestSignerSet};
 use stellar_axelar_gateway::AxelarGatewayClient;
-use stellar_interchain_token_service::testutils::setup_its;
-use stellar_interchain_token_service::InterchainTokenServiceClient;
+
+use crate::testutils::setup_its;
+use crate::InterchainTokenServiceClient;
 
 pub fn setup_env<'a>() -> (
     Env,

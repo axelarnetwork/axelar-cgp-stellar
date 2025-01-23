@@ -1,11 +1,10 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env, String};
 use stellar_axelar_std::{assert_contract_err, mock_auth};
-use stellar_upgrader::error::ContractError;
-use stellar_upgrader::{Upgrader, UpgraderClient};
-use utils::{DataKey, DummyContract, DummyContractClient};
+
+use super::utils::{DataKey, DummyContract, DummyContractClient};
+use crate::error::ContractError;
+use crate::{Upgrader, UpgraderClient};
 
 const WASM_AFTER_UPGRADE: &[u8] = include_bytes!("testdata/dummy.wasm");
 

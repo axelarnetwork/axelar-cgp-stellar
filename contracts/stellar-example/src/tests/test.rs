@@ -11,11 +11,12 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
-use stellar_example::event::{ExecutedEvent, TokenReceivedEvent};
-use stellar_example::{Example, ExampleClient};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
 use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
+
+use crate::event::{ExecutedEvent, TokenReceivedEvent};
+use crate::{Example, ExampleClient};
 
 const ITS_HUB_ADDRESS: &str = "hub_address";
 const SOURCE_CHAIN_NAME: &str = "source";

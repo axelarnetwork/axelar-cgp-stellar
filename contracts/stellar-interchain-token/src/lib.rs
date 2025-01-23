@@ -7,6 +7,11 @@ pub mod error;
 
 mod interface;
 
+#[cfg(test)]
+mod tests {
+    mod test;
+}
+
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {
         pub use interface::{InterchainTokenClient, InterchainTokenInterface};
