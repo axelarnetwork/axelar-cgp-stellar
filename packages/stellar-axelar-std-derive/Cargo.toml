@@ -1,9 +1,9 @@
 [package]
 name = "stellar-axelar-std-derive"
-version = "0.1.0"
+version = "0.2.1"
 edition = { workspace = true }
-description = "Proc macros for Axelar contracts."
-license = "MIT"
+description = "Proc macros for Stellar Axelar contracts."
+license = { workspace = true }
 publish = true
 
 [lib]

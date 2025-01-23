@@ -17,6 +17,7 @@ pub mod ttl;
 
 pub mod events;
 
+#[cfg(feature = "derive")]
 pub mod interfaces;
 
 pub mod address;

@@ -1,9 +1,9 @@
 [package]
 name = "stellar-axelar-gas-service"
-version = "0.1.0"
+version = "0.2.1"
 edition = { workspace = true }
-description = "Contract related to Axelar Gas Service."
-license = "MIT"
+description = "Contract related to Stellar Axelar Gas Service."
+license = { workspace = true }
 publish = true
 
 [lib]
