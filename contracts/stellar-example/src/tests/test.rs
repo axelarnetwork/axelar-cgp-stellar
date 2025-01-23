@@ -34,11 +34,7 @@ struct ExampleTestConfig<'a> {
 fn setup_app<'a>(env: &Env) -> ExampleTestConfig<'a> {
     let (signers, gateway_client) = setup_gateway(env, 0, 5);
     let gas_service_client = setup_gas_service(env);
-    let its_client = setup_its(
-        env,
-        &gateway_client,
-        &gas_service_client,
-    );
+    let its_client = setup_its(env, &gateway_client, &gas_service_client);
     let app = env.register(
         Example,
         (
