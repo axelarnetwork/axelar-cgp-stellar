@@ -1,39 +1,30 @@
 [package]
-name = "stellar-interchain-token-service"
+name = "stellar-example"
 version = "0.1.0"
 edition = { workspace = true }
-description = "Contract related to Interchain Token Service."
-license = "MIT"
-publish = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+testutils = ["stellar-axelar-std/testutils"]
+
 [dependencies]
-alloy-primitives = { workspace = true }
-alloy-sol-types = { workspace = true }
-cfg-if = { workspace = true }
-soroban-sdk = { workspace = true, features = ["alloc"] }
+soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-std = { workspace = true }
-stellar-interchain-token = { workspace = true, features = ["library"] }
+stellar-interchain-token-service = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
 goldie = { workspace = true }
-hex = { workspace = true }
-paste = { workspace = true }
-soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
+soroban-sdk = { workspace = true, features = ["testutils"] }
+soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
-stellar-interchain-token = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
-
-[features]
-library = []
-testutils = ["stellar-axelar-std/testutils"]
 
 [lints]
 workspace = true
