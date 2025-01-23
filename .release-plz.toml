@@ -27,7 +27,7 @@ Changes:
 """
 
 [[package]]
-name = "example"
+name = "stellar-example"
 release = false # don't process this package
 
 [changelog]
