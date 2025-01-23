@@ -1,6 +1,6 @@
 [package]
 name = "stellar-interchain-token"
-version = "0.1.0"
+version = "0.2.0"
 edition = { workspace = true }
 description = "Contract related to Interchain Token."
 license = "MIT"
