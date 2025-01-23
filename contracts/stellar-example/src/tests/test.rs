@@ -38,7 +38,6 @@ fn setup_app<'a>(env: &Env) -> ExampleTestConfig<'a> {
         env,
         &gateway_client,
         &gas_service_client,
-        // chain_name,
     );
     let app = env.register(
         Example,
