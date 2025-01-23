@@ -211,6 +211,16 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         flow_limit::flow_in_amount(env, token_id)
     }
 
+    fn set_flow_limit(
+        env: &Env,
+        token_id: BytesN<32>,
+        flow_limit: Option<i128>,
+    ) -> Result<(), ContractError> {
+        Self::operator(env).require_auth();
+
+        flow_limit::set_flow_limit(env, token_id, flow_limit)
+    }
+
     fn set_pause_status(env: &Env, paused: bool) -> Result<(), ContractError> {
         Self::owner(env).require_auth();
 
@@ -223,16 +233,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         PauseStatusSetEvent { paused }.emit(env);
 
         Ok(())
-    }
-
-    fn set_flow_limit(
-        env: &Env,
-        token_id: BytesN<32>,
-        flow_limit: Option<i128>,
-    ) -> Result<(), ContractError> {
-        Self::operator(env).require_auth();
-
-        flow_limit::set_flow_limit(env, token_id, flow_limit)
     }
 
     fn deploy_interchain_token(

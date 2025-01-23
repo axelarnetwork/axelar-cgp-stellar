@@ -112,7 +112,7 @@ fn interchain_transfer_execute_succeeds() {
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address: String = client.its_hub_address();
+    let source_address = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);
@@ -202,7 +202,7 @@ fn interchain_transfer_execute_fails_if_payload_is_len_one() {
 
     let sender = Address::generate(&env).to_string_bytes();
     let source_chain = client.its_hub_chain_name();
-    let source_address: String = client.its_hub_address();
+    let source_address = client.its_hub_address();
 
     let amount = 1000;
     let deployer = Address::generate(&env);

@@ -146,7 +146,6 @@ fn deploy_remote_interchain_token_fails_untrusted_chain() {
 #[test]
 fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     let (env, client, _, _, _) = setup_env();
-    env.mock_all_auths();
 
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
@@ -155,7 +154,12 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     let destination_chain = String::from_str(&env, "ethereum");
 
     assert_contract_err!(
-        client.try_deploy_remote_interchain_token(&spender, &salt, &destination_chain, &gas_token),
+        client.mock_all_auths().try_deploy_remote_interchain_token(
+            &spender,
+            &salt,
+            &destination_chain,
+            &gas_token
+        ),
         ContractError::InvalidTokenId
     );
 }
