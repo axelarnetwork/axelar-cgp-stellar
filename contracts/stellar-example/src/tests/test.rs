@@ -1,10 +1,12 @@
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
-use soroban_token_sdk::metadata::TokenMetadata;
-use stellar_axelar_gas_service::{AxelarGasService, AxelarGasServiceClient};
+use stellar_axelar_gas_service::testutils::setup_gas_service;
+use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::event::{ContractCalledEvent, MessageApprovedEvent};
-use stellar_axelar_gateway::testutils::{self, generate_proof, get_approve_hash, TestSignerSet};
+use stellar_axelar_gateway::testutils::{
+    generate_proof, get_approve_hash, setup_gateway, TestSignerSet,
+};
 use stellar_axelar_gateway::types::Message;
 use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
@@ -12,29 +14,14 @@ use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{auth_invocation, events};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
-use stellar_interchain_token_service::testutils::INTERCHAIN_TOKEN_WASM_HASH;
-use stellar_interchain_token_service::{InterchainTokenService, InterchainTokenServiceClient};
+use stellar_interchain_token_service::testutils::{setup_its, setup_its_token};
+use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent};
 use crate::{Example, ExampleClient};
 
-const ITS_HUB_ADDRESS: &str = "hub_address";
 const SOURCE_CHAIN_NAME: &str = "source";
 const DESTINATION_CHAIN_NAME: &str = "destination";
-
-fn setup_gateway<'a>(env: &Env) -> (TestSignerSet, AxelarGatewayClient<'a>) {
-    let (signers, client) = testutils::setup_gateway(env, 0, 5);
-    (signers, client)
-}
-
-fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
-    let owner: Address = Address::generate(env);
-    let gas_collector: Address = Address::generate(env);
-    let gas_service = env.register(AxelarGasService, (&owner, &gas_collector));
-    let gas_service_client = AxelarGasServiceClient::new(env, &gas_service);
-
-    gas_service_client
-}
 
 struct TestConfig<'a> {
     signers: TestSignerSet,
@@ -44,15 +31,10 @@ struct TestConfig<'a> {
     app: ExampleClient<'a>,
 }
 
-fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
-    let (signers, gateway_client) = setup_gateway(env);
+fn setup_app<'a>(env: &Env) -> TestConfig<'a> {
+    let (signers, gateway_client) = setup_gateway(env, 0, 5);
     let gas_service_client = setup_gas_service(env);
-    let its_client = setup_its(
-        env,
-        &gateway_client.address,
-        &gas_service_client.address,
-        chain_name,
-    );
+    let its_client = setup_its(env, &gateway_client, &gas_service_client);
     let app = env.register(
         Example,
         (
@@ -72,63 +54,6 @@ fn setup_app<'a>(env: &Env, chain_name: &String) -> TestConfig<'a> {
     }
 }
 
-fn setup_its<'a>(
-    env: &Env,
-    gateway: &Address,
-    gas_service: &Address,
-    chain_name: &String,
-) -> InterchainTokenServiceClient<'a> {
-    let owner = Address::generate(env);
-    let operator = Address::generate(env);
-    let its_hub_address = String::from_str(env, ITS_HUB_ADDRESS);
-    let native_token = Address::generate(env);
-    let interchain_token_wasm_hash = env
-        .deployer()
-        .upload_contract_wasm(INTERCHAIN_TOKEN_WASM_HASH);
-
-    let its = env.register(
-        InterchainTokenService,
-        (
-            &owner,
-            &operator,
-            gateway,
-            gas_service,
-            its_hub_address,
-            chain_name.clone(),
-            native_token,
-            interchain_token_wasm_hash,
-        ),
-    );
-
-    let its_client = InterchainTokenServiceClient::new(env, &its);
-
-    its_client
-}
-
-fn setup_its_token(
-    env: &Env,
-    client: &InterchainTokenServiceClient,
-    sender: &Address,
-    supply: i128,
-) -> BytesN<32> {
-    let salt = BytesN::from_array(env, &[1u8; 32]);
-    let token_metadata = TokenMetadata {
-        name: String::from_str(env, "Test"),
-        symbol: String::from_str(env, "TEST"),
-        decimal: 18,
-    };
-
-    let token_id = client.mock_all_auths().deploy_interchain_token(
-        sender,
-        &salt,
-        &token_metadata,
-        &supply,
-        &None,
-    );
-
-    token_id
-}
-
 #[test]
 fn gmp_example() {
     let env = Env::default();
@@ -141,7 +66,7 @@ fn gmp_example() {
         gas_service_client: source_gas_service_client,
         app: source_app,
         ..
-    } = setup_app(&env, &source_chain);
+    } = setup_app(&env);
 
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
@@ -150,7 +75,7 @@ fn gmp_example() {
         gateway_client: destination_gateway_client,
         app: destination_app,
         ..
-    } = setup_app(&env, &destination_chain);
+    } = setup_app(&env);
 
     // Set cross-chain message params
     let source_address = source_app.address.to_string();
@@ -256,14 +181,13 @@ fn its_example() {
 
     let user = Address::generate(&env).to_string_bytes();
 
-    let chain_name = String::from_str(&env, "chain_name");
     let TestConfig {
         signers,
         gateway_client,
         its_client,
         app: example_app,
         ..
-    } = setup_app(&env, &chain_name);
+    } = setup_app(&env);
     let source_chain = its_client.its_hub_chain_name();
     let source_address: String = its_client.its_hub_address();
 

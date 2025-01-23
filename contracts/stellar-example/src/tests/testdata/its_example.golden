@@ -12,7 +12,7 @@ MessageApprovedEvent {
     message: Message {
         source_chain: String(axelar),
         message_id: String(message-id),
-        source_address: String(hub_address),
+        source_address: String(its_hub_address),
         contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N),
         payload_hash: BytesN<32>(237, 149, 219, 250, 141, 232, 32, 82, 24, 198, 205, 234, 25, 38, 169, 223, 11, 147, 254, 36, 100, 116, 38, 89, 4, 52, 132, 200, 218, 56, 83, 209),
     },
