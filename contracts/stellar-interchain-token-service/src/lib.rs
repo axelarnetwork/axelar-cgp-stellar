@@ -12,20 +12,7 @@ pub mod types;
 pub mod testutils;
 
 #[cfg(test)]
-mod tests {
-    mod deploy_interchain_token;
-    mod deploy_remote_canonical_token;
-    mod deploy_remote_interchain_token;
-    mod executable;
-    mod execute;
-    mod flow_limit;
-    mod interchain_transfer;
-    mod message_routing;
-    mod pause;
-    mod register_canonical_token;
-    mod trusted_chain;
-    mod utils;
-}
+mod tests;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {

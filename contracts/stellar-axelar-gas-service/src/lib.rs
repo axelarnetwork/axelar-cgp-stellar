@@ -14,9 +14,7 @@ compile_error!("'testutils' feature is not supported on 'wasm' target");
 pub mod testutils;
 
 #[cfg(test)]
-mod tests {
-    mod test;
-}
+mod tests;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {

@@ -1,7 +1,8 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
-mod testdata;
+use crate as stellar_axelar_std;
+
 mod operatable {
     use stellar_axelar_std::assert_auth;
     use stellar_axelar_std::interfaces::OperatableClient;
@@ -85,6 +86,8 @@ mod upgradable {
     use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     use super::*;
+    use crate::std::string::ToString;
+    use crate::tests::testdata;
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

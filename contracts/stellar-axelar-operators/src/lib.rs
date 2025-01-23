@@ -12,6 +12,4 @@ pub mod error;
 pub use contract::{AxelarOperators, AxelarOperatorsClient};
 
 #[cfg(test)]
-mod tests {
-    mod test;
-}
+mod tests;

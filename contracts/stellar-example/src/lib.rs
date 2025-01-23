@@ -10,6 +10,4 @@ mod storage_types;
 pub use contract::{Example, ExampleClient};
 
 #[cfg(test)]
-mod tests {
-    mod test;
-}
+mod tests;

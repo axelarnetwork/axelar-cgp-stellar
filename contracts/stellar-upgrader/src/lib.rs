@@ -8,7 +8,4 @@ pub mod error;
 pub use contract::{Upgrader, UpgraderClient};
 
 #[cfg(test)]
-mod tests {
-    mod atomic_upgrades;
-    mod utils;
-}
+mod tests;
