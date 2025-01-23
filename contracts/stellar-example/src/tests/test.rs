@@ -23,7 +23,7 @@ use crate::{Example, ExampleClient};
 const SOURCE_CHAIN_NAME: &str = "source";
 const DESTINATION_CHAIN_NAME: &str = "destination";
 
-struct ExampleTestConfig<'a> {
+struct TestConfig<'a> {
     signers: TestSignerSet,
     gateway_client: AxelarGatewayClient<'a>,
     gas_service_client: AxelarGasServiceClient<'a>,
@@ -31,7 +31,7 @@ struct ExampleTestConfig<'a> {
     app: ExampleClient<'a>,
 }
 
-fn setup_app<'a>(env: &Env) -> ExampleTestConfig<'a> {
+fn setup_app<'a>(env: &Env) -> TestConfig<'a> {
     let (signers, gateway_client) = setup_gateway(env, 0, 5);
     let gas_service_client = setup_gas_service(env);
     let its_client = setup_its(env, &gateway_client, &gas_service_client);
@@ -45,7 +45,7 @@ fn setup_app<'a>(env: &Env) -> ExampleTestConfig<'a> {
     );
     let app = ExampleClient::new(env, &app);
 
-    ExampleTestConfig {
+    TestConfig {
         signers,
         gateway_client,
         gas_service_client,
@@ -62,7 +62,7 @@ fn gmp_example() {
 
     // Setup source Axelar gateway
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
-    let ExampleTestConfig {
+    let TestConfig {
         gas_service_client: source_gas_service_client,
         app: source_app,
         ..
@@ -70,7 +70,7 @@ fn gmp_example() {
 
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
-    let ExampleTestConfig {
+    let TestConfig {
         signers: destination_signers,
         gateway_client: destination_gateway_client,
         app: destination_app,
@@ -181,7 +181,7 @@ fn its_example() {
 
     let user = Address::generate(&env).to_string_bytes();
 
-    let ExampleTestConfig {
+    let TestConfig {
         signers,
         gateway_client,
         its_client,
