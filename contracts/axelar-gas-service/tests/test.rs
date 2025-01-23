@@ -26,16 +26,16 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     (env, contract_id, gas_collector, client)
 }
 
-fn mint_gas_token(env: &Env, recipient: &Address, gas_amount: i128, mint_amount: i128) -> Token {
+fn setup_token(env: &Env, recipient: &Address, amount: i128) -> Token {
     let asset = env.register_stellar_asset_contract_v2(Address::generate(env));
 
     StellarAssetClient::new(env, &asset.address())
         .mock_all_auths()
-        .mint(recipient, &mint_amount);
+        .mint(recipient, &amount);
 
     Token {
         address: asset.address(),
-        amount: gas_amount,
+        amount,
     }
 }
 
@@ -75,9 +75,8 @@ fn pay_gas_fails_with_zero_amount() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 0;
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
     let token = Token {
-        address: asset.address(),
+        address: Address::generate(&env),
         amount: gas_amount,
     };
 
@@ -106,7 +105,11 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount - 1);
+    let _token = setup_token(&env, &spender, gas_amount - 1);
+    let token = Token {
+        address: _token.address,
+        amount: gas_amount,
+    };
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
@@ -150,7 +153,7 @@ fn pay_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount);
+    let token = setup_token(&env, &spender, gas_amount);
     let token_client = TokenClient::new(&env, &token.address);
 
     let payload = bytes!(&env, 0x1234);
@@ -201,9 +204,8 @@ fn add_gas_fails_with_zero_gas_amount() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 0;
-    let asset = env.register_stellar_asset_contract_v2(Address::generate(&env));
     let token = Token {
-        address: asset.address(),
+        address: Address::generate(&env),
         amount: gas_amount,
     };
 
@@ -224,8 +226,11 @@ fn add_gas_fails_with_insufficient_user_balance() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 2;
-    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount - 1);
-
+    let _token = setup_token(&env, &spender, gas_amount - 1);
+    let token = Token {
+        address: _token.address,
+        amount: gas_amount,
+    };
     client
         .mock_all_auths()
         .add_gas(&sender, &message_id, &spender, &token);
@@ -238,7 +243,7 @@ fn add_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = mint_gas_token(&env, &spender, gas_amount, gas_amount);
+    let token = setup_token(&env, &spender, gas_amount);
     let token_client = TokenClient::new(&env, &token.address);
 
     let message_id = message_id(&env);
@@ -255,16 +260,13 @@ fn add_gas() {
 #[test]
 fn collect_fees_fails_with_zero_amount() {
     let (env, contract_id, gas_collector, client) = setup_env();
-
-    let supply: i128 = 1000;
-    let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
-    StellarAssetClient::new(&env, &asset.address())
-        .mock_all_auths()
-        .mint(&contract_id, &supply);
-
+    let spender: Address = Address::generate(&env);
     let refund_amount = 0;
+    let supply: i128 = 1000;
+
+    let _token = setup_token(&env, &spender, supply);
     let token = Token {
-        address: asset.address(),
+        address: _token.address,
         amount: refund_amount,
     };
 

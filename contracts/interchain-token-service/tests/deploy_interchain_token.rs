@@ -165,9 +165,7 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
         )
     );
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<
-        InterchainTokenDeployedEvent,
-    >(&env, -1));
+    goldie::assert!(events::fmt_last_emitted_event::<InterchainTokenDeployedEvent>(&env));
 
     let token_address = client.token_address(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);

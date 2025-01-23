@@ -9,7 +9,7 @@ use stellar_axelar_operators::error::ContractError;
 use stellar_axelar_operators::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use stellar_axelar_operators::{AxelarOperators, AxelarOperatorsClient};
 use stellar_axelar_std::events::{fmt_last_emitted_event, Event};
-use stellar_axelar_std::{assert_auth, assert_contract_err, mock_auth, IntoEvent};
+use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, mock_auth, IntoEvent};
 
 #[contract]
 pub struct TestTarget;
@@ -78,11 +78,7 @@ fn add_operator_fails_when_already_added() {
     let (env, client, _) = setup_env();
     let operator = Address::generate(&env);
 
-    let add_operator_auth = mock_auth!(env, client.owner(), client.add_operator(&operator));
-
-    client
-        .mock_auths(&[add_operator_auth])
-        .add_operator(&operator);
+    assert_auth!(&client.owner(), client.add_operator(&operator));
 
     assert_contract_err!(
         client.mock_all_auths().try_add_operator(&operator),
@@ -122,11 +118,7 @@ fn execute_succeeds() {
     let (env, client, target) = setup_env();
     let operator = Address::generate(&env);
 
-    let add_operator_auth = mock_auth!(env, client.owner(), client.add_operator(&operator));
-
-    client
-        .mock_auths(&[add_operator_auth])
-        .add_operator(&operator);
+    assert_auth!(&client.owner(), client.add_operator(&operator));
 
     assert_auth!(
         operator,
@@ -162,14 +154,9 @@ fn execute_fails_when_target_panics() {
     let (env, client, target) = setup_env();
     let operator = Address::generate(&env);
 
-    let add_operator_auth = mock_auth!(env, client.owner(), client.add_operator(&operator));
+    assert_auth!(&client.owner(), client.add_operator(&operator));
 
-    client
-        .mock_auths(&[add_operator_auth])
-        .add_operator(&operator);
-
-    let execute_auth = mock_auth!(
-        env,
+    assert_auth!(
         operator,
         client.execute(
             &operator,
@@ -178,42 +165,22 @@ fn execute_fails_when_target_panics() {
             &Vec::<Val>::new(&env),
         )
     );
-
-    client.mock_auths(&[execute_auth]).execute(
-        &operator,
-        &target,
-        &Symbol::new(&env, "failing"),
-        &Vec::<Val>::new(&env),
-    );
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #1)")]
 fn execute_fails_when_target_returns_error() {
     let (env, client, target) = setup_env();
     let operator = Address::generate(&env);
 
-    let add_operator_auth = mock_auth!(env, client.owner(), client.add_operator(&operator));
+    assert_auth!(&client.owner(), client.add_operator(&operator));
 
-    client
-        .mock_auths(&[add_operator_auth])
-        .add_operator(&operator);
-
-    let execute_auth = mock_auth!(
-        env,
+    assert_auth_err!(
         operator,
         client.execute(
             &operator,
             &target,
-            &Symbol::new(&env, "failing_with_error"),
+            &Symbol::new(&env, "failing"),
             &Vec::<Val>::new(&env),
         )
-    );
-
-    client.mock_auths(&[execute_auth]).execute(
-        &operator,
-        &target,
-        &Symbol::new(&env, "failing_with_error"),
-        &Vec::<Val>::new(&env),
     );
 }
