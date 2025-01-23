@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, IntoVal, String};
+use soroban_sdk::{Address, String};
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 
 use super::utils::setup_env;
