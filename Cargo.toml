@@ -22,14 +22,14 @@ proc-macro2 = { version = "1.0", default-features = false }
 rand = { version = "0.8.5", default-features = false }
 soroban-sdk = { version = "22.0.5" }
 soroban-token-sdk = { version = "22.0.5" }
-stellar-axelar-gas-service = { version = "^0.2.1", path = "contracts/stellar-axelar-gas-service" }
-stellar-axelar-gateway = { version = "^0.2.1", path = "contracts/stellar-axelar-gateway" }
-stellar-axelar-operators = { version = "^0.2.1", path = "contracts/stellar-axelar-operators" }
-stellar-axelar-std = { version = "^0.2.1", path = "packages/stellar-axelar-std", features = ["derive"] }
+stellar-axelar-gas-service = { version = "^0.2.2", path = "contracts/stellar-axelar-gas-service" }
+stellar-axelar-gateway = { version = "^0.2.2", path = "contracts/stellar-axelar-gateway" }
+stellar-axelar-operators = { version = "^0.2.2", path = "contracts/stellar-axelar-operators" }
+stellar-axelar-std = { version = "^0.2.2", path = "packages/stellar-axelar-std", features = ["derive"] }
 stellar-axelar-std-derive = { version = "^0.2.1", path = "packages/stellar-axelar-std-derive" }
 stellar-example = { version = "^0.1.0", path = "contracts/stellar-example" }
-stellar-interchain-token = { version = "^0.2.1", path = "contracts/stellar-interchain-token" }
-stellar-interchain-token-service = { version = "^0.2.1", path = "contracts/stellar-interchain-token-service" }
+stellar-interchain-token = { version = "^0.2.2", path = "contracts/stellar-interchain-token" }
+stellar-interchain-token-service = { version = "^0.2.2", path = "contracts/stellar-interchain-token-service" }
 
 [workspace.lints.clippy]
 nursery = { level = "warn", priority = -1 }
