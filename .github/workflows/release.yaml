@@ -24,7 +24,7 @@ jobs:
       ((github.event.pull_request.merged == true) &&
       contains(github.event.pull_request.labels.*.name, 'release'))
 
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-8vcpu-ubuntu-2204
 
     outputs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}
@@ -38,7 +38,7 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-  
+
       # Creates git tags and publishes the crates of the new releases
       - name: Publish release
         id: publish-release

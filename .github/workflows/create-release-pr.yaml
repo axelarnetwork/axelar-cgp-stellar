@@ -10,7 +10,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   create-release-pr:
     name: Create Release PR
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-8vcpu-ubuntu-2204
 
     steps:
       - name: Check if a branch is whitelisted and maintained
