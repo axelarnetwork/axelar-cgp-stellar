@@ -25,7 +25,6 @@ paste = { workspace = true }
 rand = { workspace = true }
 rand_chacha = { version = "0.3" }
 soroban-sdk = { workspace = true, features = ["testutils"] }
-stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [features]

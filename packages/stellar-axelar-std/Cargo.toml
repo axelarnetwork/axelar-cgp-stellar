@@ -19,7 +19,6 @@ stellar-axelar-std-derive = { workspace = true, optional = true }
 goldie = { workspace = true }
 paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
-stellar-axelar-std = { workspace = true, features = ["testutils"] }
 stellar-axelar-std-derive = { workspace = true, features = ["testutils"] }
 
 [features]
