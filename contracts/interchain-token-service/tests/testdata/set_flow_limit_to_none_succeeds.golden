@@ -1,3 +1,11 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(flow_limit_set), BytesN<32>(125, 96, 86, 2, 12, 87, 185, 38, 24, 69, 45, 187, 113, 21, 59, 197, 31, 115, 71, 89, 174, 148, 246, 246, 88, 83, 233, 86, 107, 151, 39, 140), None)
-data: ()
+FlowLimitSetEvent {
+    token_id: BytesN<32>(125, 96, 86, 2, 12, 87, 185, 38, 24, 69, 45, 187, 113, 21, 59, 197, 31, 115, 71, 89, 174, 148, 246, 246, 88, 83, 233, 86, 107, 151, 39, 140),
+    flow_limit: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+flow_limit_set {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] flow_limit: Option < i128 >,
+}

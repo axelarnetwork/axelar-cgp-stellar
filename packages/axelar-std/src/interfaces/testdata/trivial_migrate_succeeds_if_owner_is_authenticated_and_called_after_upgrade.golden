@@ -1,3 +1,9 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
-topics: (Symbol(upgraded))
-data: (String(0.1.0))
+UpgradedEvent {
+    version: String(0.1.0),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+
+upgraded {
+    #[data]  version: String,
+}

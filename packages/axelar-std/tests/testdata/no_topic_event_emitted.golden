@@ -1,3 +1,13 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
-topics: (Symbol(no_topic))
-data: (String(data-1), Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4), String(data-3))
+NoTopicEvent {
+    data1: String(data-1),
+    data2: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4),
+    data3: String(data-3),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
+
+no_topic {
+    #[data]  data1: String,
+    #[data]  data2: Address,
+    #[data]  data3: String,
+}
