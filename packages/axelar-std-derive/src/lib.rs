@@ -9,8 +9,6 @@ mod ownable;
 mod upgradable;
 
 use proc_macro::TokenStream;
-#[cfg(any(test, feature = "testutils"))]
-use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 use upgradable::MigrationArgs;
 
@@ -168,18 +166,7 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 pub fn derive_into_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    let event_impl = event::derive_event_impl(&input);
-
-    #[cfg(any(test, feature = "testutils"))]
-    let event_impl = {
-        let event_test_impl = event::derive_event_testutils_impl(&input);
-        quote! {
-            #event_impl
-            #event_test_impl
-        }
-    };
-
-    event_impl.into()
+    event::derive_event_impl(&input).into()
 }
 
 #[proc_macro_derive(InterchainTokenExecutable)]

@@ -105,9 +105,9 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let _token = setup_token(&env, &spender, gas_amount - 1);
+    let Token { address, .. } = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
-        address: _token.address,
+        address,
         amount: gas_amount,
     };
 
@@ -226,9 +226,9 @@ fn add_gas_fails_with_insufficient_user_balance() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 2;
-    let _token = setup_token(&env, &spender, gas_amount - 1);
+    let Token { address, .. } = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
-        address: _token.address,
+        address,
         amount: gas_amount,
     };
     client
@@ -259,14 +259,14 @@ fn add_gas() {
 
 #[test]
 fn collect_fees_fails_with_zero_amount() {
-    let (env, contract_id, gas_collector, client) = setup_env();
+    let (env, _, gas_collector, client) = setup_env();
     let spender: Address = Address::generate(&env);
     let refund_amount = 0;
     let supply: i128 = 1000;
 
-    let _token = setup_token(&env, &spender, supply);
+    let Token { address, .. } = setup_token(&env, &spender, supply);
     let token = Token {
-        address: _token.address,
+        address,
         amount: refund_amount,
     };
 

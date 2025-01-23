@@ -1,3 +1,13 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(interchain_token_id_claimed), BytesN<32>(109, 166, 189, 160, 172, 90, 4, 181, 216, 61, 219, 113, 117, 205, 99, 52, 22, 115, 242, 232, 242, 237, 220, 45, 215, 211, 154, 235, 33, 170, 162, 68), AccountId(GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF), BytesN<32>(107, 6, 56, 52, 154, 235, 174, 176, 50, 218, 123, 158, 246, 137, 10, 190, 66, 236, 167, 168, 53, 181, 43, 178, 50, 192, 76, 143, 129, 162, 106, 130))
-data: ()
+InterchainTokenIdClaimedEvent {
+    token_id: BytesN<32>(109, 166, 189, 160, 172, 90, 4, 181, 216, 61, 219, 113, 117, 205, 99, 52, 22, 115, 242, 232, 242, 237, 220, 45, 215, 211, 154, 235, 33, 170, 162, 68),
+    deployer: AccountId(GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF),
+    salt: BytesN<32>(107, 6, 56, 52, 154, 235, 174, 176, 50, 218, 123, 158, 246, 137, 10, 190, 66, 236, 167, 168, 53, 181, 43, 178, 50, 192, 76, 143, 129, 162, 106, 130),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+interchain_token_id_claimed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] deployer: Address,
+    #[topic] salt: BytesN < 32 >,
+}

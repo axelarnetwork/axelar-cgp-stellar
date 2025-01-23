@@ -1,3 +1,9 @@
-contract: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
-topics: (Symbol(trusted_chain_set), String(chain))
-data: ()
+TrustedChainSetEvent {
+    chain: String(chain),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+trusted_chain_set {
+    #[topic] chain: String,
+}

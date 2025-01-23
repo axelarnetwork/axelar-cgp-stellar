@@ -6,99 +6,107 @@ use syn::{DeriveInput, LitStr, Type};
 pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let event_name = event_name_snake_case(input);
-    let ((topic_idents, _), (data_idents, _)) = event_struct_fields(input);
+    let ((topic_field_idents, topic_types), (data_field_idents, data_types)) =
+        event_struct_fields(input);
 
-    let data_impl = quote! {
-        fn data(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::IntoVal<soroban_sdk::Env, soroban_sdk::Val> + core::fmt::Debug {
+    let topic_type_tokens = topic_types.iter().map(|ty| quote!(#ty));
+    let data_type_tokens = data_types.iter().map(|ty| quote!(#ty));
+
+    let emit_impl = quote! {
+        fn emit(self, env: &soroban_sdk::Env) {
+            use soroban_sdk::IntoVal;
+
+            let topics = (
+                soroban_sdk::Symbol::new(env, #event_name),
+                #(soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&self.#topic_field_idents, env),)*
+            );
+
             let data: soroban_sdk::Vec<soroban_sdk::Val> = soroban_sdk::vec![
                 env
-                #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_idents, env))*
+                #(, soroban_sdk::IntoVal::<_, soroban_sdk::Val>::into_val(&self.#data_field_idents, env))*
             ];
-            data
+
+            env.events().publish(topics, data);
+        }
+    };
+
+    let from_event_impl = quote! {
+        fn from_event(env: &soroban_sdk::Env, topics: soroban_sdk::Vec<soroban_sdk::Val>, data: soroban_sdk::Val) -> Self {
+            use soroban_sdk::TryFromVal;
+
+            // Verify the event name matches
+            let event_name = soroban_sdk::Symbol::try_from_val(env, &topics.get(0)
+                .expect("missing event name in topics"))
+                .expect("invalid event name type");
+            assert_eq!(event_name, soroban_sdk::Symbol::new(env, #event_name), "event name mismatch");
+
+            // Parse topics from Val to the corresponding type,
+            // and assign them to a variable with the same name as the struct field
+            // E.g. let destination_chain = String::try_from_val(env, &topics.get(1));
+            // Start from index 1 because the first topic is the event name
+            let mut topic_idx = 1;
+            #(
+                let #topic_field_idents = <#topic_type_tokens>::try_from_val(env, &topics.get(topic_idx)
+                    .expect("the number of topics does not match this function's definition"))
+                    .expect("given topic value does not match the expected type");
+                topic_idx += 1;
+            )*
+
+            // Parse data from Val to the corresponding types,
+            // and assign them to a variable with the same name as the struct field
+            // E.g. let message = Message::try_from_val(env, &data.get(0));
+            // `data` is required to be a `Vec<Val>`
+            let data = soroban_sdk::Vec::<soroban_sdk::Val>::try_from_val(env, &data)
+                .expect("invalid data format");
+
+            let mut data_idx = 0;
+            #(
+                let #data_field_idents = <#data_type_tokens>::try_from_val(env, &data.get(data_idx)
+                    .expect("the number of data entries does not match this function's definition"))
+                    .expect("given data value does not match the expected type");
+                data_idx += 1;
+            )*
+
+            // Construct the struct from the parsed topics and data.
+            // Since the variables created above have the same name as the struct fields,
+            // the compiler will automatically assign the values to the struct fields.
+            Self {
+                #(#topic_field_idents,)*
+                #(#data_field_idents,)*
+            }
+        }
+    };
+
+    let schema_impl = quote! {
+        fn schema(env: &soroban_sdk::Env) -> &'static str {
+            concat!(
+                #event_name, " {\n",
+                #(
+                    "    #[topic] ",
+                    stringify!(#topic_field_idents),
+                    ": ",
+                    stringify!(#topic_types),
+                    ",\n",
+                )*
+                #(
+                    "    #[data]  ",
+                    stringify!(#data_field_idents),
+                    ": ",
+                    stringify!(#data_types),
+                    ",\n",
+                )*
+                "}"
+            )
         }
     };
 
     quote! {
         impl stellar_axelar_std::events::Event for #name {
-            fn topics(&self, env: &soroban_sdk::Env) -> impl soroban_sdk::Topics + core::fmt::Debug {
-                (
-                    soroban_sdk::Symbol::new(env, #event_name),
-                    #(soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&self.#topic_idents, env),)*
-                )
-            }
+            #emit_impl
 
-            #data_impl
+            #from_event_impl
 
-            fn emit(self, env: &soroban_sdk::Env) {
-                env.events().publish(self.topics(env), self.data(env));
-            }
-        }
-    }
-}
-
-#[cfg(any(test, feature = "testutils"))]
-pub fn derive_event_testutils_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
-    let name = &input.ident;
-    let ((_, topic_types), (_, data_types)) = event_struct_fields(input);
-    event_testutils(name, topic_types, data_types)
-}
-
-#[cfg(any(test, feature = "testutils"))]
-fn event_testutils(
-    name: &Ident,
-    topic_types: Vec<&Type>,
-    data_types: Vec<&Type>,
-) -> proc_macro2::TokenStream {
-    quote! {
-        impl stellar_axelar_std::events::EventTestutils for #name {
-            fn matches(self, env: &soroban_sdk::Env, event: &(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> bool {
-                use soroban_sdk::IntoVal;
-                use stellar_axelar_std::events::Event;
-
-                Self::standardized_fmt(env, event) == Self::standardized_fmt(env, &(event.0.clone(), self.topics(env).into_val(env), self.data(env).into_val(env)))
-            }
-
-            #[allow(unused_assignments)]
-            #[allow(unused_variables)]
-            #[allow(unused_mut)]
-            fn standardized_fmt(env: &soroban_sdk::Env, (contract_id, topics, data): &(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)) -> std::string::String {
-                use soroban_sdk::TryFromVal;
-
-                let mut topics_output: std::vec::Vec<std::string::String> = std::vec![];
-
-                let event_name = topics.get(0).expect("event name topic missing");
-                topics_output.push(std::format!("{:?}", soroban_sdk::Symbol::try_from_val(env, &event_name)
-                    .expect("event name should be a Symbol")));
-
-                let mut i = 1;
-                #(
-                    let topic = topics.get(i).expect("the number of topics does not match this function's definition");
-                    topics_output.push(std::format!("{:?}", <#topic_types>::try_from_val(env, &topic)
-                        .expect("given topic value does not match the expected type")));
-
-                    i += 1;
-                )*
-
-                let data = soroban_sdk::Vec::<soroban_sdk::Val>::try_from_val(env, data)
-                    .expect("data should be defined as a vector-compatible type");
-
-                let mut data_output: std::vec::Vec<std::string::String> = std::vec![];
-
-                let mut i = 0;
-                #(
-                    let data_entry = data.get(i).expect("the number of data entries does not match this function's definition");
-                    data_output.push(std::format!("{:?}", <#data_types>::try_from_val(env, &data_entry)
-                        .expect("given data value does not match the expected type")));
-
-                    i += 1;
-                )*
-
-                std::format!("contract: {:?}\ntopics: ({})\ndata: ({})",
-                    contract_id,
-                    topics_output.join(", "),
-                    data_output.join(", ")
-                )
-            }
+            #schema_impl
         }
     }
 }
