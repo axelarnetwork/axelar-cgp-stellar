@@ -36,7 +36,7 @@ on:
     secrets:
       github-token:
         description: "The github token to use to do the tag updates"
-        required: true        
+        required: true
       cf-endpoint-url:
         description: "The endpoint URL of the CF bucket"
         required: true
@@ -56,7 +56,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.github-token }}
-          
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -66,7 +66,7 @@ jobs:
       - name: Build artifacts for ${{ inputs.package-name }}-v${{ inputs.package-version }}
         run: |
           echo "Building wasm for '${{ inputs.package-name }}-v${{ inputs.package-version }}'";
-          cargo install --locked soroban-cli --version 22.0.0-rc.1 --features opt
+          cargo install --locked stellar-cli --version 22.2.0 --features opt
           cargo wasm -p ${{ inputs.package-name }}
           stellar contract build
           ./optimize.sh
@@ -78,7 +78,7 @@ jobs:
           export PACKAGE_VERSION='v${{ inputs.package-version }}'
 
           export BASE_ARTIFACTS_DIR="./target/wasm32-unknown-unknown/release"
-          export ARTIFACT_NAME="axelar-cgp-soroban-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
+          export ARTIFACT_NAME="axelar-cgp-stellar-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
           export BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}" # Regardless of the dir type, relative or absolute
 
           export ARCHIVES_OUTPUT_DIR="${{ github.workspace }}/build/archives"
@@ -97,10 +97,10 @@ jobs:
           # ex: ./target/wasm32-unknown-unknown/release
           echo "BASE_ARTIFACTS_DIR=${BASE_ARTIFACTS_DIR}" >> $GITHUB_ENV
 
-          # ex: axelar-cgp-soroban-wasm-axelar-gas-service-v0.1.0
+          # ex: axelar-cgp-stellar-wasm-axelar-gas-service-v0.1.0
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
 
-          # ex: ./axelar-cgp-soroban-wasm-axelar-gas-service-v0.1.0
+          # ex: ./axelar-cgp-stellar-wasm-axelar-gas-service-v0.1.0
           echo "BASE_ARTIFACTS_VERSIONED_DIR=${BASE_ARTIFACTS_VERSIONED_DIR}" >> $GITHUB_ENV
 
           echo "ZIP_ARCHIVE_FILE=${ZIP_ARCHIVE_FILE}" >> $GITHUB_ENV
