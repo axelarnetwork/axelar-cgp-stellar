@@ -11,8 +11,8 @@ use stellar_interchain_token_service::executable::CustomInterchainTokenExecutabl
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
-use crate::storage_types::DataKey;
 use crate::interface::ExampleInterface;
+use crate::storage_types::DataKey;
 
 #[contract]
 #[derive(InterchainTokenExecutable)]

@@ -1,6 +1,7 @@
 use soroban_sdk::{Address, Bytes, BytesN, Env, String};
-use crate::contract::ExampleError;
 use stellar_axelar_std::types::Token;
+
+use crate::contract::ExampleError;
 
 pub trait ExampleInterface {
     /// Retrieves the address of the gas service.

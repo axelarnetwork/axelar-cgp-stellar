@@ -12,7 +12,7 @@ pub trait AxelarGatewayInterface:
     /// Approves a collection of messages with the provided proof.
     ///
     /// This function allows the approval of multiple messages using a cryptographic proof.
-    /// It ensures that the messages are not empty and prevents replay attacks by checking 
+    /// It ensures that the messages are not empty and prevents replay attacks by checking
     /// if the messages have already been approved or executed.
     ///
     /// # Arguments
@@ -33,7 +33,7 @@ pub trait AxelarGatewayInterface:
 
     /// Rotates the signers for the contract.
     ///
-    /// This function allows the rotation of signers for the contract. 
+    /// This function allows the rotation of signers for the contract.
     /// It validates the provided proof and ensures that the signers are the latest.
     /// If `bypass_rotation_delay` is set to true, the `operator` must authorize the rotation.
     ///
@@ -51,7 +51,6 @@ pub trait AxelarGatewayInterface:
     ///
     /// # Authorization
     /// - The `operator` must authenticate if `bypass_rotation_delay` is true.
-
     fn rotate_signers(
         env: Env,
         signers: WeightedSigners,
@@ -68,7 +67,7 @@ pub trait AxelarGatewayInterface:
     /// Returns the signers hash by epoch.
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError>;
 
-    /// Validate the `proof` for `data_hash` created by the signers. 
+    /// Validate the `proof` for `data_hash` created by the signers.
     /// Returns a boolean indicating if the proof was created by the latest signers.
     fn validate_proof(
         env: &Env,

@@ -12,8 +12,7 @@ pub trait AxelarGasServiceInterface {
     /// e.g. the `sender` is a contract, but the `spender` can be the user signing the transaction.
     ///
     /// # Arguments
-    /// * `sender` - The address initiating the gas payment. It's the address that sent the
-    /// cross-chain message via the `axelar_gateway`.
+    /// * `sender` - The address initiating the gas payment. It's the address that sent the cross-chain message via the `axelar_gateway`.
     /// * `destination_chain` - The name of the destination chain where the transaction will be executed.
     /// * `destination_address` - The address on the destination chain where the transaction will be executed.
     /// * `payload` - The payload data associated with the transaction.
@@ -47,8 +46,7 @@ pub trait AxelarGasServiceInterface {
     /// e.g. the `sender` is a contract, but the `spender` can be the user signing the transaction.
     ///
     /// # Arguments
-    /// * `sender` - The address of the sender initiating the gas addition. It's the address that sent the
-    /// cross-chain message via the `axelar_gateway`.
+    /// * `sender` - The address of the sender initiating the gas addition. It's the address that sent the cross-chain message via the `axelar_gateway`.
     /// * `message_id` - The identifier of the message for which gas is being added.
     /// * `spender` - The address of the spender paying for the gas.
     /// * `token` - The token used to pay for the gas, including the address and amount.

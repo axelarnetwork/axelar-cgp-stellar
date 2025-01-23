@@ -3,9 +3,9 @@ use soroban_sdk::{
 };
 use stellar_axelar_std::ensure;
 use stellar_axelar_std::interfaces::UpgradableClient;
-use crate::interface::UpgraderInterface;
 
 use crate::error::ContractError;
+use crate::interface::UpgraderInterface;
 
 const MIGRATE: Symbol = symbol_short!("migrate");
 
