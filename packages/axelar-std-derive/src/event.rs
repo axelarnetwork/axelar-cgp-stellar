@@ -40,6 +40,10 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
                 .expect("invalid event name type");
             assert_eq!(event_name, soroban_sdk::Symbol::new(env, #event_name), "event name mismatch");
 
+            // Parse topics from Val to the corresponding type,
+            // and assign them to a variable with the same name as the struct field
+            // E.g. let destination_chain = String::try_from_val(env, &topics.get(1));
+            // Start from index 1 because the first topic is the event name
             let mut topic_idx = 1;
             #(
                 let #topic_field_idents = <#topic_type_tokens>::try_from_val(env, &topics.get(topic_idx)
@@ -48,6 +52,10 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
                 topic_idx += 1;
             )*
 
+            // Parse data from Val to the corresponding types,
+            // and assign them to a variable with the same name as the struct field
+            // E.g. let message = Message::try_from_val(env, &data.get(0));
+            // `data` is required to be a `Vec<Val>`
             let data = soroban_sdk::Vec::<soroban_sdk::Val>::try_from_val(env, &data)
                 .expect("invalid data format");
 
@@ -59,6 +67,9 @@ pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
                 data_idx += 1;
             )*
 
+            // Construct the struct from the parsed topics and data.
+            // Since the variables created above have the same name as the struct fields,
+            // the compiler will automatically assign the values to the struct fields.
             Self {
                 #(#topic_field_idents,)*
                 #(#data_field_idents,)*
