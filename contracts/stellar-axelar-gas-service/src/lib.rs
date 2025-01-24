@@ -21,7 +21,6 @@ cfg_if::cfg_if! {
         pub use interface::{AxelarGasServiceClient, AxelarGasServiceInterface};
     } else {
         pub mod event;
-        mod storage_types;
         mod contract;
 
         pub use contract::{AxelarGasService, AxelarGasServiceClient};

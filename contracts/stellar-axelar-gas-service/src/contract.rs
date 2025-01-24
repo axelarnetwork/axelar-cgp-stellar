@@ -2,25 +2,22 @@ use soroban_sdk::{contract, contractimpl, token, Address, Bytes, Env, String};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
 use crate::interface::AxelarGasServiceInterface;
-use crate::storage_types::DataKey;
 
 #[contract]
-#[derive(Ownable, Upgradable)]
+#[derive(Operatable, Ownable, Upgradable)]
 pub struct AxelarGasService;
 
 #[contractimpl]
 impl AxelarGasService {
     /// Initialize the gas service contract with a gas_collector address.
-    pub fn __constructor(env: Env, owner: Address, gas_collector: Address) {
+    pub fn __constructor(env: Env, owner: Address, operator: Address) {
+        interfaces::set_operator(&env, &operator);
         interfaces::set_owner(&env, &owner);
-        env.storage()
-            .instance()
-            .set(&DataKey::GasCollector, &gas_collector);
     }
 }
 
@@ -94,8 +91,7 @@ impl AxelarGasServiceInterface for AxelarGasService {
     }
 
     fn collect_fees(env: Env, receiver: Address, token: Token) -> Result<(), ContractError> {
-        let gas_collector = Self::gas_collector(&env);
-        gas_collector.require_auth();
+        Self::operator(&env).require_auth();
 
         ensure!(token.amount > 0, ContractError::InvalidAmount);
 
@@ -117,7 +113,7 @@ impl AxelarGasServiceInterface for AxelarGasService {
     }
 
     fn refund(env: Env, message_id: String, receiver: Address, token: Token) {
-        Self::gas_collector(&env).require_auth();
+        Self::operator(&env).require_auth();
 
         token::Client::new(&env, &token.address).transfer(
             &env.current_contract_address(),
@@ -131,12 +127,5 @@ impl AxelarGasServiceInterface for AxelarGasService {
             token,
         }
         .emit(&env);
-    }
-
-    fn gas_collector(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::GasCollector)
-            .expect("gas collector not found")
     }
 }
