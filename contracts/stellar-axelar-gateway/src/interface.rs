@@ -9,6 +9,15 @@ use crate::AxelarGatewayMessagingInterface;
 pub trait AxelarGatewayInterface:
     AxelarGatewayMessagingInterface + UpgradableInterface + OwnableInterface + OperatableInterface
 {
+    /// Returns the domain separator.
+    fn domain_separator(env: &Env) -> BytesN<32>;
+
+    /// Returns the number of epochs that previous signers are retained for after rotations.
+    fn previous_signers_retention(env: &Env) -> u64;
+
+    /// Returns the minimum delay between rotations.
+    fn minimum_rotation_delay(env: &Env) -> u64;
+
     /// Approves a collection of messages.
     fn approve_messages(
         env: &Env,
@@ -16,7 +25,7 @@ pub trait AxelarGatewayInterface:
         proof: Proof,
     ) -> Result<(), ContractError>;
 
-    // TODO: add docstring about how bypass_rotation_delay supposed to be used.
+    /// Rotates the signers.
     fn rotate_signers(
         env: &Env,
         signers: WeightedSigners,
