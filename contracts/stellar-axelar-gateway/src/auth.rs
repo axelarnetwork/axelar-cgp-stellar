@@ -17,7 +17,6 @@ pub fn initialize_auth(
 ) -> Result<(), ContractError> {
     env.storage().instance().set(&DataKey::Epoch, &0_u64);
 
-    // TODO: Do we need to manually expose these in a query, or can it be read directly off of storage in Stellar?
     env.storage().instance().set(
         &DataKey::PreviousSignerRetention,
         &previous_signer_retention,
@@ -40,6 +39,27 @@ pub fn initialize_auth(
     Ok(())
 }
 
+pub fn domain_separator(env: &Env) -> BytesN<32> {
+    env.storage()
+        .instance()
+        .get(&DataKey::DomainSeparator)
+        .expect("domain_separator not found")
+}
+
+pub fn minimum_rotation_delay(env: &Env) -> u64 {
+    env.storage()
+        .instance()
+        .get(&DataKey::MinimumRotationDelay)
+        .expect("minimum_rotation_delay not found")
+}
+
+pub fn previous_signers_retention(env: &Env) -> u64 {
+    env.storage()
+        .instance()
+        .get(&DataKey::PreviousSignerRetention)
+        .expect("previous_signers_retention not found")
+}
+
 pub fn validate_proof(
     env: &Env,
     data_hash: &BytesN<32>,
@@ -55,14 +75,8 @@ pub fn validate_proof(
 
     let is_latest_signers: bool = signers_epoch == current_epoch;
 
-    let previous_signers_retention: u64 = env
-        .storage()
-        .instance()
-        .get(&DataKey::PreviousSignerRetention)
-        .expect("previous_signers_retention not found");
-
     ensure!(
-        current_epoch - signers_epoch <= previous_signers_retention,
+        current_epoch - signers_epoch <= previous_signers_retention(env),
         ContractError::OutdatedSigners
     );
 
@@ -136,28 +150,15 @@ pub fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, Contra
         .ok_or(ContractError::InvalidEpoch)
 }
 
-fn message_hash_to_sign(env: &Env, signers_hash: BytesN<32>, data_hash: &BytesN<32>) -> Hash<32> {
-    let domain_separator: BytesN<32> = env
-        .storage()
-        .instance()
-        .get(&DataKey::DomainSeparator)
-        .unwrap();
-
-    let mut msg: Bytes = domain_separator.into();
+fn message_hash_to_sign(env: &Env, signers_hash: BytesN<32>, data_hash: &BytesN<32>) -> BytesN<32> {
+    let mut msg: Bytes = domain_separator(env).into();
     msg.extend_from_array(&signers_hash.to_array());
     msg.extend_from_array(&data_hash.to_array());
 
-    // TODO: use an appropriate non tx overlapping prefix
-    env.crypto().keccak256(&msg)
+    env.crypto().keccak256(&msg).into()
 }
 
 fn update_rotation_timestamp(env: &Env, enforce_rotation_delay: bool) -> Result<(), ContractError> {
-    let minimum_rotation_delay: u64 = env
-        .storage()
-        .instance()
-        .get(&DataKey::MinimumRotationDelay)
-        .expect("minimum_rotation_delay not found");
-
     let last_rotation_timestamp: u64 = env
         .storage()
         .instance()
@@ -168,7 +169,7 @@ fn update_rotation_timestamp(env: &Env, enforce_rotation_delay: bool) -> Result<
 
     if enforce_rotation_delay {
         ensure!(
-            current_timestamp - last_rotation_timestamp >= minimum_rotation_delay,
+            current_timestamp - last_rotation_timestamp >= minimum_rotation_delay(env),
             ContractError::InsufficientRotationDelay
         );
     }
@@ -180,7 +181,7 @@ fn update_rotation_timestamp(env: &Env, enforce_rotation_delay: bool) -> Result<
     Ok(())
 }
 
-fn validate_signatures(env: &Env, msg_hash: Hash<32>, proof: Proof) -> bool {
+fn validate_signatures(env: &Env, msg_hash: BytesN<32>, proof: Proof) -> bool {
     let mut total_weight = 0u128;
 
     for ProofSigner {
@@ -193,7 +194,7 @@ fn validate_signatures(env: &Env, msg_hash: Hash<32>, proof: Proof) -> bool {
     {
         if let ProofSignature::Signed(signature) = signature {
             env.crypto()
-                .ed25519_verify(&public_key, msg_hash.to_bytes().as_ref(), &signature);
+                .ed25519_verify(&public_key, msg_hash.as_ref(), &signature);
 
             total_weight = total_weight.checked_add(weight).unwrap();
 
@@ -214,7 +215,6 @@ fn validate_signers(env: &Env, weighted_signers: &WeightedSigners) -> Result<(),
         ContractError::EmptySigners
     );
 
-    // TODO: what's the min address/hash?
     let mut previous_signer = BytesN::<32>::from_array(env, &[0; 32]);
     let mut total_weight = 0u128;
 
