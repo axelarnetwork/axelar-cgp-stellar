@@ -125,13 +125,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 
     let token_id = assert_auth!(
         &sender,
-        client.deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &minter,
-        )
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
