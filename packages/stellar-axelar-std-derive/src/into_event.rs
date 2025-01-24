@@ -3,7 +3,7 @@ use proc_macro2::Ident;
 use quote::quote;
 use syn::{DeriveInput, LitStr, Type};
 
-pub fn derive_event_impl(input: &DeriveInput) -> proc_macro2::TokenStream {
+pub fn into_event(input: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &input.ident;
     let event_name = event_name_snake_case(input);
     let ((topic_field_idents, topic_types), (data_field_idents, data_types)) =
