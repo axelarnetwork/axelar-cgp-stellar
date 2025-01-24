@@ -11,14 +11,14 @@ pub trait AxelarGatewayInterface:
 {
     /// Approves a collection of messages.
     fn approve_messages(
-        env: Env,
+        env: &Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError>;
 
     // TODO: add docstring about how bypass_rotation_delay supposed to be used.
     fn rotate_signers(
-        env: Env,
+        env: &Env,
         signers: WeightedSigners,
         proof: Proof,
         bypass_rotation_delay: bool,
