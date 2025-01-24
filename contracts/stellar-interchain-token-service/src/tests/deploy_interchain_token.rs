@@ -117,7 +117,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let (env, client, _, _, _) = setup_env();
 
     let (sender, salt, token_metadata) = dummy_token_params(&env);
-    let minter = Address::generate(&env);
+    let minter = Some(Address::generate(&env));
     let initial_supply = 100;
 
     let deploy_salt = client.interchain_token_deploy_salt(&sender, &salt);
@@ -130,7 +130,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
             &salt,
             &token_metadata,
             &initial_supply,
-            &Some(minter.clone()),
+            &minter,
         )
     );
 

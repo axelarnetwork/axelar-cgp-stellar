@@ -201,7 +201,7 @@ fn its_example() {
 
     let trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
 
-    let data = Some(Address::generate(&env).to_string_bytes());
+    let data = Address::generate(&env).to_string_bytes();
 
     let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
@@ -211,7 +211,7 @@ fn its_example() {
                 source_address: user,
                 destination_address: example_app.address.to_string_bytes(),
                 amount,
-                data: data.clone(),
+                data: Some(data.clone()),
             },
         ),
     };
@@ -249,6 +249,6 @@ fn its_example() {
     let token = token::TokenClient::new(&env, &its_client.token_address(&token_id));
     assert_eq!(token.balance(&example_app.address), 0);
 
-    let recipient = Address::from_string_bytes(&data.unwrap());
+    let recipient = Address::from_string_bytes(&data);
     assert_eq!(token.balance(&recipient), amount);
 }
