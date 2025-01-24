@@ -32,3 +32,14 @@ jobs:
         run: RUSTFLAGS="-D warnings" cargo test --locked
         env:
           RUST_BACKTRACE: 1
+
+      - name: Remove all golden files
+        run: find . -name "*.golden" -exec rm -rf {} \;
+
+      - name: Regenerate golden files
+        run: RUSTFLAGS="-D warnings" cargo test --locked
+        env:
+          GOLDIE_UPDATE: 1
+
+      - name: Check for stale golden files
+        run: git diff --exit-code
