@@ -229,6 +229,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         caller.require_auth();
 
+        ensure!(initial_supply >= 0, ContractError::InvalidSupply);
+
         let initial_minter = if initial_supply > 0 {
             Some(env.current_contract_address())
         } else if let Some(ref minter) = minter {
@@ -542,12 +544,13 @@ impl InterchainTokenService {
     /// Retrieves the configuration value for the specified token ID.
     ///
     /// # Arguments
-    /// - `env`: Reference to the environment.
     /// - `token_id`: A 32-byte unique identifier for the token.
     ///
     /// # Returns
     /// - `Ok(TokenIdConfigValue)`: The configuration value if it exists.
-    /// - `Err(ContractError::InvalidTokenId)`: If the token ID does not exist in storage.
+    ///
+    /// # Errors
+    /// - `ContractError::InvalidTokenId`: If the token ID does not exist in storage.
     fn token_id_config(
         env: &Env,
         token_id: BytesN<32>,
@@ -561,12 +564,13 @@ impl InterchainTokenService {
     /// Retrieves the configuration value for the specified token ID and extends its TTL.
     ///
     /// # Arguments
-    /// - `env`: Reference to the environment.
     /// - `token_id`: A 32-byte unique identifier for the token.
     ///
     /// # Returns
     /// - `Ok(TokenIdConfigValue)`: The configuration value if it exists.
-    /// - `Err(ContractError::InvalidTokenId)`: If the token ID does not exist in storage.
+    ///
+    /// # Errors
+    /// - `ContractError::InvalidTokenId`: If the token ID does not exist in storage.
     fn token_id_config_with_extended_ttl(
         env: &Env,
         token_id: BytesN<32>,
@@ -583,23 +587,27 @@ impl InterchainTokenService {
 
     /// Deploys a remote token on a specified destination chain.
     ///
-    /// This function authorizes the caller, retrieves the token's metadata,
-    /// validates the metadata, and emits an event indicating the start of the
-    /// token deployment process. It also constructs and sends the deployment
-    /// message to the remote chain.
+    /// This function retrieves and validates the token's metadata
+    /// and emits an event indicating the start of the token deployment process.
+    /// It also constructs and sends the deployment message to the remote chain.
     ///
     /// # Arguments
-    /// * `env` - Reference to the environment object.
     /// * `caller` - Address of the caller initiating the deployment.
     /// * `deploy_salt` - Unique salt used for token deployment.
     /// * `destination_chain` - The name of the destination chain where the token will be deployed.
     /// * `gas_token` - The token used to pay for gas during the deployment.
     ///
     /// # Returns
-    /// Returns the token ID of the deployed token on the remote chain, or an error if the deployment fails.
+    /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
-    /// Returns `ContractError` if the deployment fails, the token ID is invalid, or token metadata is invalid.
+    /// - `ContractError::InvalidDestinationChain`: If the `destination_chain` is the current chain.
+    /// - `ContractError::InvalidTokenId`: If the token ID is invalid.
+    /// - Errors propagated from `token_metadata`.
+    /// - Any error propagated from `pay_gas_and_call_contract`.
+    ///     
+    /// # Authorization
+    /// - The `caller` must authenticate.
     fn deploy_remote_token(
         env: &Env,
         caller: Address,

@@ -279,3 +279,22 @@ fn deploy_interchain_token_fails_with_invalid_auth() {
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
 }
+
+#[test]
+fn deploy_interchain_token_fails_with_negative_supply() {
+    let (env, client, _, _, _) = setup_env();
+
+    let (sender, salt, token_metadata) = dummy_token_params(&env);
+    let invalid_supply = -1;
+
+    assert_contract_err!(
+        client.mock_all_auths().try_deploy_interchain_token(
+            &sender,
+            &salt,
+            &token_metadata,
+            &invalid_supply,
+            &None
+        ),
+        ContractError::InvalidSupply
+    );
+}
