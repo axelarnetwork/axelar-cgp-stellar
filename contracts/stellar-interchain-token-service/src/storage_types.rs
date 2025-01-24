@@ -11,7 +11,6 @@ pub enum DataKey {
     ItsHubAddress,
     NativeTokenAddress,
     InterchainTokenWasmHash,
-    Paused,
     TrustedChain(String),
     TokenIdConfig(BytesN<32>),
     FlowLimit(BytesN<32>),

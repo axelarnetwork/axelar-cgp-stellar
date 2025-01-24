@@ -97,7 +97,7 @@ fn deploy_remote_interchain_token_succeeds() {
 fn deploy_remote_interchain_token_fails_when_paused() {
     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_deploy_remote_interchain_token(
