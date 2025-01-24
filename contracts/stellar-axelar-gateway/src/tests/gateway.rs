@@ -171,6 +171,23 @@ fn approve_messages_fail_empty_messages() {
 }
 
 #[test]
+fn approve_messages_fails_when_contract_is_paused() {
+    let (env, signers, client) = setup_env(1, randint(1, 10));
+
+    assert_auth!(client.owner(), client.pause());
+
+    let (message, _) = generate_test_message(&env);
+    let messages = vec![&env, message];
+    let data_hash = get_approve_hash(&env, messages.clone());
+    let proof = generate_proof(&env, data_hash, signers);
+
+    assert_contract_err!(
+        client.try_approve_messages(&messages, &proof),
+        ContractError::ContractPaused
+    );
+}
+
+#[test]
 fn approve_messages_skip_duplicate_message() {
     let (env, signers, client) = setup_env(1, randint(1, 10));
     let (message, _) = generate_test_message(&env);
