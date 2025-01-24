@@ -143,7 +143,7 @@ impl AxelarGatewayInterface for AxelarGateway {
 
         let data_hash: BytesN<32> = env
             .crypto()
-            .keccak256(&(CommandType::ApproveMessages, messages.clone()).to_xdr(&env))
+            .keccak256(&(CommandType::ApproveMessages, messages.clone()).to_xdr(env))
             .into();
 
         auth::validate_proof(env, &data_hash, proof)?;
