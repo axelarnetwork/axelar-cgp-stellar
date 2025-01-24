@@ -22,8 +22,8 @@ pub struct TestSignerSet {
 
 pub fn setup_gateway<'a>(
     env: &Env,
-    previous_signers_retention: u32,
-    num_signers: u32,
+    previous_signers_retention: u64,
+    num_signers: u64,
 ) -> (TestSignerSet, AxelarGatewayClient<'a>) {
     let owner = Address::generate(env);
     let operator = Address::generate(env);
@@ -38,7 +38,7 @@ pub fn setup_gateway<'a>(
             operator,
             &signer_set.domain_separator,
             minimum_rotation_delay,
-            previous_signers_retention as u64,
+            previous_signers_retention,
             initial_signers,
         ),
     );
@@ -79,13 +79,13 @@ pub fn generate_test_message_with_rng(
     )
 }
 
-pub fn randint(a: u32, b: u32) -> u32 {
+pub fn randint(a: u64, b: u64) -> u64 {
     rand::thread_rng().gen_range(a..b)
 }
 
 pub fn generate_signers_set(
     env: &Env,
-    num_signers: u32,
+    num_signers: u64,
     domain_separator: BytesN<32>,
 ) -> TestSignerSet {
     generate_signers_set_with_rng(env, num_signers, domain_separator, rand::thread_rng())
@@ -93,7 +93,7 @@ pub fn generate_signers_set(
 
 pub fn generate_signers_set_with_rng(
     env: &Env,
-    num_signers: u32,
+    num_signers: u64,
     domain_separator: BytesN<32>,
     mut rng: impl Rng + rand::CryptoRng,
 ) -> TestSignerSet {

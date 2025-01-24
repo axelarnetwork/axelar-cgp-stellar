@@ -134,6 +134,18 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 
 #[contractimpl]
 impl AxelarGatewayInterface for AxelarGateway {
+    fn domain_separator(env: &Env) -> BytesN<32> {
+        auth::domain_separator(env)
+    }
+
+    fn minimum_rotation_delay(env: &Env) -> u64 {
+        auth::minimum_rotation_delay(env)
+    }
+
+    fn previous_signers_retention(env: &Env) -> u64 {
+        auth::previous_signers_retention(env)
+    }
+
     fn approve_messages(
         env: &Env,
         messages: Vec<Message>,
