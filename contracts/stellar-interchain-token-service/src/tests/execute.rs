@@ -154,7 +154,7 @@ fn execute_fails_when_paused() {
     ];
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_execute(&source_chain, &message_id, &source_address, &payload,),

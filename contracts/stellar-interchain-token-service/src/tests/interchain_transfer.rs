@@ -62,7 +62,7 @@ fn interchain_transfer_send_succeeds() {
 fn interchain_transfer_send_fails_when_paused() {
     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_interchain_transfer(

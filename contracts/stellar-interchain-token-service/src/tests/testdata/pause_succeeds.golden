@@ -1,9 +1,6 @@
-PauseStatusSetEvent {
-    paused: true,
-}
+PausedEvent
 
 Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
 
-pause_status_set {
-    #[topic] paused: bool,
+paused {
 }

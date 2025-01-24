@@ -40,7 +40,7 @@ fn deploy_interchain_token_succeeds() {
 fn deploy_interchain_token_fails_when_paused() {
     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_deploy_interchain_token(
@@ -117,7 +117,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let (env, client, _, _, _) = setup_env();
 
     let (sender, salt, token_metadata) = dummy_token_params(&env);
-    let minter = Address::generate(&env);
+    let minter = Some(Address::generate(&env));
     let initial_supply = 100;
 
     let deploy_salt = client.interchain_token_deploy_salt(&sender, &salt);
@@ -125,13 +125,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 
     let token_id = assert_auth!(
         &sender,
-        client.deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &Some(minter.clone()),
-        )
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
