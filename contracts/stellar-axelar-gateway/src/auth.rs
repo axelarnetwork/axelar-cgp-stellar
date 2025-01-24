@@ -1,4 +1,3 @@
-use soroban_sdk::crypto::Hash;
 use soroban_sdk::{Bytes, BytesN, Env, Vec};
 use stellar_axelar_std::ensure;
 use stellar_axelar_std::events::Event;
