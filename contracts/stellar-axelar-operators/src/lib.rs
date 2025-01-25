@@ -7,8 +7,6 @@ pub mod error;
 
 mod interface;
 
-pub use contract::{AxelarOperators, AxelarOperatorsClient};
-
 #[cfg(test)]
 mod tests;
 
@@ -23,4 +21,3 @@ cfg_if::cfg_if! {
         pub use contract::{AxelarOperators, AxelarOperatorsClient};
     }
 }
-

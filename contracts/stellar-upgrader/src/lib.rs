@@ -6,8 +6,6 @@ pub mod error;
 
 mod interface;
 
-pub use contract::{Upgrader, UpgraderClient};
-
 #[cfg(test)]
 mod tests;
 

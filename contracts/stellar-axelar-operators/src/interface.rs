@@ -11,8 +11,8 @@ pub trait AxelarOperatorsInterface: OwnableInterface {
 
     /// Add an address as an operator.
     ///
-    /// The operator is authorized to execute any third party contract via this contract. 
-    /// An app can give a privileged role to this contract, which can then allow multiple operators 
+    /// The operator is authorized to execute any third party contract via this contract.
+    /// An app can give a privileged role to this contract, which can then allow multiple operators
     /// to call it, e.g. `refund` on the gas service.
     ///
     /// # Arguments
