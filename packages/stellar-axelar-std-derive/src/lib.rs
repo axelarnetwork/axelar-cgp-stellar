@@ -10,7 +10,7 @@ mod pausable;
 mod upgradable;
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input, DeriveInput, ItemFn};
 use upgradable::MigrationArgs;
 
 /// Implements the Operatable interface for a Soroban contract.
@@ -88,6 +88,41 @@ pub fn derive_pausable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     pausable::pausable(name).into()
+}
+
+/// Ensure that the Stellar contract is not paused before executing the function.
+///
+/// The first argument to the function must be `env`, and a `ContractError` error type must be defined in scope,
+/// with a `ContractPaused` variant.
+///
+/// # Example
+/// ```rust,ignore
+/// # mod test {
+/// # use soroban_sdk::{contract, contractimpl, Address, Env};
+/// use stellar_axelar_std_derive::when_not_paused;
+///
+/// #[contracttype]
+/// pub enum ContractError {
+///     ContractPaused = 1,
+/// }
+///
+/// #[contract]
+/// #[derive(Pausable)]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///     #[when_not_paused]
+///     pub fn transfer(env: &Env, to: Address, amount: String) {
+///         // ... transfer logic ...
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input_fn = parse_macro_input!(item as ItemFn);
+
+    pausable::when_not_paused_impl(input_fn).into()
 }
 
 /// Implements the Upgradable and Migratable interfaces for a Soroban contract.
