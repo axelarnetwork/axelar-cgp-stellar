@@ -2016,10 +2016,8 @@ name = "stellar-axelar-std-derive"
 version = "0.2.1"
 dependencies = [
  "heck",
- "paste",
  "proc-macro2",
  "quote",
- "soroban-sdk",
  "syn 2.0.87",
 ]
 
