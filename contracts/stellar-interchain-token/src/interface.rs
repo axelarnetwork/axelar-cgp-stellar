@@ -19,15 +19,12 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// * `to` - The address to which the tokens will be minted.
     /// * `amount` - The amount of tokens to be minted.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::NotMinter`: If the specified minter is not authorized to mint tokens.
-    /// - `ContractError::InvalidAmount`: If the specified amount is invalid (e.g., negative).
+    /// - [`ContractError::NotMinter`]: If the specified minter is not authorized to mint tokens.
+    /// - [`ContractError::InvalidAmount`]: If the specified amount is invalid (e.g. negative).
     ///
     /// # Authorization
-    /// - The `minter` address must authenticate.
+    /// - The `minter` address must authorize.
     fn mint_from(
         env: &Env,
         minter: Address,
@@ -41,7 +38,7 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// * `minter` - The address to be added as a minter.
     ///
     /// # Authorization
-    /// - Must be called by [`Self::owner`].
+    /// - [`Self::owner`] must authorize.
     fn add_minter(env: &Env, minter: Address);
 
     /// Removes a new minter from the Interchain Token contract.
@@ -50,6 +47,6 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// * `minter` - The address to be added as a minter.
     ///
     /// # Authorization
-    /// - Must be called by [`Self::owner`].
+    /// - [`Self::owner`] must authorize.
     fn remove_minter(env: &Env, minter: Address);
 }

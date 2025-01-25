@@ -28,22 +28,17 @@ pub trait AxelarGatewayInterface:
     /// * `messages` - A vector of messages to be approved.
     /// * `proof` - The cryptographic proof used to validate the approval.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::EmptyMessages`: If the provided messages vector is empty.
-    /// - Any error propagated from `auth::validate_proof`.
+    /// - [`ContractError::EmptyMessages`]: If the provided messages vector is empty.
+    /// - Any error from `auth::validate_proof` due to an invalid proof.
     fn approve_messages(
         env: &Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError>;
 
-    /// Rotates the signers for the contract.
+    /// Rotates to `signers` if the `proof` is valid.
     ///
-    /// This function allows the rotation of signers for the contract.
-    /// It validates the provided proof and ensures that the signers are the latest.
     /// If `bypass_rotation_delay` is set to true, the `operator` must authorize the rotation.
     ///
     /// # Arguments
@@ -51,15 +46,12 @@ pub trait AxelarGatewayInterface:
     /// * `proof` - The cryptographic proof used to validate the rotation.
     /// * `bypass_rotation_delay` - A boolean indicating whether to bypass the rotation delay.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::NotLatestSigners`: If the provided signers are not the latest and `bypass_rotation_delay` is false.
-    /// - Any error propagated from `auth::validate_proof`.
+    /// - [`ContractError::NotLatestSigners`]: If the provided signers are not the latest and `bypass_rotation_delay` is false.
+    /// - Any error from `auth::validate_proof` due to invalid proof.
     ///
     /// # Authorization
-    /// - The `operator` must authenticate if `bypass_rotation_delay` is true.
+    /// - The `operator` must authorize if `bypass_rotation_delay` is true.
     fn rotate_signers(
         env: &Env,
         signers: WeightedSigners,

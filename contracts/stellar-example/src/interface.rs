@@ -1,9 +1,10 @@
 use soroban_sdk::{Address, Bytes, BytesN, Env, String};
+use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_std::types::Token;
 
 use crate::contract::ExampleError;
 
-pub trait ExampleInterface {
+pub trait ExampleInterface: AxelarExecutableInterface {
     /// Retrieves the address of the gas service.
     fn gas_service(env: &Env) -> Address;
 
@@ -18,14 +19,8 @@ pub trait ExampleInterface {
     /// * `message` - The message to be sent.
     /// * `gas_token` - The token used to pay for gas during the transaction.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
-    /// # Errors
-    /// - Any error propagated from the `pay_gas` or `call_contract` functions.
-    ///
     /// # Authorization
-    /// - The `caller` address must authenticate.
+    /// - The `caller` address must authorize.
     fn send(
         env: &Env,
         caller: Address,
@@ -48,14 +43,8 @@ pub trait ExampleInterface {
     /// * `recipient` - An optional recipient address on the destination chain.
     /// * `gas_token` - The token used to pay for gas during the transaction.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
-    /// # Errors
-    /// - Any errors propagated during the `interchain_transfer` function.
-    ///
     /// # Authorization
-    /// - The `caller` address must authenticate.
+    /// - The `caller` address must authorize.
     fn send_token(
         env: &Env,
         caller: Address,

@@ -1,48 +1,45 @@
 use soroban_sdk::{contractclient, Address, Env, Symbol, Val, Vec};
+use stellar_axelar_std::interfaces::OwnableInterface;
 
 use crate::error::ContractError;
 
 #[allow(dead_code)]
 #[contractclient(name = "AxelarOperatorsClient")]
-pub trait AxelarOperatorsInterface {
+pub trait AxelarOperatorsInterface: OwnableInterface {
     /// Return whether specified account is an operator.
     fn is_operator(env: Env, account: Address) -> bool;
 
     /// Add an address as an operator.
     ///
-    /// The operator is authorized to execute specific functions (e.g. setting flow limits) for a contract.
+    /// The operator is authorized to execute any third party contract via this contract. 
+    /// An app can give a privileged role to this contract, which can then allow multiple operators 
+    /// to call it, e.g. `refund` on the gas service.
     ///
     /// # Arguments
     /// * `account` - The address to be added as an operator.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::OperatorAlreadyAdded`: If the specified account is already an operator.
+    /// - [`ContractError::OperatorAlreadyAdded`]: If the specified account is already an operator.
     ///
     /// # Authorization
-    /// - Must be called by [`Self::owner`].
+    /// - [`Self::owner`] must authorize.
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError>;
 
     /// Remove an address as an operator.
     ///
-    /// The address is no longer authorized to execute specific operator functions (e.g. setting flow limits) for a contract.
+    /// The address is no longer authorized to execute apps via this contract.
     ///
     /// # Arguments
     /// * `account` - The address to be removed as an operator.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::NotAnOperator`: If the specified account is not an operator.
+    /// - [`ContractError::NotAnOperator`]: If the specified account is not an operator.
     ///
     /// # Authorization
-    /// - Must be called by [`Self::owner`].
+    ///  - [`Self::owner`] must authorize.
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError>;
 
-    /// Execute a function on a contract as an operator.
+    /// Execute a function on any contract as the operators contract.
     ///
     /// # Arguments
     /// * `operator` - The address of the operator executing the function.
@@ -54,11 +51,10 @@ pub trait AxelarOperatorsInterface {
     /// - `Ok(Val)`: Returns the result of the function execution.
     ///
     /// # Errors
-    /// - `ContractError::NotAnOperator`: If the specified operator is not authorized.
-    /// - Any error propagated from `env.invoke_contract`.
+    /// - [`ContractError::NotAnOperator`]: If the specified operator is not authorized.
     ///
     /// # Authorization
-    /// - The `operator` must authenticate.
+    /// - The `operator` must authorize.
     fn execute(
         env: Env,
         operator: Address,
