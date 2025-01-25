@@ -2,7 +2,9 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::extend_instance_ttl;
-use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Pausable, Upgradable};
+use stellar_axelar_std::{
+    ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
+};
 
 use crate::auth;
 use crate::error::ContractError;
@@ -146,13 +148,12 @@ impl AxelarGatewayInterface for AxelarGateway {
         auth::previous_signers_retention(env)
     }
 
+    #[when_not_paused]
     fn approve_messages(
         env: &Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         let data_hash: BytesN<32> = env
             .crypto()
             .keccak256(&(CommandType::ApproveMessages, messages.clone()).to_xdr(env))
