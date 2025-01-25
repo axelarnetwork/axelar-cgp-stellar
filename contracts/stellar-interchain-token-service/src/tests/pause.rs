@@ -1,41 +1,39 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, IntoVal};
+use soroban_sdk::Address;
+use stellar_axelar_std::interfaces::{PausedEvent, UnpausedEvent};
 use stellar_axelar_std::{assert_auth, assert_auth_err, events};
-use stellar_interchain_token_service::event::PauseStatusSetEvent;
-use utils::setup_env;
+
+use super::utils::setup_env;
 
 #[test]
 fn pause_succeeds() {
     let (env, client, _, _, _) = setup_env();
 
-    assert!(!client.is_paused());
+    assert!(!client.paused());
 
-    assert_auth!(client.owner(), client.set_pause_status(&true));
-    goldie::assert!(events::fmt_last_emitted_event::<PauseStatusSetEvent>(&env));
+    assert_auth!(client.owner(), client.pause());
+    goldie::assert!(events::fmt_last_emitted_event::<PausedEvent>(&env));
 
-    assert!(client.is_paused());
+    assert!(client.paused());
 }
 
 #[test]
 fn unpause_succeeds() {
     let (env, client, _, _, _) = setup_env();
 
-    assert_auth!(client.owner(), client.set_pause_status(&true));
+    assert_auth!(client.owner(), client.pause());
 
-    assert!(client.is_paused());
-    assert_auth!(client.owner(), client.set_pause_status(&false));
+    assert!(client.paused());
+    assert_auth!(client.owner(), client.unpause());
 
-    goldie::assert!(events::fmt_last_emitted_event::<PauseStatusSetEvent>(&env));
+    goldie::assert!(events::fmt_last_emitted_event::<UnpausedEvent>(&env));
 
-    assert!(!client.is_paused());
+    assert!(!client.paused());
 }
 
 #[test]
 fn pause_fails_with_invalid_auth() {
     let (env, client, _, _, _) = setup_env();
 
-    let user = Address::generate(&env);
-    assert_auth_err!(user, client.set_pause_status(&true));
+    assert_auth_err!(Address::generate(&env), client.pause());
 }

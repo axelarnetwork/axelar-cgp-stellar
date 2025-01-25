@@ -1,11 +1,13 @@
 mod operatable;
 mod ownable;
+mod pausable;
 #[cfg(test)]
 mod testdata;
 mod upgradable;
 
 pub use operatable::*;
 pub use ownable::*;
+pub use pausable::*;
 pub use upgradable::*;
 
 /// Marker trait for interfaces that should not be implemented by using `contractimpl`.
@@ -40,6 +42,15 @@ mod storage {
         #[contracttype]
         pub enum DataKey {
             Interfaces_Owner,
+        }
+    }
+
+    pub mod pausable {
+        use soroban_sdk::contracttype;
+
+        #[contracttype]
+        pub enum DataKey {
+            Interfaces_Paused,
         }
     }
 

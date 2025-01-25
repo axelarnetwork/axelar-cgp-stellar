@@ -1,5 +1,3 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -8,15 +6,14 @@ use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
-use stellar_interchain_token_service::error::ContractError;
-use stellar_interchain_token_service::event::{
-    InterchainTokenDeployedEvent, InterchainTransferReceivedEvent,
-};
-use stellar_interchain_token_service::testutils::setup_its_token;
-use stellar_interchain_token_service::types::{
+
+use super::utils::{setup_env, TokenMetadataExt};
+use crate::error::ContractError;
+use crate::event::{InterchainTokenDeployedEvent, InterchainTransferReceivedEvent};
+use crate::testutils::setup_its_token;
+use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
 };
-use utils::{setup_env, TokenMetadataExt};
 
 #[test]
 fn interchain_transfer_message_execute_succeeds() {
@@ -157,7 +154,7 @@ fn execute_fails_when_paused() {
     ];
     approve_gateway_messages(&env, &gateway_client, signers, messages);
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_execute(&source_chain, &message_id, &source_address, &payload,),

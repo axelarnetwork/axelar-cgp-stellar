@@ -1964,7 +1964,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stellar-axelar-gas-service"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cfg-if",
  "goldie",
@@ -1975,7 +1975,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-axelar-gateway"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cfg-if",
  "ed25519-dalek",
@@ -1991,7 +1991,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-axelar-operators"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "goldie",
  "paste",
@@ -2001,7 +2001,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-axelar-std"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "goldie",
  "hex",
@@ -2038,7 +2038,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-interchain-token"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cfg-if",
  "goldie",
@@ -2050,7 +2050,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-interchain-token-service"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -2079,7 +2079,7 @@ dependencies = [
 
 [[package]]
 name = "stellar-upgrader"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "soroban-sdk",
  "stellar-axelar-std",

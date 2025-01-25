@@ -1,15 +1,14 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{token, vec, Address, Bytes, BytesN, IntoVal, String};
+use soroban_sdk::{token, vec, Address, Bytes, BytesN, String};
 use stellar_axelar_gateway::testutils::{generate_proof, get_approve_hash};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth_err, events};
-use stellar_interchain_token_service::testutils::setup_its_token;
-use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
-use utils::setup_env;
+
+use super::utils::setup_env;
+use crate::testutils::setup_its_token;
+use crate::types::{HubMessage, InterchainTransfer, Message};
 
 mod test {
     use core::fmt::Debug;
@@ -19,7 +18,9 @@ mod test {
     };
     use stellar_axelar_std::events::Event;
     use stellar_axelar_std::{ensure, InterchainTokenExecutable, IntoEvent};
-    use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
+
+    use crate as stellar_interchain_token_service;
+    use crate::executable::CustomInterchainTokenExecutable;
 
     #[contract]
     #[derive(InterchainTokenExecutable)]

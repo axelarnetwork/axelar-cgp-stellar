@@ -2,7 +2,7 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::extend_instance_ttl;
-use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Pausable, Upgradable};
 
 use crate::auth;
 use crate::error::ContractError;
@@ -13,7 +13,7 @@ use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
 
 #[contract]
-#[derive(Ownable, Upgradable, Operatable)]
+#[derive(Operatable, Ownable, Pausable, Upgradable)]
 pub struct AxelarGateway;
 
 #[contractimpl]
@@ -134,17 +134,31 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 
 #[contractimpl]
 impl AxelarGatewayInterface for AxelarGateway {
+    fn domain_separator(env: &Env) -> BytesN<32> {
+        auth::domain_separator(env)
+    }
+
+    fn minimum_rotation_delay(env: &Env) -> u64 {
+        auth::minimum_rotation_delay(env)
+    }
+
+    fn previous_signers_retention(env: &Env) -> u64 {
+        auth::previous_signers_retention(env)
+    }
+
     fn approve_messages(
-        env: Env,
+        env: &Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError> {
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
+
         let data_hash: BytesN<32> = env
             .crypto()
-            .keccak256(&(CommandType::ApproveMessages, messages.clone()).to_xdr(&env))
+            .keccak256(&(CommandType::ApproveMessages, messages.clone()).to_xdr(env))
             .into();
 
-        auth::validate_proof(&env, &data_hash, proof)?;
+        auth::validate_proof(env, &data_hash, proof)?;
 
         ensure!(!messages.is_empty(), ContractError::EmptyMessages);
 
@@ -155,43 +169,45 @@ impl AxelarGatewayInterface for AxelarGateway {
             };
 
             // Prevent replay if message is already approved/executed
-            let message_approval = Self::message_approval_by_key(&env, key.clone());
+            let message_approval = Self::message_approval_by_key(env, key.clone());
             if message_approval != MessageApprovalValue::NotApproved {
                 continue;
             }
 
             env.storage().persistent().set(
                 &DataKey::MessageApproval(key),
-                &Self::message_approval_hash(&env, message.clone()),
+                &Self::message_approval_hash(env, message.clone()),
             );
 
-            MessageApprovedEvent { message }.emit(&env);
+            MessageApprovedEvent { message }.emit(env);
         }
 
-        extend_instance_ttl(&env);
+        extend_instance_ttl(env);
 
         Ok(())
     }
 
     fn rotate_signers(
-        env: Env,
+        env: &Env,
         signers: WeightedSigners,
         proof: Proof,
         bypass_rotation_delay: bool,
     ) -> Result<(), ContractError> {
         if bypass_rotation_delay {
-            Self::operator(&env).require_auth();
+            Self::operator(env).require_auth();
         }
 
-        let data_hash: BytesN<32> = signers.signers_rotation_hash(&env);
+        let data_hash: BytesN<32> = signers.signers_rotation_hash(env);
 
-        let is_latest_signers = auth::validate_proof(&env, &data_hash, proof)?;
+        let is_latest_signers = auth::validate_proof(env, &data_hash, proof)?;
         ensure!(
             bypass_rotation_delay || is_latest_signers,
             ContractError::NotLatestSigners
         );
 
-        auth::rotate_signers(&env, signers, !bypass_rotation_delay)?;
+        auth::rotate_signers(env, signers, !bypass_rotation_delay)?;
+
+        extend_instance_ttl(env);
 
         Ok(())
     }

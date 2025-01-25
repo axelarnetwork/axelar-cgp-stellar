@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.2.1...stellar-interchain-token-service-v0.2.2)
+
+### 🚜 Refactor
+
+- Move test modules into lib.rs ([#199](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/199)) - ([51a638a](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/51a638a52bdaebc4928aab9e191b28a90e73f338))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(its)* Remove unused IntoVal imports ([#200](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/200)) - ([d68aa73](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/d68aa730fb3f44e559387001a6ebe528fe087666))
+
+### Contributors
+
+* @nbayindirli
+* @AttissNgo
+
 ## [0.2.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.2.0...stellar-interchain-token-service-v0.2.1)
 
 ### ⚙️ Miscellaneous Tasks

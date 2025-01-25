@@ -2,10 +2,11 @@
 //!
 //! This ensures compatibility and prevents cyclic dependency issues during testing and release.
 
-mod event;
+mod into_event;
 mod its_executable;
 mod operatable;
 mod ownable;
+mod pausable;
 mod upgradable;
 
 use proc_macro::TokenStream;
@@ -66,6 +67,27 @@ pub fn derive_ownable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     ownable::ownable(name).into()
+}
+
+/// Implements the Pausable interface for a Soroban contract.
+///
+/// # Example
+/// ```rust,ignore
+/// # mod test {
+/// # use soroban_sdk::{contract, contractimpl, Address, Env};
+/// use stellar_axelar_std_derive::Pausable;
+///
+/// #[contract]
+/// #[derive(Pausable)]
+/// pub struct Contract;
+/// # }
+/// ```
+#[proc_macro_derive(Pausable)]
+pub fn derive_pausable(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    pausable::pausable(name).into()
 }
 
 /// Implements the Upgradable and Migratable interfaces for a Soroban contract.
@@ -166,7 +188,7 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
 pub fn derive_into_event(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    event::derive_event_impl(&input).into()
+    into_event::into_event(&input).into()
 }
 
 #[proc_macro_derive(InterchainTokenExecutable)]

@@ -21,11 +21,6 @@ pub struct FlowLimitSetEvent {
 }
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
-pub struct PauseStatusSetEvent {
-    pub paused: bool,
-}
-
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
 pub struct InterchainTokenDeployedEvent {
     pub token_id: BytesN<32>,
     pub token_address: Address,

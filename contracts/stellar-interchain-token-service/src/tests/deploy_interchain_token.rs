@@ -1,15 +1,14 @@
-mod utils;
-
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, BytesN, Env, IntoVal};
+use soroban_sdk::{Address, BytesN, Env};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
-use stellar_interchain_token_service::error::ContractError;
-use stellar_interchain_token_service::event::InterchainTokenDeployedEvent;
-use stellar_interchain_token_service::types::TokenManagerType;
-use utils::{setup_env, TokenMetadataExt};
+
+use super::utils::{setup_env, TokenMetadataExt};
+use crate::error::ContractError;
+use crate::event::InterchainTokenDeployedEvent;
+use crate::types::TokenManagerType;
 
 fn dummy_token_params(env: &Env) -> (Address, BytesN<32>, TokenMetadata) {
     let sender = Address::generate(env);
@@ -41,7 +40,7 @@ fn deploy_interchain_token_succeeds() {
 fn deploy_interchain_token_fails_when_paused() {
     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().set_pause_status(&true);
+    client.mock_all_auths().pause();
 
     assert_contract_err!(
         client.try_deploy_interchain_token(
@@ -118,7 +117,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let (env, client, _, _, _) = setup_env();
 
     let (sender, salt, token_metadata) = dummy_token_params(&env);
-    let minter = Address::generate(&env);
+    let minter = Some(Address::generate(&env));
     let initial_supply = 100;
 
     let deploy_salt = client.interchain_token_deploy_salt(&sender, &salt);
@@ -126,13 +125,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 
     let token_id = assert_auth!(
         &sender,
-        client.deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &Some(minter.clone()),
-        )
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<

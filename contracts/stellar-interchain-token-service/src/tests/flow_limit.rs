@@ -1,7 +1,5 @@
-mod utils;
-
 use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String};
+use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_gateway::testutils::{approve_gateway_messages, TestSignerSet};
 use stellar_axelar_gateway::types::Message as GatewayMessage;
@@ -9,12 +7,13 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::{assert_auth, assert_contract_err, events};
-use stellar_interchain_token_service::error::ContractError;
-use stellar_interchain_token_service::event::FlowLimitSetEvent;
-use stellar_interchain_token_service::testutils::setup_its_token;
-use stellar_interchain_token_service::types::{HubMessage, InterchainTransfer, Message};
-use stellar_interchain_token_service::InterchainTokenServiceClient;
-use utils::setup_env;
+
+use super::utils::setup_env;
+use crate::error::ContractError;
+use crate::event::FlowLimitSetEvent;
+use crate::testutils::setup_its_token;
+use crate::types::{HubMessage, InterchainTransfer, Message};
+use crate::InterchainTokenServiceClient;
 
 struct GatewayConfig<'a> {
     client: AxelarGatewayClient<'a>,

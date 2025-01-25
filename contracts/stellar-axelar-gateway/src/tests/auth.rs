@@ -1,13 +1,12 @@
 use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::{vec, Address, BytesN, Env, Vec};
-use stellar_axelar_gateway::error::ContractError;
-use stellar_axelar_gateway::testutils::{generate_proof, generate_signers_set, randint};
-use stellar_axelar_gateway::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
-use stellar_axelar_gateway::{AxelarGateway, AxelarGatewayClient};
 use stellar_axelar_std::{assert_auth, assert_contract_err};
 
-mod utils;
-use utils::setup_env;
+use super::utils::setup_env;
+use crate::error::ContractError;
+use crate::testutils::{generate_proof, generate_signers_set, randint};
+use crate::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
+use crate::{AxelarGateway, AxelarGatewayClient};
 
 #[test]
 #[should_panic(expected = "Error(Contract, #13)")] // ContractError::InvalidSigners
@@ -18,7 +17,7 @@ fn initialization_fails_with_empty_signer_set() {
 
     let empty_signer_set = Vec::<WeightedSigners>::new(&env);
     let domain_separator: BytesN<32> = BytesN::random(&env);
-    let previous_signers_retention = randint(0, 10) as u64;
+    let previous_signers_retention = randint(0, 10);
     let minimum_rotation_delay: u64 = 0;
     let initial_signers = empty_signer_set;
 
@@ -46,6 +45,50 @@ fn validate_proof_fails_with_invalid_signatures() {
 
     // NOTE: panic occurs in std function, cannot handle explicitly
     client.validate_proof(&random_hash, &proof);
+}
+
+#[test]
+fn domain_separator_succeeds_with_register() {
+    let (_, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+
+    assert_eq!(client.domain_separator(), signers.domain_separator);
+}
+
+#[test]
+fn minimum_rotation_delay_succeeds_with_register() {
+    let env = &Env::default();
+
+    let owner = Address::generate(env);
+    let operator = Address::generate(env);
+    let signer_set = generate_signers_set(env, randint(1, 10), BytesN::random(env));
+    let initial_signers = vec![&env, signer_set.signers.clone()];
+    let minimum_rotation_delay: u64 = randint(0, u64::MAX);
+
+    let contract_id = env.register(
+        AxelarGateway,
+        (
+            owner,
+            operator,
+            &signer_set.domain_separator,
+            minimum_rotation_delay,
+            randint(0, 10),
+            initial_signers,
+        ),
+    );
+    let client = AxelarGatewayClient::new(env, &contract_id);
+
+    assert_eq!(client.minimum_rotation_delay(), minimum_rotation_delay);
+}
+
+#[test]
+fn previous_signers_retention_succeeds_with_register() {
+    let previous_signers_retention = randint(0, 10);
+    let (_, _, client) = setup_env(previous_signers_retention, randint(1, 10));
+
+    assert_eq!(
+        client.previous_signers_retention(),
+        previous_signers_retention
+    );
 }
 
 #[test]
@@ -349,7 +392,7 @@ fn rotate_signers_fails_with_insufficient_rotation_delay() {
             operator,
             &signers.domain_separator,
             minimum_rotation_delay,
-            previous_signers_retention as u64,
+            previous_signers_retention,
             initial_signers,
         ),
     );

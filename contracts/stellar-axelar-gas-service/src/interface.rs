@@ -1,10 +1,11 @@
 use soroban_sdk::{contractclient, Address, Bytes, Env, String};
+use stellar_axelar_std::interfaces::OperatableInterface;
 use stellar_axelar_std::types::Token;
 
 use crate::error::ContractError;
 
 #[contractclient(name = "AxelarGasServiceClient")]
-pub trait AxelarGasServiceInterface {
+pub trait AxelarGasServiceInterface: OperatableInterface {
     /// Pay for gas using a token for sending a message on a destination chain.
     ///
     /// This function is called on the source chain before calling the gateway to send a message.
@@ -104,7 +105,4 @@ pub trait AxelarGasServiceInterface {
     /// # Authorization
     /// - The `gas_collector` must authenticate.
     fn refund(env: Env, message_id: String, receiver: Address, token: Token);
-
-    /// Returns the address of the `gas_collector`.
-    fn gas_collector(env: &Env) -> Address;
 }

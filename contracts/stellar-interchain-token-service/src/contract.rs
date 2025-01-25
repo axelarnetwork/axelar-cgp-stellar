@@ -11,14 +11,14 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Pausable, Upgradable};
 use stellar_interchain_token::InterchainTokenClient;
 
 use crate::error::ContractError;
 use crate::event::{
     InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
     InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
-    PauseStatusSetEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
+    TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
@@ -36,7 +36,7 @@ const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
 const EXECUTE_WITH_TOKEN: &str = "execute_with_interchain_token";
 
 #[contract]
-#[derive(Operatable, Ownable, Upgradable)]
+#[derive(Operatable, Ownable, Pausable, Upgradable)]
 pub struct InterchainTokenService;
 
 #[contractimpl]
@@ -195,10 +195,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .token_manager_type
     }
 
-    fn is_paused(env: &Env) -> bool {
-        env.storage().instance().has(&DataKey::Paused)
-    }
-
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
         flow_limit::flow_limit(env, token_id)
     }
@@ -221,20 +217,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         flow_limit::set_flow_limit(env, token_id, flow_limit)
     }
 
-    fn set_pause_status(env: &Env, paused: bool) -> Result<(), ContractError> {
-        Self::owner(env).require_auth();
-
-        if paused {
-            env.storage().instance().set(&DataKey::Paused, &());
-        } else {
-            env.storage().instance().remove(&DataKey::Paused);
-        }
-
-        PauseStatusSetEvent { paused }.emit(env);
-
-        Ok(())
-    }
-
     fn deploy_interchain_token(
         env: &Env,
         caller: Address,
@@ -243,7 +225,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         initial_supply: i128,
         minter: Option<Address>,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         caller.require_auth();
 
@@ -300,7 +282,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         destination_chain: String,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         caller.require_auth();
 
@@ -313,7 +295,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         env: &Env,
         token_address: Address,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
@@ -351,7 +333,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         spender: Address,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address);
 
@@ -371,7 +353,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         data: Option<Bytes>,
         gas_token: Token,
     ) -> Result<(), ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         ensure!(amount > 0, ContractError::InvalidAmount);
 
@@ -502,7 +484,7 @@ impl InterchainTokenService {
         source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
-        ensure!(!Self::is_paused(env), ContractError::ContractPaused);
+        ensure!(!Self::paused(env), ContractError::ContractPaused);
 
         let (source_chain, message) =
             Self::get_execute_params(env, source_chain, source_address, payload)?;
