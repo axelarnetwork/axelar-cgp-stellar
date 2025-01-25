@@ -177,7 +177,7 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
     upgradable::upgradable(name, args).into()
 }
 
-/// Implements the Event and EventTestUtils traits for a Soroban contract event.
+/// Implements the Event trait for a Stellar contract event.
 ///
 /// Fields without a `#[data]` attribute are used as topics, while fields with `#[data]` are used as event data.
 /// The event name can be specified with `#[event_name(...)]` or will default to the struct name in snake_case (minus "Event" suffix).
