@@ -2084,7 +2084,6 @@ dependencies = [
  "goldie",
  "paste",
  "soroban-sdk",
- "soroban-token-sdk",
  "stellar-axelar-std",
 ]
 
