@@ -4,7 +4,7 @@ use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
 use crate::error::ContractError;
 
 #[contractclient(name = "TokenManagerClient")]
-pub trait TokenManagerInterface: OwnableInterface + UpgradableInterface {
+pub trait TokenManagerInterface: UpgradableInterface + OwnableInterface {
     /// Executes a function on the given contract.
     ///
     /// # Arguments

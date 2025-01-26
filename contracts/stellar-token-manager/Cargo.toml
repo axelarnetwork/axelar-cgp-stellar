@@ -12,7 +12,6 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
-soroban-token-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
