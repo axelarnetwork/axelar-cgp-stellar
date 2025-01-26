@@ -1,6 +1,6 @@
 #![no_std]
 
-#[cfg(any(test, feature = "testutils"))]
+#[cfg(test)]
 extern crate std;
 
 pub mod error;
@@ -11,7 +11,7 @@ mod interface;
 mod tests;
 
 cfg_if::cfg_if! {
-    if #[cfg(all(feature = "library", not(feature = "testutils")))] {
+    if #[cfg(all(feature = "library", not(test)))] {
         pub use interface::{TokenManagerClient, TokenManagerInterface};
     } else {
         mod contract;
