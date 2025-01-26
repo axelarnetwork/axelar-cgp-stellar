@@ -21,13 +21,9 @@ pub fn setup_its<'a>(
     let its_hub_address = String::from_str(env, "its_hub_address");
     let chain_name = String::from_str(env, "chain_name");
 
-    let interchain_token_wasm_hash = env
-        .deployer()
-        .upload_contract_wasm(INTERCHAIN_TOKEN_WASM);
+    let interchain_token_wasm_hash = env.deployer().upload_contract_wasm(INTERCHAIN_TOKEN_WASM);
 
-    let token_manager_wasm_hash = env
-        .deployer()
-        .upload_contract_wasm(TOKEN_MANAGER_WASM);
+    let token_manager_wasm_hash = env.deployer().upload_contract_wasm(TOKEN_MANAGER_WASM);
 
     let native_token_address = env.register_stellar_asset_contract_v2(owner.clone());
 

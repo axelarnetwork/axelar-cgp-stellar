@@ -118,7 +118,9 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -2));
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -4));
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 

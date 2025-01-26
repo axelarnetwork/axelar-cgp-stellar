@@ -18,7 +18,9 @@ use stellar_interchain_token::InterchainTokenClient;
 
 use crate::error::ContractError;
 use crate::event::{
-    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent, InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent, TokenManagerDeployedEvent, TrustedChainRemovedEvent, TrustedChainSetEvent
+    InterchainTokenDeployedEvent, InterchainTokenDeploymentStartedEvent,
+    InterchainTokenIdClaimedEvent, InterchainTransferReceivedEvent, InterchainTransferSentEvent,
+    TokenManagerDeployedEvent, TrustedChainRemovedEvent, TrustedChainSetEvent,
 };
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
@@ -251,15 +253,16 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         token_metadata.validate()?;
 
-        let token_address = Self::deploy_interchain_token_contract(
-            env,
-            minter,
-            token_id.clone(),
-            token_metadata,
-        );
+        let token_address =
+            Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);
 
         let token_manager_type = TokenManagerType::NativeInterchainToken;
-        let token_manager_address = Self::deploy_token_manager_contract(env, token_id.clone(), token_address.clone(), token_manager_type);
+        let token_manager_address = Self::deploy_token_manager_contract(
+            env,
+            token_id.clone(),
+            token_address.clone(),
+            token_manager_type,
+        );
         let interchain_token_client = InterchainTokenClient::new(env, &token_address);
 
         if initial_supply > 0 {
@@ -314,7 +317,12 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         );
 
         let token_manager_type = TokenManagerType::LockUnlock;
-        let token_manager_address = Self::deploy_token_manager_contract(env, token_id.clone(), token_address.clone(), token_manager_type);
+        let token_manager_address = Self::deploy_token_manager_contract(
+            env,
+            token_id.clone(),
+            token_address.clone(),
+            token_manager_type,
+        );
 
         InterchainTokenIdClaimedEvent {
             token_id: token_id.clone(),
@@ -697,12 +705,13 @@ impl InterchainTokenService {
     ) -> Address {
         let deployed_address = env
             .deployer()
-            .with_address(env.current_contract_address(), Self::token_manager_salt(env, token_id.clone()))
+            .with_address(
+                env.current_contract_address(),
+                Self::token_manager_salt(env, token_id.clone()),
+            )
             .deploy_v2(
                 Self::token_manager_wasm_hash(env),
-                (
-                    env.current_contract_address(),
-                ),
+                (env.current_contract_address(),),
             );
 
         TokenManagerDeployedEvent {
@@ -735,12 +744,7 @@ impl InterchainTokenService {
 
         FlowDirection::In.add_flow(env, token_id.clone(), amount)?;
 
-        token_handler::give_token(
-            env,
-            &destination_address,
-            token_config_value,
-            amount,
-        )?;
+        token_handler::give_token(env, &destination_address, token_config_value, amount)?;
 
         InterchainTransferReceivedEvent {
             source_chain: source_chain.clone(),
@@ -821,7 +825,12 @@ impl InterchainTokenService {
         let token_address =
             Self::deploy_interchain_token_contract(env, minter, token_id.clone(), token_metadata);
 
-        let token_manager_address = Self::deploy_token_manager_contract(env, token_id.clone(), token_address.clone(), TokenManagerType::NativeInterchainToken);
+        let token_manager_address = Self::deploy_token_manager_contract(
+            env,
+            token_id.clone(),
+            token_address.clone(),
+            TokenManagerType::NativeInterchainToken,
+        );
 
         // Transfer minter role to token manager
         let interchain_token_client = InterchainTokenClient::new(env, &token_address);

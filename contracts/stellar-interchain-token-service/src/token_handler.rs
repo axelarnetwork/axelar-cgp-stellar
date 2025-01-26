@@ -4,8 +4,8 @@ use stellar_token_manager::TokenManagerClient;
 
 use crate::error::ContractError;
 use crate::storage_types::TokenIdConfigValue;
-use crate::types::TokenManagerType;
 use crate::token_manager::TokenManagerClientExt;
+use crate::types::TokenManagerType;
 
 pub fn take_token(
     env: &Env,
@@ -21,9 +21,7 @@ pub fn take_token(
 
     match token_manager_type {
         TokenManagerType::NativeInterchainToken => token.burn(sender, &amount),
-        TokenManagerType::LockUnlock => {
-            token.transfer(sender, &token_manager, &amount)
-        }
+        TokenManagerType::LockUnlock => token.transfer(sender, &token_manager, &amount),
     }
 
     Ok(())
@@ -45,7 +43,9 @@ pub fn give_token(
         TokenManagerType::NativeInterchainToken => {
             token_manager.mint(env, &token_address, recipient, amount)
         }
-        TokenManagerType::LockUnlock => token_manager.transfer(env, &token_address, recipient, amount),
+        TokenManagerType::LockUnlock => {
+            token_manager.transfer(env, &token_address, recipient, amount)
+        }
     }
 
     Ok(())

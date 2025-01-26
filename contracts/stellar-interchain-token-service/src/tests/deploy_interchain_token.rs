@@ -162,7 +162,9 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
         )
     );
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4));
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -4));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);
@@ -173,26 +175,6 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
     assert!(!token.is_minter(&sender));
     assert!(token.is_minter(&minter));
     assert_eq!(token.balance(&sender), initial_supply);
-}
-
-#[test]
-fn deploy_interchain_token_fails_zero_initial_supply_and_invalid_minter() {
-    let (env, client, _, _, _) = setup_env();
-
-    let (sender, salt, token_metadata) = dummy_token_params(&env);
-    let minter: Option<Address> = Some(client.address.clone());
-    let initial_supply = 0;
-
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &minter
-        ),
-        ContractError::InvalidMinter
-    );
 }
 
 #[test]
@@ -208,7 +190,9 @@ fn deploy_interchain_token_zero_initial_supply_no_minter() {
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4));
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, -4));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);

@@ -11,10 +11,28 @@ pub trait TokenManagerClientExt {
 
 impl<'a> TokenManagerClientExt for TokenManagerClient<'a> {
     fn transfer(&self, env: &Env, token_address: &Address, recipient: &Address, amount: i128) {
-        let _: Val = self.execute(token_address, &Symbol::new(env, "transfer"), &vec![env, self.address.to_val(), recipient.to_val(), amount.into_val(env)]);
+        let _: Val = self.execute(
+            token_address,
+            &Symbol::new(env, "transfer"),
+            &vec![
+                env,
+                self.address.to_val(),
+                recipient.to_val(),
+                amount.into_val(env),
+            ],
+        );
     }
 
     fn mint(&self, env: &Env, token_address: &Address, recipient: &Address, amount: i128) {
-        let _: Val = self.execute(token_address, &Symbol::new(env, "mint"), &vec![env, recipient.to_val(), amount.into_val(env)]);
+        let _: Val = self.execute(
+            token_address,
+            &Symbol::new(env, "mint_from"),
+            &vec![
+                env,
+                self.address.to_val(),
+                recipient.to_val(),
+                amount.into_val(env),
+            ],
+        );
     }
 }
