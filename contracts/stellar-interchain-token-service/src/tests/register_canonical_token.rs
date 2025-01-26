@@ -18,7 +18,7 @@ fn register_canonical_token_succeeds() {
     let expected_deploy_salt = client.canonical_token_deploy_salt(&token_address);
     let expected_id = client.interchain_token_id(&Address::zero(&env), &expected_deploy_salt);
 
-    assert_eq!(client.register_canonical_token(&token_address), expected_id);
+    assert_eq!(client.mock_all_auths().register_canonical_token(&token_address), expected_id);
     goldie::assert!(events::fmt_last_emitted_event::<
         InterchainTokenIdClaimedEvent,
     >(&env));

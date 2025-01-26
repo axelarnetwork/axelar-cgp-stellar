@@ -3,6 +3,8 @@ use core::fmt::Debug;
 use soroban_sdk::{Address, Bytes, BytesN, String};
 use stellar_axelar_std::IntoEvent;
 
+use crate::types::TokenManagerType;
+
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
 pub struct TrustedChainSetEvent {
     pub chain: String,
@@ -28,6 +30,14 @@ pub struct InterchainTokenDeployedEvent {
     pub symbol: String,
     pub decimals: u32,
     pub minter: Option<Address>,
+}
+
+#[derive(Debug, PartialEq, Eq, IntoEvent)]
+pub struct TokenManagerDeployedEvent {
+    pub token_id: BytesN<32>,
+    pub token_manager_address: Address,
+    pub token_address: Address,
+    pub token_manager_type: TokenManagerType,
 }
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]

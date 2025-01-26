@@ -28,12 +28,12 @@ fn deploy_interchain_token_succeeds() {
 
     assert_auth!(
         &sender,
-        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -2));
+    >(&env, -5));
 }
 
 #[test]
@@ -64,18 +64,20 @@ fn deploy_interchain_token_with_initial_supply_no_minter() {
 
     let token_id = assert_auth!(
         &sender,
-        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -2));
+    >(&env, -5));
 
     let token_address = client.token_address(&token_id);
+    let token_manager = client.token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
-    assert!(token.is_minter(&client.address));
+    assert!(!token.is_minter(&client.address));
+    assert!(token.is_minter(&token_manager));
     assert!(!token.is_minter(&sender));
     assert_eq!(token.balance(&sender), initial_supply);
 }
@@ -101,13 +103,15 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -4));
+    >(&env, -5));
 
     let token_address = client.token_address(&token_id);
+    let token_manager = client.token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
     assert!(!token.is_minter(&client.address));
+    assert!(token.is_minter(&token_manager));
     assert!(token.is_minter(&minter));
     assert_eq!(token.balance(&sender), initial_supply);
 }
@@ -125,12 +129,12 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 
     let token_id = assert_auth!(
         &sender,
-        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
+        client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -4));
+    >(&env, -5));
 
     assert_eq!(token_id, expected_token_id);
     assert_eq!(
@@ -158,13 +162,14 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
         )
     );
 
-    goldie::assert!(events::fmt_last_emitted_event::<InterchainTokenDeployedEvent>(&env));
+    goldie::assert!(events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4));
 
     let token_address = client.token_address(&token_id);
+    let token_manager = client.token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
-    assert!(token.is_minter(&client.address));
+    assert!(token.is_minter(&token_manager));
     assert!(!token.is_minter(&sender));
     assert!(token.is_minter(&minter));
     assert_eq!(token.balance(&sender), initial_supply);
@@ -203,13 +208,14 @@ fn deploy_interchain_token_zero_initial_supply_no_minter() {
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter,)
     );
 
-    goldie::assert!(events::fmt_last_emitted_event::<InterchainTokenDeployedEvent>(&env));
+    goldie::assert!(events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4));
 
     let token_address = client.token_address(&token_id);
+    let token_manager = client.token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
-    assert!(token.is_minter(&client.address));
+    assert!(token.is_minter(&token_manager));
     assert!(!token.is_minter(&sender));
     assert_eq!(token.balance(&sender), initial_supply);
 }

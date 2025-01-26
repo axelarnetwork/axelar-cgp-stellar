@@ -6,7 +6,10 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 
 use crate::{InterchainTokenService, InterchainTokenServiceClient};
 
-pub const INTERCHAIN_TOKEN_WASM_HASH: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
+// Note: On changes to `interchain-token` and `token-manager` crates, recompile via `stellar contract build && ./optimize.sh`
+// and copy the built `target/wasm32-unknown-unknown/release/stellar_*.optimized.wasm` to ../testdata.
+pub const INTERCHAIN_TOKEN_WASM: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
+pub const TOKEN_MANAGER_WASM: &[u8] = include_bytes!("./testdata/token_manager.wasm");
 
 pub fn setup_its<'a>(
     env: &Env,
@@ -18,11 +21,13 @@ pub fn setup_its<'a>(
     let its_hub_address = String::from_str(env, "its_hub_address");
     let chain_name = String::from_str(env, "chain_name");
 
-    // Note: On changes to `interchain-token` crate, recompile it via `stellar contract build && ./optimize.sh`
-    // and copy the built `target/wasm32-unknown-unknown/release/interchain_token.optimized.wasm` to ../testdata.
     let interchain_token_wasm_hash = env
         .deployer()
-        .upload_contract_wasm(INTERCHAIN_TOKEN_WASM_HASH);
+        .upload_contract_wasm(INTERCHAIN_TOKEN_WASM);
+
+    let token_manager_wasm_hash = env
+        .deployer()
+        .upload_contract_wasm(TOKEN_MANAGER_WASM);
 
     let native_token_address = env.register_stellar_asset_contract_v2(owner.clone());
 
@@ -37,6 +42,7 @@ pub fn setup_its<'a>(
             chain_name,
             native_token_address.address(),
             interchain_token_wasm_hash,
+            token_manager_wasm_hash,
         ),
     );
 
