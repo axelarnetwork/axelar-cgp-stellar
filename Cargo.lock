@@ -2062,6 +2062,7 @@ dependencies = [
  "stellar-axelar-gateway",
  "stellar-axelar-std",
  "stellar-interchain-token",
+ "stellar-token-manager",
 ]
 
 [[package]]
