@@ -34,7 +34,7 @@ jobs:
           RUST_BACKTRACE: 1
 
       - name: Run tests for packages
-        run: for C in packages/*; do cd packages/$C; RUSTFLAGS="-D warnings" cargo test --locked; cd ../../ ; done
+        run: for C in packages/*; do cd $C; RUSTFLAGS="-D warnings" cargo test --locked; cd ../../ ; done
         env:
           RUST_BACKTRACE: 1
 
