@@ -4,7 +4,7 @@ use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_std::address::AddressExt;
-use stellar_axelar_std::{auth_invocation, events, mock_auth};
+use stellar_axelar_std::{auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::event::InterchainTokenDeploymentStartedEvent;
@@ -12,7 +12,7 @@ use crate::types::{DeployInterchainToken, HubMessage, Message, TokenManagerType}
 
 #[test]
 fn deploy_remote_canonical_token_succeeds() {
-    let (env, client, gateway, gas_service, _) = setup_env();
+    let (env, client, _, gas_service, _) = setup_env();
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
@@ -54,36 +54,12 @@ fn deploy_remote_canonical_token_succeeds() {
     }
     .abi_encode(&env);
 
-    let transfer_token_auth = mock_auth!(
-        env,
-        spender,
-        gas_token.transfer(spender, gas_service.address, gas_token.amount)
+    let deployed_token_id = client.mock_all_auths().deploy_remote_canonical_token(
+        &token_address,
+        &destination_chain,
+        &spender,
+        &gas_token,
     );
-
-    let pay_gas_auth = mock_auth!(
-        env,
-        spender,
-        gas_service.pay_gas(
-            client.address,
-            its_hub_chain,
-            its_hub_address,
-            payload,
-            spender,
-            gas_token,
-            Bytes::new(&env)
-        ),
-        &[(transfer_token_auth.invoke).clone()]
-    );
-
-    let call_contract_auth = mock_auth!(
-        env,
-        spender,
-        gateway.call_contract(client.address, its_hub_chain, its_hub_address, payload)
-    );
-
-    let deployed_token_id = client
-        .mock_auths(&[pay_gas_auth, call_contract_auth])
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
     assert_eq!(expected_id, deployed_token_id);
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
@@ -104,18 +80,25 @@ fn deploy_remote_canonical_token_succeeds() {
         &env,
         spender,
         gas_service.pay_gas(
-            client.address,
+            client.address.clone(),
             its_hub_chain,
             its_hub_address,
             payload,
-            spender,
-            gas_token,
+            spender.clone(),
+            gas_token.clone(),
             Bytes::new(&env)
         ),
         transfer_auth
     );
 
-    assert_eq!(env.auths(), gas_service_auth);
+    let deploy_remote_canonical_token_auth = auth_invocation!(
+        &env,
+        spender,
+        client.deploy_remote_canonical_token(token_address, destination_chain, spender, gas_token),
+        gas_service_auth
+    );
+
+    assert_eq!(env.auths(), deploy_remote_canonical_token_auth);
 }
 
 #[test]
@@ -131,9 +114,12 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
     client
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
-    client
-        .mock_all_auths_allowing_non_root_auth()
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+    client.mock_all_auths().deploy_remote_canonical_token(
+        &token_address,
+        &destination_chain,
+        &spender,
+        &gas_token,
+    );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
@@ -165,9 +151,12 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
     client
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
-    client
-        .mock_all_auths_allowing_non_root_auth()
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+    client.mock_all_auths().deploy_remote_canonical_token(
+        &token_address,
+        &destination_chain,
+        &spender,
+        &gas_token,
+    );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
@@ -198,7 +187,10 @@ fn deploy_remote_canonical_token_fail_no_actual_token() {
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
 
-    client
-        .mock_all_auths_allowing_non_root_auth()
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &spender, &gas_token);
+    client.mock_all_auths().deploy_remote_canonical_token(
+        &token_address,
+        &destination_chain,
+        &spender,
+        &gas_token,
+    );
 }
