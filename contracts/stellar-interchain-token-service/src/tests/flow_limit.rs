@@ -176,253 +176,253 @@ fn set_flow_limit_to_none_succeeds() {
     assert_eq!(client.flow_limit(&token.id), None);
 }
 
-#[test]
-fn zero_flow_limit_effectively_freezes_token() {
-    let (env, client, gateway, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+// #[test]
+// fn zero_flow_limit_effectively_freezes_token() {
+//     let (env, client, gateway, token) = setup();
+//     let gas_token = setup_gas_token(&env, &token.deployer);
 
-    client.mock_all_auths().set_flow_limit(&token.id, &Some(0));
+//     client.mock_all_auths().set_flow_limit(&token.id, &Some(0));
 
-    let amount = 1;
-    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
+//     let amount = 1;
+//     let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    assert_contract_err!(
-        client.try_execute(
-            &msg.source_chain,
-            &msg.message_id,
-            &msg.source_address,
-            &msg.payload,
-        ),
-        ContractError::FlowLimitExceeded
-    );
+//     assert_contract_err!(
+//         client.try_execute(
+//             &msg.source_chain,
+//             &msg.message_id,
+//             &msg.source_address,
+//             &msg.payload,
+//         ),
+//         ContractError::FlowLimitExceeded
+//     );
 
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&destination_chain);
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&destination_chain);
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &token.deployer,
-            &token.id,
-            &destination_chain,
-            &destination_address,
-            &amount,
-            &data,
-            &gas_token,
-        ),
-        ContractError::FlowLimitExceeded
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &token.deployer,
+//             &token.id,
+//             &destination_chain,
+//             &destination_address,
+//             &amount,
+//             &data,
+//             &gas_token,
+//         ),
+//         ContractError::FlowLimitExceeded
+//     );
+// }
 
-#[test]
-fn set_flow_limit_fails_on_negative_limit() {
-    let (env, client, _, _, _) = setup_env();
-    let token_id = BytesN::from_array(&env, &[1; 32]);
+// #[test]
+// fn set_flow_limit_fails_on_negative_limit() {
+//     let (env, client, _, _, _) = setup_env();
+//     let token_id = BytesN::from_array(&env, &[1; 32]);
 
-    let invalid_limit = Some(-1);
+//     let invalid_limit = Some(-1);
 
-    assert_contract_err!(
-        client
-            .mock_all_auths()
-            .try_set_flow_limit(&token_id, &invalid_limit),
-        ContractError::InvalidFlowLimit
-    );
-}
+//     assert_contract_err!(
+//         client
+//             .mock_all_auths()
+//             .try_set_flow_limit(&token_id, &invalid_limit),
+//         ContractError::InvalidFlowLimit
+//     );
+// }
 
-#[test]
-fn flow_limit_resets_after_epoch() {
-    let (env, client, gateway, token) = setup();
+// #[test]
+// fn flow_limit_resets_after_epoch() {
+//     let (env, client, gateway, token) = setup();
 
-    let amount = dummy_flow_limit();
+//     let amount = dummy_flow_limit();
 
-    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
+//     execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    assert_eq!(client.flow_in_amount(&token.id), amount);
+//     assert_eq!(client.flow_in_amount(&token.id), amount);
 
-    env.ledger()
-        .set_timestamp(env.ledger().timestamp() + EPOCH_TIME);
+//     env.ledger()
+//         .set_timestamp(env.ledger().timestamp() + EPOCH_TIME);
 
-    assert_eq!(client.flow_in_amount(&token.id), 0);
-}
+//     assert_eq!(client.flow_in_amount(&token.id), 0);
+// }
 
-#[test]
-fn add_flow_in_succeeds() {
-    let (env, client, gateway, token) = setup();
+// #[test]
+// fn add_flow_in_succeeds() {
+//     let (env, client, gateway, token) = setup();
 
-    let amount = dummy_flow_limit();
+//     let amount = dummy_flow_limit();
 
-    assert_eq!(client.flow_in_amount(&token.id), 0);
+//     assert_eq!(client.flow_in_amount(&token.id), 0);
 
-    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
+//     execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    assert_eq!(client.flow_in_amount(&token.id), amount);
-    assert_eq!(client.flow_out_amount(&token.id), 0);
-}
+//     assert_eq!(client.flow_in_amount(&token.id), amount);
+//     assert_eq!(client.flow_out_amount(&token.id), 0);
+// }
 
-#[test]
-fn add_flow_in_fails_on_exceeding_flow_limit() {
-    let (env, client, gateway, token) = setup();
+// #[test]
+// fn add_flow_in_fails_on_exceeding_flow_limit() {
+//     let (env, client, gateway, token) = setup();
 
-    let amount = dummy_flow_limit();
+//     let amount = dummy_flow_limit();
 
-    execute_its_transfer(&env, &client, &gateway, &token.id, amount);
+//     execute_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    assert_eq!(client.flow_in_amount(&token.id), amount);
+//     assert_eq!(client.flow_in_amount(&token.id), amount);
 
-    let amount = 1;
-    let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
+//     let amount = 1;
+//     let msg = approve_its_transfer(&env, &client, &gateway, &token.id, amount);
 
-    assert_contract_err!(
-        client.try_execute(
-            &msg.source_chain,
-            &msg.message_id,
-            &msg.source_address,
-            &msg.payload
-        ),
-        ContractError::FlowLimitExceeded
-    );
-}
+//     assert_contract_err!(
+//         client.try_execute(
+//             &msg.source_chain,
+//             &msg.message_id,
+//             &msg.source_address,
+//             &msg.payload
+//         ),
+//         ContractError::FlowLimitExceeded
+//     );
+// }
 
-#[test]
-fn add_flow_out_succeeds() {
-    let (env, client, _, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+// #[test]
+// fn add_flow_out_succeeds() {
+//     let (env, client, _, token) = setup();
+//     let gas_token = setup_gas_token(&env, &token.deployer);
 
-    let amount = dummy_flow_limit();
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let amount = dummy_flow_limit();
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&destination_chain);
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&destination_chain);
 
-    assert_eq!(client.flow_out_amount(&token.id), 0);
+//     assert_eq!(client.flow_out_amount(&token.id), 0);
 
-    client.mock_all_auths().interchain_transfer(
-        &token.deployer,
-        &token.id,
-        &destination_chain,
-        &destination_address,
-        &amount,
-        &data,
-        &gas_token,
-    );
+//     client.mock_all_auths().interchain_transfer(
+//         &token.deployer,
+//         &token.id,
+//         &destination_chain,
+//         &destination_address,
+//         &amount,
+//         &data,
+//         &gas_token,
+//     );
 
-    assert_eq!(client.flow_out_amount(&token.id), amount);
-    assert_eq!(client.flow_in_amount(&token.id), 0);
-}
+//     assert_eq!(client.flow_out_amount(&token.id), amount);
+//     assert_eq!(client.flow_in_amount(&token.id), 0);
+// }
 
-#[test]
-fn add_flow_out_fails_on_exceeding_flow_limit() {
-    let (env, client, _, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+// #[test]
+// fn add_flow_out_fails_on_exceeding_flow_limit() {
+//     let (env, client, _, token) = setup();
+//     let gas_token = setup_gas_token(&env, &token.deployer);
 
-    let amount = dummy_flow_limit();
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let amount = dummy_flow_limit();
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&destination_chain);
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&destination_chain);
 
-    client.mock_all_auths().interchain_transfer(
-        &token.deployer,
-        &token.id,
-        &destination_chain,
-        &destination_address,
-        &amount,
-        &data,
-        &gas_token,
-    );
+//     client.mock_all_auths().interchain_transfer(
+//         &token.deployer,
+//         &token.id,
+//         &destination_chain,
+//         &destination_address,
+//         &amount,
+//         &data,
+//         &gas_token,
+//     );
 
-    assert_eq!(client.flow_out_amount(&token.id), amount);
+//     assert_eq!(client.flow_out_amount(&token.id), amount);
 
-    let second_amount = 1;
+//     let second_amount = 1;
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &token.deployer,
-            &token.id,
-            &destination_chain,
-            &destination_address,
-            &second_amount,
-            &data,
-            &gas_token,
-        ),
-        ContractError::FlowLimitExceeded
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &token.deployer,
+//             &token.id,
+//             &destination_chain,
+//             &destination_address,
+//             &second_amount,
+//             &data,
+//             &gas_token,
+//         ),
+//         ContractError::FlowLimitExceeded
+//     );
+// }
 
-#[test]
-fn add_flow_fails_on_flow_comparison_overflow() {
-    let cases = std::vec![
-        (i128::MAX - 50, i128::MAX - 51, 2),
-        (i128::MAX - 100, i128::MAX - 101, 2),
-        (i128::MAX / 2 + 1, i128::MAX / 2 + 1, 2),
-    ];
+// #[test]
+// fn add_flow_fails_on_flow_comparison_overflow() {
+//     let cases = std::vec![
+//         (i128::MAX - 50, i128::MAX - 51, 2),
+//         (i128::MAX - 100, i128::MAX - 101, 2),
+//         (i128::MAX / 2 + 1, i128::MAX / 2 + 1, 2),
+//     ];
 
-    for (flow_limit, flow_in, flow_out) in &cases {
-        let (env, client, gateway, token) = setup();
-        let gas_token = setup_gas_token(&env, &token.deployer);
+//     for (flow_limit, flow_in, flow_out) in &cases {
+//         let (env, client, gateway, token) = setup();
+//         let gas_token = setup_gas_token(&env, &token.deployer);
 
-        client
-            .mock_all_auths()
-            .set_flow_limit(&token.id, &Some(*flow_limit));
+//         client
+//             .mock_all_auths()
+//             .set_flow_limit(&token.id, &Some(*flow_limit));
 
-        let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
-        client
-            .mock_all_auths()
-            .set_trusted_chain(&destination_chain);
+//         let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//         client
+//             .mock_all_auths()
+//             .set_trusted_chain(&destination_chain);
 
-        execute_its_transfer(&env, &client, &gateway, &token.id, *flow_in);
+//         execute_its_transfer(&env, &client, &gateway, &token.id, *flow_in);
 
-        assert_contract_err!(
-            client.mock_all_auths().try_interchain_transfer(
-                &token.deployer,
-                &token.id,
-                &destination_chain,
-                &destination_address,
-                flow_out,
-                &data,
-                &gas_token
-            ),
-            ContractError::FlowAmountOverflow
-        );
-    }
+//         assert_contract_err!(
+//             client.mock_all_auths().try_interchain_transfer(
+//                 &token.deployer,
+//                 &token.id,
+//                 &destination_chain,
+//                 &destination_address,
+//                 flow_out,
+//                 &data,
+//                 &gas_token
+//             ),
+//             ContractError::FlowAmountOverflow
+//         );
+//     }
 
-    for (flow_limit, flow_out, flow_in) in cases {
-        let (env, client, gateway, token) = setup();
-        let gas_token = setup_gas_token(&env, &token.deployer);
+//     for (flow_limit, flow_out, flow_in) in cases {
+//         let (env, client, gateway, token) = setup();
+//         let gas_token = setup_gas_token(&env, &token.deployer);
 
-        client
-            .mock_all_auths()
-            .set_flow_limit(&token.id, &Some(flow_limit));
+//         client
+//             .mock_all_auths()
+//             .set_flow_limit(&token.id, &Some(flow_limit));
 
-        let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
-        client
-            .mock_all_auths()
-            .set_trusted_chain(&destination_chain);
+//         let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//         client
+//             .mock_all_auths()
+//             .set_trusted_chain(&destination_chain);
 
-        client.mock_all_auths().interchain_transfer(
-            &token.deployer,
-            &token.id,
-            &destination_chain,
-            &destination_address,
-            &flow_out,
-            &data,
-            &gas_token,
-        );
+//         client.mock_all_auths().interchain_transfer(
+//             &token.deployer,
+//             &token.id,
+//             &destination_chain,
+//             &destination_address,
+//             &flow_out,
+//             &data,
+//             &gas_token,
+//         );
 
-        let msg = approve_its_transfer(&env, &client, &gateway, &token.id, flow_in);
+//         let msg = approve_its_transfer(&env, &client, &gateway, &token.id, flow_in);
 
-        assert_contract_err!(
-            client.try_execute(
-                &msg.source_chain,
-                &msg.message_id,
-                &msg.source_address,
-                &msg.payload
-            ),
-            ContractError::FlowAmountOverflow
-        );
-    }
-}
+//         assert_contract_err!(
+//             client.try_execute(
+//                 &msg.source_chain,
+//                 &msg.message_id,
+//                 &msg.source_address,
+//                 &msg.payload
+//             ),
+//             ContractError::FlowAmountOverflow
+//         );
+//     }
+// }

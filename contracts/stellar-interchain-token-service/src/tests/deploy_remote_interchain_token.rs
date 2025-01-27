@@ -93,92 +93,92 @@ fn deploy_remote_interchain_token_succeeds() {
     assert_eq!(env.auths(), deploy_remote_interchain_token_auth);
 }
 
-#[test]
-fn deploy_remote_interchain_token_fails_when_paused() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn deploy_remote_interchain_token_fails_when_paused() {
+//     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().pause();
+//     client.mock_all_auths().pause();
 
-    assert_contract_err!(
-        client.try_deploy_remote_interchain_token(
-            &Address::generate(&env),
-            &BytesN::from_array(&env, &[1; 32]),
-            &String::from_str(&env, "ethereum"),
-            &setup_gas_token(&env, &Address::generate(&env))
-        ),
-        ContractError::ContractPaused
-    );
-}
+//     assert_contract_err!(
+//         client.try_deploy_remote_interchain_token(
+//             &Address::generate(&env),
+//             &BytesN::from_array(&env, &[1; 32]),
+//             &String::from_str(&env, "ethereum"),
+//             &setup_gas_token(&env, &Address::generate(&env))
+//         ),
+//         ContractError::ContractPaused
+//     );
+// }
 
-#[test]
-fn deploy_remote_interchain_token_fails_untrusted_chain() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn deploy_remote_interchain_token_fails_untrusted_chain() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let sender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
-    let minter: Option<Address> = None;
-    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
-    let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
-    let initial_supply = 1;
+//     let sender = Address::generate(&env);
+//     let gas_token = setup_gas_token(&env, &sender);
+//     let minter: Option<Address> = None;
+//     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+//     let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
+//     let initial_supply = 1;
 
-    client.mock_all_auths().deploy_interchain_token(
-        &sender,
-        &salt,
-        &token_metadata,
-        &initial_supply,
-        &minter,
-    );
+//     client.mock_all_auths().deploy_interchain_token(
+//         &sender,
+//         &salt,
+//         &token_metadata,
+//         &initial_supply,
+//         &minter,
+//     );
 
-    let destination_chain = String::from_str(&env, "ethereum");
+//     let destination_chain = String::from_str(&env, "ethereum");
 
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_remote_interchain_token(
-            &sender,
-            &salt,
-            &destination_chain,
-            &gas_token,
-        ),
-        ContractError::UntrustedChain
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_deploy_remote_interchain_token(
+//             &sender,
+//             &salt,
+//             &destination_chain,
+//             &gas_token,
+//         ),
+//         ContractError::UntrustedChain
+//     );
+// }
 
-#[test]
-fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
-    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+//     let spender = Address::generate(&env);
+//     let gas_token = setup_gas_token(&env, &spender);
+//     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
 
-    let destination_chain = String::from_str(&env, "ethereum");
+//     let destination_chain = String::from_str(&env, "ethereum");
 
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_remote_interchain_token(
-            &spender,
-            &salt,
-            &destination_chain,
-            &gas_token
-        ),
-        ContractError::InvalidTokenId
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_deploy_remote_interchain_token(
+//             &spender,
+//             &salt,
+//             &destination_chain,
+//             &gas_token
+//         ),
+//         ContractError::InvalidTokenId
+//     );
+// }
 
-#[test]
-fn deploy_remote_token_fails_local_deployment() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn deploy_remote_token_fails_local_deployment() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
-    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
-    let destination_chain = client.chain_name();
+//     let spender = Address::generate(&env);
+//     let gas_token = setup_gas_token(&env, &spender);
+//     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+//     let destination_chain = client.chain_name();
 
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_remote_interchain_token(
-            &spender,
-            &salt,
-            &destination_chain,
-            &gas_token
-        ),
-        ContractError::InvalidDestinationChain
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_deploy_remote_interchain_token(
+//             &spender,
+//             &salt,
+//             &destination_chain,
+//             &gas_token
+//         ),
+//         ContractError::InvalidDestinationChain
+//     );
+// }

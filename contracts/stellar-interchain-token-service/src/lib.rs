@@ -11,8 +11,8 @@ pub mod types;
 #[cfg(any(test, feature = "testutils"))]
 pub mod testutils;
 
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {

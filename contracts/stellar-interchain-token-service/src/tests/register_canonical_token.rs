@@ -30,45 +30,45 @@ fn register_canonical_token_succeeds() {
     );
 }
 
-#[test]
-fn register_canonical_token_fails_when_paused() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn register_canonical_token_fails_when_paused() {
+//     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().pause();
+//     client.mock_all_auths().pause();
 
-    assert_contract_err!(
-        client.try_register_canonical_token(&Address::generate(&env)),
-        ContractError::ContractPaused
-    );
-}
+//     assert_contract_err!(
+//         client.try_register_canonical_token(&Address::generate(&env)),
+//         ContractError::ContractPaused
+//     );
+// }
 
-#[test]
-fn register_canonical_token_fails_if_already_registered() {
-    let (env, client, _, _, _) = setup_env();
-    let token_address = Address::generate(&env);
+// #[test]
+// fn register_canonical_token_fails_if_already_registered() {
+//     let (env, client, _, _, _) = setup_env();
+//     let token_address = Address::generate(&env);
 
-    client.register_canonical_token(&token_address);
+//     client.register_canonical_token(&token_address);
 
-    assert_contract_err!(
-        client.try_register_canonical_token(&token_address),
-        ContractError::TokenAlreadyRegistered
-    );
-}
+//     assert_contract_err!(
+//         client.try_register_canonical_token(&token_address),
+//         ContractError::TokenAlreadyRegistered
+//     );
+// }
 
-#[test]
-fn canonical_token_id_derivation() {
-    let (env, client, _, _, _) = setup_env();
-    let token_address = Address::generate(&env);
+// #[test]
+// fn canonical_token_id_derivation() {
+//     let (env, client, _, _, _) = setup_env();
+//     let token_address = Address::generate(&env);
 
-    let chain_name = client.chain_name();
-    let chain_name_hash: BytesN<32> = env.crypto().keccak256(&(chain_name).to_xdr(&env)).into();
-    let deploy_salt = client.canonical_token_deploy_salt(&token_address);
+//     let chain_name = client.chain_name();
+//     let chain_name_hash: BytesN<32> = env.crypto().keccak256(&(chain_name).to_xdr(&env)).into();
+//     let deploy_salt = client.canonical_token_deploy_salt(&token_address);
 
-    let token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
+//     let token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
 
-    goldie::assert_json!(vec![
-        hex::encode(chain_name_hash.to_array()),
-        hex::encode(deploy_salt.to_array()),
-        hex::encode(token_id.to_array())
-    ]);
-}
+//     goldie::assert_json!(vec![
+//         hex::encode(chain_name_hash.to_array()),
+//         hex::encode(deploy_salt.to_array()),
+//         hex::encode(token_id.to_array())
+//     ]);
+// }

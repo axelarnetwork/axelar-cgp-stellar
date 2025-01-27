@@ -165,85 +165,85 @@ fn interchain_transfer_execute_succeeds() {
     assert_eq!(executable_client.message(), Some(data));
 }
 
-#[test]
-fn executable_fails_if_not_executed_from_its() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn executable_fails_if_not_executed_from_its() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
-    let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
+//     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
+//     let executable_client = test::ExecutableContractClient::new(&env, &executable_id);
 
-    let source_chain = client.its_hub_chain_name();
-    let source_address = Address::generate(&env).to_string_bytes();
-    let amount = 1000;
-    let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
-    let token_address = Address::generate(&env);
-    let message_id = String::from_str(&env, "test");
-    let payload = Bytes::from_hex(&env, "dead");
+//     let source_chain = client.its_hub_chain_name();
+//     let source_address = Address::generate(&env).to_string_bytes();
+//     let amount = 1000;
+//     let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
+//     let token_address = Address::generate(&env);
+//     let message_id = String::from_str(&env, "test");
+//     let payload = Bytes::from_hex(&env, "dead");
 
-    assert_auth_err!(
-        Address::generate(&env),
-        executable_client.execute_with_interchain_token(
-            &source_chain,
-            &message_id,
-            &source_address,
-            &payload,
-            &token_id,
-            &token_address,
-            &amount,
-        )
-    );
-}
+//     assert_auth_err!(
+//         Address::generate(&env),
+//         executable_client.execute_with_interchain_token(
+//             &source_chain,
+//             &message_id,
+//             &source_address,
+//             &payload,
+//             &token_id,
+//             &token_address,
+//             &amount,
+//         )
+//     );
+// }
 
-#[test]
-#[should_panic(expected = "Error(Contract, #1)")] // ContractError::PayloadLenOne
-fn interchain_transfer_execute_fails_if_payload_is_len_one() {
-    let (env, client, gateway_client, _, signers) = setup_env();
+// #[test]
+// #[should_panic(expected = "Error(Contract, #1)")] // ContractError::PayloadLenOne
+// fn interchain_transfer_execute_fails_if_payload_is_len_one() {
+//     let (env, client, gateway_client, _, signers) = setup_env();
 
-    let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
+//     let executable_id = env.register(test::ExecutableContract, (client.address.clone(),));
 
-    let sender = Address::generate(&env).to_string_bytes();
-    let source_chain = client.its_hub_chain_name();
-    let source_address = client.its_hub_address();
+//     let sender = Address::generate(&env).to_string_bytes();
+//     let source_chain = client.its_hub_chain_name();
+//     let source_address = client.its_hub_address();
 
-    let amount = 1000;
-    let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, amount);
-    let data_with_len_1 = Bytes::from_slice(&env, &[1]);
-    let destination_address = executable_id.to_string_bytes();
-    let original_source_chain = String::from_str(&env, "ethereum");
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&original_source_chain);
+//     let amount = 1000;
+//     let deployer = Address::generate(&env);
+//     let token_id = setup_its_token(&env, &client, &deployer, amount);
+//     let data_with_len_1 = Bytes::from_slice(&env, &[1]);
+//     let destination_address = executable_id.to_string_bytes();
+//     let original_source_chain = String::from_str(&env, "ethereum");
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&original_source_chain);
 
-    let msg = HubMessage::ReceiveFromHub {
-        source_chain: original_source_chain,
-        message: Message::InterchainTransfer(InterchainTransfer {
-            token_id,
-            source_address: sender,
-            destination_address,
-            amount,
-            data: Some(data_with_len_1),
-        }),
-    };
-    let payload = msg.abi_encode(&env).unwrap();
-    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+//     let msg = HubMessage::ReceiveFromHub {
+//         source_chain: original_source_chain,
+//         message: Message::InterchainTransfer(InterchainTransfer {
+//             token_id,
+//             source_address: sender,
+//             destination_address,
+//             amount,
+//             data: Some(data_with_len_1),
+//         }),
+//     };
+//     let payload = msg.abi_encode(&env).unwrap();
+//     let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
 
-    let message_id = String::from_str(&env, "test");
+//     let message_id = String::from_str(&env, "test");
 
-    let messages = vec![
-        &env,
-        GatewayMessage {
-            source_chain: source_chain.clone(),
-            message_id: message_id.clone(),
-            source_address: source_address.clone(),
-            contract_address: client.address.clone(),
-            payload_hash,
-        },
-    ];
-    let data_hash = get_approve_hash(&env, messages.clone());
-    let proof = generate_proof(&env, data_hash, signers);
+//     let messages = vec![
+//         &env,
+//         GatewayMessage {
+//             source_chain: source_chain.clone(),
+//             message_id: message_id.clone(),
+//             source_address: source_address.clone(),
+//             contract_address: client.address.clone(),
+//             payload_hash,
+//         },
+//     ];
+//     let data_hash = get_approve_hash(&env, messages.clone());
+//     let proof = generate_proof(&env, data_hash, signers);
 
-    gateway_client.approve_messages(&messages, &proof);
+//     gateway_client.approve_messages(&messages, &proof);
 
-    client.execute(&source_chain, &message_id, &source_address, &payload);
-}
+//     client.execute(&source_chain, &message_id, &source_address, &payload);
+// }

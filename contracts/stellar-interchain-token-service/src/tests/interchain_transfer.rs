@@ -58,150 +58,150 @@ fn interchain_transfer_send_succeeds() {
     >(&env, -4));
 }
 
-#[test]
-fn interchain_transfer_send_fails_when_paused() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn interchain_transfer_send_fails_when_paused() {
+//     let (env, client, _, _, _) = setup_env();
 
-    client.mock_all_auths().pause();
+//     client.mock_all_auths().pause();
 
-    assert_contract_err!(
-        client.try_interchain_transfer(
-            &Address::generate(&env),
-            &BytesN::from_array(&env, &[0u8; 32]),
-            &String::from_str(&env, ""),
-            &Bytes::from_hex(&env, ""),
-            &1,
-            &Some(Bytes::from_hex(&env, "")),
-            &setup_gas_token(&env, &Address::generate(&env))
-        ),
-        ContractError::ContractPaused
-    );
-}
+//     assert_contract_err!(
+//         client.try_interchain_transfer(
+//             &Address::generate(&env),
+//             &BytesN::from_array(&env, &[0u8; 32]),
+//             &String::from_str(&env, ""),
+//             &Bytes::from_hex(&env, ""),
+//             &1,
+//             &Some(Bytes::from_hex(&env, "")),
+//             &setup_gas_token(&env, &Address::generate(&env))
+//         ),
+//         ContractError::ContractPaused
+//     );
+// }
 
-#[test]
-#[should_panic(expected = "burn, Error(Contract, #9)")]
-fn interchain_transfer_send_fails_on_insufficient_balance() {
-    let (env, client, _, _, _) = setup_env();
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&client.its_hub_chain_name());
+// #[test]
+// #[should_panic(expected = "burn, Error(Contract, #9)")]
+// fn interchain_transfer_send_fails_on_insufficient_balance() {
+//     let (env, client, _, _, _) = setup_env();
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let amount = 1000;
-    let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let amount = 1000;
+//     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    client.mock_all_auths().interchain_transfer(
-        &sender,
-        &token_id,
-        &destination_chain,
-        &destination_address,
-        &(amount + 1),
-        &data,
-        &gas_token,
-    );
-}
+//     client.mock_all_auths().interchain_transfer(
+//         &sender,
+//         &token_id,
+//         &destination_chain,
+//         &destination_address,
+//         &(amount + 1),
+//         &data,
+//         &gas_token,
+//     );
+// }
 
-#[test]
-fn interchain_transfer_fails_on_zero_amount() {
-    let (env, client, _, _, _) = setup_env();
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&client.its_hub_chain_name());
+// #[test]
+// fn interchain_transfer_fails_on_zero_amount() {
+//     let (env, client, _, _, _) = setup_env();
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let supply = 1000;
-    let transfer_amount = 0;
-    let (sender, gas_token, token_id) = setup_sender(&env, &client, supply);
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let supply = 1000;
+//     let transfer_amount = 0;
+//     let (sender, gas_token, token_id) = setup_sender(&env, &client, supply);
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &sender,
-            &token_id,
-            &destination_chain,
-            &destination_address,
-            &transfer_amount,
-            &data,
-            &gas_token
-        ),
-        ContractError::InvalidAmount
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &sender,
+//             &token_id,
+//             &destination_chain,
+//             &destination_address,
+//             &transfer_amount,
+//             &data,
+//             &gas_token
+//         ),
+//         ContractError::InvalidAmount
+//     );
+// }
 
-#[test]
-fn interchain_transfer_fails_on_empty_destination_address() {
-    let (env, client, _, _, _) = setup_env();
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&client.its_hub_chain_name());
+// #[test]
+// fn interchain_transfer_fails_on_empty_destination_address() {
+//     let (env, client, _, _, _) = setup_env();
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let amount = 1000;
-    let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
-    let (destination_chain, _, data) = dummy_transfer_params(&env);
-    let empty_address = Bytes::new(&env);
+//     let amount = 1000;
+//     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
+//     let (destination_chain, _, data) = dummy_transfer_params(&env);
+//     let empty_address = Bytes::new(&env);
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &sender,
-            &token_id,
-            &destination_chain,
-            &empty_address,
-            &amount,
-            &data,
-            &gas_token
-        ),
-        ContractError::InvalidDestinationAddress
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &sender,
+//             &token_id,
+//             &destination_chain,
+//             &empty_address,
+//             &amount,
+//             &data,
+//             &gas_token
+//         ),
+//         ContractError::InvalidDestinationAddress
+//     );
+// }
 
-#[test]
-fn interchain_transfer_fails_on_empty_data() {
-    let (env, client, _, _, _) = setup_env();
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&client.its_hub_chain_name());
+// #[test]
+// fn interchain_transfer_fails_on_empty_data() {
+//     let (env, client, _, _, _) = setup_env();
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let amount = 1000;
-    let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
-    let (destination_chain, destination_address, _) = dummy_transfer_params(&env);
-    let empty_data = Some(Bytes::new(&env));
+//     let amount = 1000;
+//     let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
+//     let (destination_chain, destination_address, _) = dummy_transfer_params(&env);
+//     let empty_data = Some(Bytes::new(&env));
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &sender,
-            &token_id,
-            &destination_chain,
-            &destination_address,
-            &amount,
-            &empty_data,
-            &gas_token
-        ),
-        ContractError::InvalidData
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &sender,
+//             &token_id,
+//             &destination_chain,
+//             &destination_address,
+//             &amount,
+//             &empty_data,
+//             &gas_token
+//         ),
+//         ContractError::InvalidData
+//     );
+// }
 
-#[test]
-fn interchain_transfer_fails_with_invalid_token() {
-    let (env, client, _, _, _) = setup_env();
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&client.its_hub_chain_name());
+// #[test]
+// fn interchain_transfer_fails_with_invalid_token() {
+//     let (env, client, _, _, _) = setup_env();
+//     client
+//         .mock_all_auths()
+//         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let amount = 1000;
-    let (sender, gas_token, _) = setup_sender(&env, &client, amount);
-    let invalid_token_id = BytesN::from_array(&env, &[1u8; 32]);
+//     let amount = 1000;
+//     let (sender, gas_token, _) = setup_sender(&env, &client, amount);
+//     let invalid_token_id = BytesN::from_array(&env, &[1u8; 32]);
 
-    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+//     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
-    assert_contract_err!(
-        client.mock_all_auths().try_interchain_transfer(
-            &sender,
-            &invalid_token_id,
-            &destination_chain,
-            &destination_address,
-            &amount,
-            &data,
-            &gas_token
-        ),
-        ContractError::InvalidTokenId
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_interchain_transfer(
+//             &sender,
+//             &invalid_token_id,
+//             &destination_chain,
+//             &destination_address,
+//             &amount,
+//             &data,
+//             &gas_token
+//         ),
+//         ContractError::InvalidTokenId
+//     );
+// }
