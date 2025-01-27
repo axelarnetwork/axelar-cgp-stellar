@@ -24,10 +24,7 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         panic!("contractstorage can only be used on enums.");
     };
 
-    let transformed_variants: Vec<_> = variants
-        .iter()
-        .map(|variant| transform_variant(variant))
-        .collect();
+    let transformed_variants: Vec<_> = variants.iter().map(transform_variant).collect();
 
     let storage_fns: Vec<_> = variants
         .iter()

@@ -1,5 +1,4 @@
-use soroban_sdk::BytesN;
-use soroban_sdk::{contracttype, Address};
+use soroban_sdk::{contracttype, Address, BytesN};
 use stellar_axelar_std::contractstorage;
 use stellar_interchain_token_service::types::TokenManagerType;
 
