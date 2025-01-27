@@ -33,10 +33,7 @@ impl AxelarExecutableInterface for Example {
     type Error = ExampleError;
 
     fn gateway(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::Gateway)
-            .expect("gateway not found")
+        DataKey::get_gateway(env).expect("gateway not found")
     }
 
     fn execute(
@@ -64,10 +61,7 @@ impl CustomInterchainTokenExecutable for Example {
     type Error = ExampleError;
 
     fn __interchain_token_service(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::InterchainTokenService)
-            .expect("ITS not found")
+        DataKey::get_interchain_token_service(env).expect("ITS not found")
     }
 
     fn __authorized_execute_with_token(
@@ -114,20 +108,13 @@ impl Example {
         gas_service: Address,
         interchain_token_service: Address,
     ) {
-        env.storage().instance().set(&DataKey::Gateway, &gateway);
-        env.storage()
-            .instance()
-            .set(&DataKey::GasService, &gas_service);
-        env.storage()
-            .instance()
-            .set(&DataKey::InterchainTokenService, &interchain_token_service);
+        DataKey::set_gateway(env, &gateway);
+        DataKey::set_gas_service(env, &gas_service);
+        DataKey::set_interchain_token_service(env, &interchain_token_service);
     }
 
     pub fn gas_service(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::GasService)
-            .expect("gas service not found")
+        DataKey::get_gas_service(env).expect("gas service not found")
     }
 
     pub fn send(

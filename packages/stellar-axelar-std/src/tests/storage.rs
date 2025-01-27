@@ -1,0 +1,209 @@
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
+
+use crate as stellar_axelar_std;
+use crate::contractstorage;
+
+#[contract]
+pub struct Contract;
+
+#[contractstorage]
+pub enum DataKey {
+    #[instance]
+    #[value(u32)]
+    Counter,
+
+    #[persistent]
+    #[value(String)]
+    Message { sender: Address },
+
+    #[temporary]
+    #[value(Address)]
+    LastCaller { timestamp: u64 },
+
+    #[persistent]
+    #[value(bool)]
+    Flag { key: String, owner: Address },
+}
+
+#[contractimpl]
+impl Contract {
+    pub const fn __constructor() {}
+
+    pub fn increment_counter(env: &Env) -> u32 {
+        let current_counter = DataKey::get_counter(env).unwrap_or(0);
+        let new_counter = current_counter + 1;
+        DataKey::set_counter(env, &new_counter);
+        new_counter
+    }
+
+    pub fn set_message(env: &Env, sender: Address, message: String) {
+        DataKey::set_message(env, sender, &message);
+    }
+
+    pub fn message(env: &Env, sender: Address) -> Option<String> {
+        DataKey::get_message(env, sender)
+    }
+
+    pub fn set_last_caller(env: &Env, timestamp: u64, caller: Address) {
+        DataKey::set_last_caller(env, timestamp, &caller);
+    }
+
+    pub fn last_caller(env: &Env, timestamp: u64) -> Option<Address> {
+        DataKey::get_last_caller(env, timestamp)
+    }
+
+    pub fn set_flag(env: &Env, key: String, owner: Address, value: bool) {
+        DataKey::set_flag(env, key, owner, &value);
+    }
+
+    pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
+        DataKey::get_flag(env, key, owner)
+    }
+}
+
+#[test]
+fn instance_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    assert_eq!(client.increment_counter(), 1);
+    assert_eq!(client.increment_counter(), 2);
+}
+
+#[test]
+fn persistent_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    let message = String::from_str(&env, "Hello, Soroban!");
+
+    assert_eq!(client.message(&sender), None);
+
+    client.set_message(&sender, &message);
+    assert_eq!(client.message(&sender), Some(message));
+}
+
+#[test]
+fn temporary_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let timestamp = 12345u64;
+    let caller = Address::generate(&env);
+
+    assert_eq!(client.last_caller(&timestamp), None);
+
+    client.set_last_caller(&timestamp, &caller);
+    assert_eq!(client.last_caller(&timestamp), Some(caller));
+}
+
+#[test]
+fn multiple_fields_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let key = String::from_str(&env, "test_key");
+    let owner = Address::generate(&env);
+
+    assert_eq!(client.flag(&key, &owner), None);
+
+    client.set_flag(&key, &owner, &true);
+    assert_eq!(client.flag(&key, &owner), Some(true));
+
+    client.set_flag(&key, &owner, &false);
+    assert_eq!(client.flag(&key, &owner), Some(false));
+}
+
+#[test]
+fn storage_mapping_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender1 = Address::generate(&env);
+    let sender2 = Address::generate(&env);
+    let sender3 = Address::generate(&env);
+    let message1 = String::from_str(&env, "Message 1");
+    let message2 = String::from_str(&env, "Message 2");
+    let message3 = String::from_str(&env, "Message 3");
+
+    client.set_message(&sender1, &message1);
+    client.set_message(&sender2, &message2);
+    client.set_message(&sender3, &message3);
+
+    assert_eq!(client.message(&sender1), Some(message1));
+    assert_eq!(client.message(&sender2), Some(message2));
+    assert_eq!(client.message(&sender3), Some(message3));
+}
+
+#[test]
+fn instance_storage_overwrite_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    assert_eq!(client.increment_counter(), 1);
+    assert_eq!(client.increment_counter(), 2);
+}
+
+#[test]
+fn persistent_storage_overwrite_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    let message1 = String::from_str(&env, "First message");
+    let message2 = String::from_str(&env, "Second message");
+
+    client.set_message(&sender, &message1);
+    assert_eq!(client.message(&sender), Some(message1));
+
+    client.set_message(&sender, &message2);
+    assert_eq!(client.message(&sender), Some(message2));
+}
+
+#[test]
+fn empty_string_keys_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let empty_key = String::from_str(&env, "");
+    let owner = Address::generate(&env);
+
+    client.set_flag(&empty_key, &owner, &true);
+    assert_eq!(client.flag(&empty_key, &owner), Some(true));
+}
+
+#[test]
+fn all_storage_types_interaction_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let counter = client.increment_counter();
+
+    let sender = Address::generate(&env);
+    let message = String::from_str(&env, "Test message");
+    client.set_message(&sender, &message);
+
+    let timestamp = 12345u64;
+    let caller = Address::generate(&env);
+    client.set_last_caller(&timestamp, &caller);
+
+    let key = String::from_str(&env, "test");
+    let owner = Address::generate(&env);
+    client.set_flag(&key, &owner, &true);
+
+    assert_eq!(client.increment_counter(), counter + 1);
+    assert_eq!(client.message(&sender), Some(message));
+    assert_eq!(client.last_caller(&timestamp), Some(caller));
+    assert_eq!(client.flag(&key, &owner), Some(true));
+}

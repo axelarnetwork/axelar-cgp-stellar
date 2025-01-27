@@ -2,6 +2,7 @@
 //!
 //! This ensures compatibility and prevents cyclic dependency issues during testing and release.
 
+mod contractstorage;
 mod into_event;
 mod its_executable;
 mod operatable;
@@ -232,4 +233,59 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     its_executable::its_executable(name).into()
+}
+
+/// Implements a storage interface for a Stellar contract storage enum.
+///
+/// The enum variants define contract data keys, with optional named fields as contract data map keys.
+/// Each variant requires a `#[value(Type)]` attribute to specify the stored value type.
+/// Storage type can be specified with `#[instance]`, `#[persistent]`, or `#[temporary]` attributes (defaults to instance).
+///
+/// # Example
+/// ```rust,ignore
+/// # mod test {
+/// use soroban_sdk::{contract, contractimpl, contractype, Address, Env, String};
+/// use stellar_axelar_std::contractstorage;
+///
+/// #[contractstorage]
+/// #[derive(Clone, Debug)]
+/// pub enum DataKey {
+///     #[instance]
+///     #[value(Address)]
+///     Owner,
+///
+///     #[persistent]
+///     #[value(String)]
+///     TokenName { token_id: u32 },
+///
+///     #[temporary]
+///     #[value(u64)]
+///     LastUpdate { account: Address },
+/// }
+///
+/// #[contract]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///     pub fn __constructor(
+///         env: &Env,
+///         token_id: u32,
+///         name: String,
+///     ) {
+///         // Generates: DataKey::set_token_name(env, token_id, &name);
+///         DataKey::set_token_name(env, token_id, &name);
+///     }
+///
+///     pub fn token_name(env: &Env, token_id: u32) -> Option<String> {
+///         // Generates: DataKey::get_token_name(env, token_id)
+///         DataKey::get_token_name(env, token_id)
+///     }
+/// }
+/// # }
+/// ```
+#[proc_macro_attribute]
+pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    contractstorage::contractstorage(&input).into()
 }
