@@ -3,20 +3,18 @@ use std::vec;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{Address, BytesN};
-use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
 
 use super::utils::setup_env;
 use crate::error::ContractError;
-use crate::event::{InterchainTokenIdClaimedEvent, TokenManagerDeployedEvent};
+use crate::event::TokenManagerDeployedEvent;
 use crate::types::TokenManagerType;
 
 #[test]
 fn register_canonical_token_succeeds() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let expected_deploy_salt = client.canonical_token_deploy_salt(&token_address);
-    let expected_id = client.interchain_token_id(&Address::zero(&env), &expected_deploy_salt);
+    let expected_id = client.canonical_interchain_token_id(&token_address);
 
     assert_eq!(
         client
@@ -24,21 +22,15 @@ fn register_canonical_token_succeeds() {
             .register_canonical_token(&token_address),
         expected_id
     );
-    let interchain_token_id_claimed_event =
-        events::fmt_last_emitted_event::<InterchainTokenIdClaimedEvent>(&env);
     let token_manager_deployed_event =
-        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -2);
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -1);
 
     assert_eq!(client.token_address(&expected_id), token_address);
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
     );
-    goldie::assert!([
-        interchain_token_id_claimed_event,
-        token_manager_deployed_event
-    ]
-    .join("\n\n"));
+    goldie::assert!([token_manager_deployed_event].join("\n\n"));
 }
 
 #[test]
@@ -73,13 +65,10 @@ fn canonical_token_id_derivation() {
 
     let chain_name = client.chain_name();
     let chain_name_hash: BytesN<32> = env.crypto().keccak256(&(chain_name).to_xdr(&env)).into();
-    let deploy_salt = client.canonical_token_deploy_salt(&token_address);
-
-    let token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
+    let token_id = client.canonical_interchain_token_id(&token_address);
 
     goldie::assert_json!(vec![
         hex::encode(chain_name_hash.to_array()),
-        hex::encode(deploy_salt.to_array()),
         hex::encode(token_id.to_array())
     ]);
 }
