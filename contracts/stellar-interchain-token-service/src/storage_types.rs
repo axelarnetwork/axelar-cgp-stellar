@@ -11,6 +11,7 @@ pub enum DataKey {
     ItsHubAddress,
     NativeTokenAddress,
     InterchainTokenWasmHash,
+    TokenManagerWasmHash,
     TrustedChain(String),
     TokenIdConfig(BytesN<32>),
     FlowLimit(BytesN<32>),
@@ -22,6 +23,7 @@ pub enum DataKey {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TokenIdConfigValue {
     pub token_address: Address,
+    pub token_manager: Address,
     pub token_manager_type: TokenManagerType,
 }
 

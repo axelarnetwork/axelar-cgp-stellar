@@ -9,7 +9,9 @@ use stellar_interchain_token::InterchainTokenClient;
 
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::error::ContractError;
-use crate::event::{InterchainTokenDeployedEvent, InterchainTransferReceivedEvent};
+use crate::event::{
+    InterchainTokenDeployedEvent, InterchainTransferReceivedEvent, TokenManagerDeployedEvent,
+};
 use crate::testutils::setup_its_token;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
@@ -118,7 +120,10 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
-    goldie::assert!(events::fmt_last_emitted_event::<InterchainTokenDeployedEvent>(&env));
+    let interchain_token_deployed_event =
+        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4);
+    let token_manager_deployed_event =
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -3);
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
@@ -130,6 +135,12 @@ fn deploy_interchain_token_message_execute_succeeds() {
         client.token_manager_type(&token_id),
         TokenManagerType::NativeInterchainToken
     );
+
+    goldie::assert!([
+        interchain_token_deployed_event,
+        token_manager_deployed_event
+    ]
+    .join("\n\n"));
 }
 
 #[test]
@@ -359,6 +370,56 @@ fn execute_fails_with_untrusted_chain() {
     assert_contract_err!(
         client.try_execute(&source_chain, &message_id, &source_address, &payload),
         ContractError::UntrustedChain
+    );
+}
+
+#[test]
+fn execute_fails_with_invalid_amount() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
+    let source_chain = client.its_hub_chain_name();
+    let source_address = client.its_hub_address();
+    let original_source_chain = String::from_str(&env, "ethereum");
+
+    let invalid_amount = 0;
+    let deployer = Address::generate(&env);
+    let token_id = setup_its_token(&env, &client, &deployer, invalid_amount);
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
+
+    let msg = HubMessage::ReceiveFromHub {
+        source_chain: original_source_chain,
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address: recipient,
+            amount: invalid_amount,
+            data: None,
+        }),
+    };
+    let message_id = String::from_str(&env, "test");
+    let payload = msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    assert_contract_err!(
+        client.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ContractError::InvalidAmount
     );
 }
 

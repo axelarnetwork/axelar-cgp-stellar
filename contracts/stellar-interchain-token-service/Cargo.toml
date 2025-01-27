@@ -19,6 +19,7 @@ stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
 stellar-axelar-std = { workspace = true }
 stellar-interchain-token = { workspace = true, features = ["library"] }
+stellar-token-manager = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
 goldie = { workspace = true }

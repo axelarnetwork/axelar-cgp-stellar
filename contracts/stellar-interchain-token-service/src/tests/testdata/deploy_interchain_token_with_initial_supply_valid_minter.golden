@@ -5,7 +5,7 @@ InterchainTokenDeployedEvent {
     symbol: String(TEST),
     decimals: 6,
     minter: Some(
-        Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5),
+        Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
     ),
 }
 

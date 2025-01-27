@@ -2062,6 +2062,7 @@ dependencies = [
  "stellar-axelar-gateway",
  "stellar-axelar-std",
  "stellar-interchain-token",
+ "stellar-token-manager",
 ]
 
 [[package]]
@@ -2073,6 +2074,17 @@ dependencies = [
  "crate-git-revision",
  "data-encoding",
  "thiserror",
+]
+
+[[package]]
+name = "stellar-token-manager"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "goldie",
+ "paste",
+ "soroban-sdk",
+ "stellar-axelar-std",
 ]
 
 [[package]]

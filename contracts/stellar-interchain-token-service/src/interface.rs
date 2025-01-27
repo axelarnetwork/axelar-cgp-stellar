@@ -36,6 +36,9 @@ pub trait InterchainTokenServiceInterface:
     /// Returns the WASM hash of the token contract used for deploying interchain tokens.
     fn interchain_token_wasm_hash(env: &Env) -> BytesN<32>;
 
+    /// Returns the WASM hash of the token manager contract used for deploying token managers.
+    fn token_manager_wasm_hash(env: &Env) -> BytesN<32>;
+
     /// Returns whether the specified chain is trusted for cross-chain messaging.
     fn is_trusted_chain(env: &Env, chain: String) -> bool;
 
@@ -86,6 +89,9 @@ pub trait InterchainTokenServiceInterface:
 
     /// Returns the address of the token associated with the specified token ID.
     fn token_address(env: &Env, token_id: BytesN<32>) -> Address;
+
+    /// Returns the address of the token manager associated with the specified token ID.
+    fn token_manager(env: &Env, token_id: BytesN<32>) -> Address;
 
     /// Returns the type of the token manager associated with the specified token ID.
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType;
