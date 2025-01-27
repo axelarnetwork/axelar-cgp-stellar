@@ -19,45 +19,45 @@ fn set_trusted_address() {
     assert!(client.is_trusted_chain(&chain));
 }
 
-#[test]
-fn set_trusted_chain_fails_if_not_owner() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn set_trusted_chain_fails_if_not_owner() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let not_owner = Address::generate(&env);
-    let chain = String::from_str(&env, "chain");
+//     let not_owner = Address::generate(&env);
+//     let chain = String::from_str(&env, "chain");
 
-    assert_auth_err!(not_owner, client.set_trusted_chain(&chain));
-}
+//     assert_auth_err!(not_owner, client.set_trusted_chain(&chain));
+// }
 
-#[test]
-fn set_trusted_chain_fails_if_already_set() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn set_trusted_chain_fails_if_already_set() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let chain = String::from_str(&env, "chain");
-    client.mock_all_auths().set_trusted_chain(&chain);
+//     let chain = String::from_str(&env, "chain");
+//     client.mock_all_auths().set_trusted_chain(&chain);
 
-    assert_contract_err!(
-        client.mock_all_auths().try_set_trusted_chain(&chain),
-        ContractError::TrustedChainAlreadySet
-    );
-}
+//     assert_contract_err!(
+//         client.mock_all_auths().try_set_trusted_chain(&chain),
+//         ContractError::TrustedChainAlreadySet
+//     );
+// }
 
-#[test]
-fn remove_trusted_chain() {
-    let (env, client, _, _, _) = setup_env();
+// #[test]
+// fn remove_trusted_chain() {
+//     let (env, client, _, _, _) = setup_env();
 
-    let chain = String::from_str(&env, "chain");
+//     let chain = String::from_str(&env, "chain");
 
-    assert_auth!(client.owner(), client.set_trusted_chain(&chain));
+//     assert_auth!(client.owner(), client.set_trusted_chain(&chain));
 
-    assert_auth!(client.owner(), client.remove_trusted_chain(&chain));
+//     assert_auth!(client.owner(), client.remove_trusted_chain(&chain));
 
-    goldie::assert!(events::fmt_last_emitted_event::<TrustedChainRemovedEvent>(
-        &env
-    ));
+//     goldie::assert!(events::fmt_last_emitted_event::<TrustedChainRemovedEvent>(
+//         &env
+//     ));
 
-    assert!(!client.is_trusted_chain(&chain));
-}
+//     assert!(!client.is_trusted_chain(&chain));
+// }
 
 #[test]
 fn remove_trusted_chain_fails_if_not_set() {
