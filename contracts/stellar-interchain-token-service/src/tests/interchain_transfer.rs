@@ -1,4 +1,5 @@
 use soroban_sdk::testutils::Address as _;
+use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gas_service::testutils::setup_gas_token;
 use stellar_axelar_std::traits::BytesExt;
@@ -56,6 +57,58 @@ fn interchain_transfer_send_succeeds() {
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTransferSentEvent,
     >(&env, -4));
+}
+
+#[test]
+fn interchain_transfer_canonical_token_send_succeeds() {
+    let (env, client, _, _, _) = setup_env();
+
+    let amount = 1000;
+    let sender: Address = Address::generate(&env);
+    let gas_token = setup_gas_token(&env, &sender);
+    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+
+    let token_address = env
+        .register_stellar_asset_contract_v2(sender.clone())
+        .address();
+
+    let token_id = client
+        .mock_all_auths()
+        .register_canonical_token(&token_address);
+    let token_manager = client.token_manager(&token_id);
+
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&token_manager),
+        0
+    );
+
+    StellarAssetClient::new(&env, &token_address)
+        .mock_all_auths()
+        .mint(&sender, &amount);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    client.mock_all_auths().interchain_transfer(
+        &sender,
+        &token_id,
+        &destination_chain,
+        &destination_address,
+        &amount,
+        &data,
+        &gas_token,
+    );
+
+    // Check that the tokens were escrowed in the token manager
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&token_manager),
+        amount
+    );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTransferSentEvent,
+    >(&env, -3));
 }
 
 #[test]

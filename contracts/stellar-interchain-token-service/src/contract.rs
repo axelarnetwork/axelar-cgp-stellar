@@ -279,9 +279,12 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             ContractError::TokenAlreadyRegistered
         );
 
-        let token_manager_type = TokenManagerType::LockUnlock;
-        let _ =
-            Self::deploy_token_manager(env, token_id.clone(), token_address, token_manager_type);
+        let _ = Self::deploy_token_manager(
+            env,
+            token_id.clone(),
+            token_address,
+            TokenManagerType::LockUnlock,
+        );
 
         Ok(token_id)
     }
