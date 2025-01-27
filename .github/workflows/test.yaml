@@ -29,12 +29,12 @@ jobs:
           shared-key: "cache"
 
       - name: Run tests for contracts
-        run: for C in contracts/*; do cd $C; RUSTFLAGS="-D warnings" cargo test --locked; popd ; done
+        run: for C in contracts/*; do cd $C; RUSTFLAGS="-D warnings" cargo test --locked; cd ../../ ; done
         env:
           RUST_BACKTRACE: 1
 
       - name: Run tests for packages
-        run: for C in packages/*; do cd $C; RUSTFLAGS="-D warnings" cargo test --locked; popd ; done
+        run: for C in packages/*; do cd packages/$C; RUSTFLAGS="-D warnings" cargo test --locked; cd ../../ ; done
         env:
           RUST_BACKTRACE: 1
 
