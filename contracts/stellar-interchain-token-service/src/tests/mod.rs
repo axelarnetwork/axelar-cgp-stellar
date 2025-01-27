@@ -1,7 +1,7 @@
-mod deployer;
 mod deploy_interchain_token;
 mod deploy_remote_canonical_token;
 mod deploy_remote_interchain_token;
+mod deployer;
 mod executable;
 mod execute;
 mod flow_limit;
