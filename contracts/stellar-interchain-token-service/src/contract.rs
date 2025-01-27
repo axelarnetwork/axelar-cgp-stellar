@@ -125,12 +125,9 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     }
 
     fn is_trusted_chain(env: &Env, chain: String) -> bool {
-        let key = DataKey::TrustedChain(chain);
-        let value = env.storage().persistent().has(&key);
-
-        extend_persistent_ttl(env, &key);
-
-        value
+        env.storage()
+            .persistent()
+            .has(&DataKey::TrustedChain(chain))
     }
 
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
@@ -402,12 +399,13 @@ impl InterchainTokenService {
             Self::is_trusted_chain(env, destination_chain.clone()),
             ContractError::UntrustedChain
         );
+        extend_persistent_ttl(env, &DataKey::TrustedChain(destination_chain.clone()));
 
         let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
         let gas_service = AxelarGasServiceClient::new(env, &Self::gas_service(env));
 
         let payload = HubMessage::SendToHub {
-            destination_chain: destination_chain.clone(),
+            destination_chain,
             message,
         }
         .abi_encode(env)?;
@@ -488,6 +486,7 @@ impl InterchainTokenService {
             Self::is_trusted_chain(env, original_source_chain.clone()),
             ContractError::UntrustedChain
         );
+        extend_persistent_ttl(env, &DataKey::TrustedChain(original_source_chain.clone()));
 
         Ok((original_source_chain, message))
     }
