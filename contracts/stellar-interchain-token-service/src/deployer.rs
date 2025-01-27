@@ -17,7 +17,7 @@ fn interchain_token_salt(env: &Env, token_id: BytesN<32>) -> BytesN<32> {
 
 pub fn interchain_token_address(env: &Env, token_id: BytesN<32>) -> Address {
     env.deployer()
-        .with_current_contract(interchain_token_salt(env, token_id.clone()))
+        .with_current_contract(interchain_token_salt(env, token_id))
         .deployed_address()
 }
 
@@ -29,7 +29,7 @@ fn token_manager_salt(env: &Env, token_id: BytesN<32>) -> BytesN<32> {
 
 pub fn token_manager_address(env: &Env, token_id: BytesN<32>) -> Address {
     env.deployer()
-        .with_current_contract(token_manager_salt(env, token_id.clone()))
+        .with_current_contract(token_manager_salt(env, token_id))
         .deployed_address()
 }
 

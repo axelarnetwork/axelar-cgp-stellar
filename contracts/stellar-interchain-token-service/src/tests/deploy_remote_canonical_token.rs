@@ -3,6 +3,7 @@ use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::testutils::setup_gas_token;
+use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
@@ -29,8 +30,6 @@ fn deploy_remote_canonical_token_succeeds() {
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
     );
-    assert_eq!(client.interchain_token_address(&expected_id), token_address);
-    assert_eq!(client.token_manager_address(&expected_id), asset.address());
 
     let destination_chain = String::from_str(&env, "ethereum");
     let its_hub_chain = String::from_str(&env, "axelar");
@@ -127,6 +126,22 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
 }
 
 #[test]
+fn interchain_token_address_is_unchanged() {
+    let (env, client, _, _, _) = setup_env();
+    let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
+
+    goldie::assert!(hex::encode(client.interchain_token_address(&token_id).to_raw_bytes()));
+}
+
+#[test]
+fn token_manager_derivation_is_unchanged() {
+    let (env, client, _, _, _) = setup_env();
+    let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
+
+    goldie::assert!(hex::encode(client.token_manager_address(&token_id).to_raw_bytes()));
+}
+
+#[test]
 fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
     let (env, client, _, _, _) = setup_env();
     let spender = Address::generate(&env);
@@ -172,8 +187,6 @@ fn deploy_remote_canonical_token_fail_no_actual_token() {
     let gas_token = setup_gas_token(&env, &spender);
     let token_address = Address::generate(&env);
     let expected_id = client.canonical_interchain_token_id(&token_address);
-    assert_eq!(client.interchain_token_address(&expected_id), token_address);
-    assert_eq!(client.token_manager_address(&expected_id), gas_token.address);
 
     assert_eq!(client.register_canonical_token(&token_address), expected_id);
     assert_eq!(client.token_address(&expected_id), token_address);

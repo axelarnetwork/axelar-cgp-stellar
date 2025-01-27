@@ -7,6 +7,8 @@ pub trait AddressExt {
     fn zero(env: &Env) -> Address;
 
     fn to_string_bytes(&self) -> Bytes;
+
+    fn to_raw_bytes(&self) -> [u8; STELLAR_ADDRESS_LEN];
 }
 
 impl AddressExt for Address {
@@ -20,6 +22,12 @@ impl AddressExt for Address {
         let mut address_string_bytes = [0u8; STELLAR_ADDRESS_LEN];
         self.to_string().copy_into_slice(&mut address_string_bytes);
         Bytes::from_slice(self.env(), &address_string_bytes)
+    }
+
+    fn to_raw_bytes(&self) -> [u8; STELLAR_ADDRESS_LEN] {
+        let mut address_string_bytes = [0u8; STELLAR_ADDRESS_LEN];
+        self.to_string().copy_into_slice(&mut address_string_bytes);
+        address_string_bytes
     }
 }
 
