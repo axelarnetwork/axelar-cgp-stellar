@@ -35,8 +35,8 @@ pub struct InterchainTokenDeployedEvent {
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
 pub struct TokenManagerDeployedEvent {
     pub token_id: BytesN<32>,
-    pub token_manager_address: Address,
     pub token_address: Address,
+    pub token_manager: Address,
     pub token_manager_type: TokenManagerType,
 }
 

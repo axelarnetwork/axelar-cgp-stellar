@@ -76,12 +76,12 @@ fn execute_succeeds() {
 }
 
 #[test]
-fn execute_fails_unauthorized() {
+fn execute_fails_when_not_owner() {
     let (env, client, target) = setup();
-    let unauthorized = Address::generate(&env);
+    let not_owner = Address::generate(&env);
 
     assert_auth_err!(
-        unauthorized,
+        not_owner,
         client.execute(
             &target,
             &symbol_short!("method"),

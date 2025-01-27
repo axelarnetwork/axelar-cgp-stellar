@@ -36,7 +36,7 @@ const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
 const PREFIX_INTERCHAIN_TOKEN_SALT: &str = "interchain-token-salt";
 const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
 const PREFIX_TOKEN_MANAGER: &str = "token-manager-id";
-const EXECUTE_WITH_TOKEN: &str = "execute_with_interchain_token";
+const EXECUTE_WITH_INTERCHAIN_TOKEN: &str = "execute_with_interchain_token";
 
 #[contract]
 #[derive(Operatable, Ownable, Pausable, Upgradable)]
@@ -716,8 +716,8 @@ impl InterchainTokenService {
 
         TokenManagerDeployedEvent {
             token_id,
-            token_manager_address: deployed_address.clone(),
             token_address,
+            token_manager: deployed_address.clone(),
             token_manager_type,
         }
         .emit(env);
@@ -737,6 +737,8 @@ impl InterchainTokenService {
             data,
         }: InterchainTransfer,
     ) -> Result<(), ContractError> {
+        ensure!(amount > 0, ContractError::InvalidAmount);
+
         let destination_address = Address::from_string_bytes(&destination_address);
 
         let token_config_value = Self::token_id_config_with_extended_ttl(env, token_id.clone())?;
@@ -788,7 +790,7 @@ impl InterchainTokenService {
         // The invocation will panic on error, so we can safely cast the return value to `()` and discard it.
         env.invoke_contract::<()>(
             &destination_address,
-            &Symbol::new(env, EXECUTE_WITH_TOKEN),
+            &Symbol::new(env, EXECUTE_WITH_INTERCHAIN_TOKEN),
             vec![
                 env,
                 source_chain.to_val(),
