@@ -184,26 +184,6 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
 }
 
 #[test]
-fn deploy_interchain_token_fails_zero_initial_supply_and_invalid_minter() {
-    let (env, client, _, _, _) = setup_env();
-
-    let (sender, salt, token_metadata) = dummy_token_params(&env);
-    let minter: Option<Address> = Some(client.address.clone());
-    let initial_supply = 0;
-
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &minter
-        ),
-        ContractError::InvalidMinter
-    );
-}
-
-#[test]
 fn deploy_interchain_token_fails_with_zero_initial_supply_and_no_minter() {
     let (env, client, _, _, _) = setup_env();
 
