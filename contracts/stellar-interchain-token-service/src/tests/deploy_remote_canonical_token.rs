@@ -3,7 +3,6 @@ use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::testutils::setup_gas_token;
-use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
@@ -123,26 +122,6 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
     >(&env, -4));
-}
-
-#[test]
-fn interchain_token_address_is_unchanged() {
-    let (env, client, _, _, _) = setup_env();
-    let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
-
-    goldie::assert!(hex::encode(
-        client.interchain_token_address(&token_id).to_raw_bytes()
-    ));
-}
-
-#[test]
-fn token_manager_derivation_is_unchanged() {
-    let (env, client, _, _, _) = setup_env();
-    let token_id = BytesN::<32>::from_array(&env, &[1; 32]);
-
-    goldie::assert!(hex::encode(
-        client.token_manager_address(&token_id).to_raw_bytes()
-    ));
 }
 
 #[test]

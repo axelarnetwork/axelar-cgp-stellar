@@ -761,9 +761,12 @@ impl InterchainTokenService {
         );
         let interchain_token_client = InterchainTokenClient::new(env, &token_address);
 
-        let token_manager_type = TokenManagerType::NativeInterchainToken;
-        let token_manager =
-            Self::deploy_token_manager(env, token_id, token_address, token_manager_type);
+        let token_manager = Self::deploy_token_manager(
+            env,
+            token_id,
+            token_address,
+            TokenManagerType::NativeInterchainToken,
+        );
 
         match initial_mint {
             Some((initial_supply, recipient)) if initial_supply > 0 => {
