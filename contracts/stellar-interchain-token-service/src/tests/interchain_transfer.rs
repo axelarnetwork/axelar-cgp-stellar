@@ -100,15 +100,15 @@ fn interchain_transfer_canonical_token_send_succeeds() {
         &gas_token,
     );
 
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTransferSentEvent,
+    >(&env, -4));
+
     // Check that the tokens were escrowed in the token manager
     assert_eq!(
         TokenClient::new(&env, &token_address).balance(&token_manager),
         amount
     );
-
-    goldie::assert!(events::fmt_emitted_event_at_idx::<
-        InterchainTransferSentEvent,
-    >(&env, -3));
 }
 
 #[test]
