@@ -240,7 +240,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             );
             Some(minter.clone())
         } else {
-            None
+            return Err(ContractError::InvalidSupply);
         };
 
         let deploy_salt = Self::interchain_token_deploy_salt(env, caller.clone(), salt);
