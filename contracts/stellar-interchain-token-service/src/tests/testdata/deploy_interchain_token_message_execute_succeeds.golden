@@ -19,3 +19,19 @@ interchain_token_deployed {
     #[topic] decimals: u32,
     #[topic] minter: Option < Address >,
 }
+
+TokenManagerDeployedEvent {
+    token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+    token_address: Contract(CBAWP2LID52I5JPA77XDY5EX3ZIL3S4SVHZCMIYLG47ZT6MQQ44V5VVR),
+    token_manager: Contract(CCFYXHU3UMDYC7SFCELM3OSIS6XU6RT44ERJTVE5MYA6Z5GXRLMDJSIM),
+    token_manager_type: NativeInterchainToken,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_manager_deployed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] token_manager: Address,
+    #[topic] token_manager_type: TokenManagerType,
+}

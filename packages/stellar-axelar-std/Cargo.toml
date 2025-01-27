@@ -20,10 +20,10 @@ goldie = { workspace = true }
 hex = { workspace = true }
 paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
-stellar-axelar-std-derive = { workspace = true, features = ["testutils"] }
+stellar-axelar-std-derive = { workspace = true }
 
 [features]
-testutils = ["soroban-sdk/testutils", "hex", "stellar-axelar-std-derive/testutils"]
+testutils = ["soroban-sdk/testutils", "dep:hex"]
 derive = ["dep:stellar-axelar-std-derive"]
 
 [lints]

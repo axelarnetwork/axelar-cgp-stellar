@@ -1,8 +1,10 @@
-use soroban_sdk::token::{StellarAssetClient, TokenClient};
+use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env};
+use stellar_token_manager::TokenManagerClient;
 
 use crate::error::ContractError;
 use crate::storage_types::TokenIdConfigValue;
+use crate::token_manager::TokenManagerClientExt;
 use crate::types::TokenManagerType;
 
 pub fn take_token(
@@ -10,6 +12,7 @@ pub fn take_token(
     sender: &Address,
     TokenIdConfigValue {
         token_address,
+        token_manager,
         token_manager_type,
     }: TokenIdConfigValue,
     amount: i128,
@@ -18,9 +21,7 @@ pub fn take_token(
 
     match token_manager_type {
         TokenManagerType::NativeInterchainToken => token.burn(sender, &amount),
-        TokenManagerType::LockUnlock => {
-            token.transfer(sender, &env.current_contract_address(), &amount)
-        }
+        TokenManagerType::LockUnlock => token.transfer(sender, &token_manager, &amount),
     }
 
     Ok(())
@@ -31,19 +32,20 @@ pub fn give_token(
     recipient: &Address,
     TokenIdConfigValue {
         token_address,
+        token_manager,
         token_manager_type,
     }: TokenIdConfigValue,
     amount: i128,
 ) -> Result<(), ContractError> {
+    let token_manager = TokenManagerClient::new(env, &token_manager);
+
     match token_manager_type {
         TokenManagerType::NativeInterchainToken => {
-            StellarAssetClient::new(env, &token_address).mint(recipient, &amount)
+            token_manager.mint(env, &token_address, recipient, amount)
         }
-        TokenManagerType::LockUnlock => TokenClient::new(env, &token_address).transfer(
-            &env.current_contract_address(),
-            recipient,
-            &amount,
-        ),
+        TokenManagerType::LockUnlock => {
+            token_manager.transfer(env, &token_address, recipient, amount)
+        }
     }
 
     Ok(())
