@@ -335,6 +335,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         spender: Address,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
+        spender.require_auth();
+
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address);
 
         let token_id =
@@ -601,7 +603,7 @@ impl InterchainTokenService {
     /// - `ContractError::InvalidTokenId`: If the token ID is invalid.
     /// - Errors propagated from `token_metadata`.
     /// - Any error propagated from `pay_gas_and_call_contract`.
-    ///     
+    ///
     /// # Authorization
     /// - The `caller` must authenticate.
     fn deploy_remote_token(
