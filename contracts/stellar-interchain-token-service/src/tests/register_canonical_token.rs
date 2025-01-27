@@ -8,7 +8,7 @@ use stellar_axelar_std::{assert_contract_err, events};
 
 use super::utils::setup_env;
 use crate::error::ContractError;
-use crate::event::InterchainTokenIdClaimedEvent;
+use crate::event::{InterchainTokenIdClaimedEvent, TokenManagerDeployedEvent};
 use crate::types::TokenManagerType;
 
 #[test]
@@ -24,15 +24,21 @@ fn register_canonical_token_succeeds() {
             .register_canonical_token(&token_address),
         expected_id
     );
-    goldie::assert!(events::fmt_last_emitted_event::<
-        InterchainTokenIdClaimedEvent,
-    >(&env));
+    let interchain_token_id_claimed_event =
+        events::fmt_last_emitted_event::<InterchainTokenIdClaimedEvent>(&env);
+    let token_manager_deployed_event =
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -2);
 
     assert_eq!(client.token_address(&expected_id), token_address);
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
     );
+    goldie::assert!([
+        interchain_token_id_claimed_event,
+        token_manager_deployed_event
+    ]
+    .join("\n\n"));
 }
 
 #[test]

@@ -7,7 +7,7 @@ use stellar_interchain_token::InterchainTokenClient;
 
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::error::ContractError;
-use crate::event::InterchainTokenDeployedEvent;
+use crate::event::{InterchainTokenDeployedEvent, TokenManagerDeployedEvent};
 use crate::types::TokenManagerType;
 
 fn dummy_token_params(env: &Env) -> (Address, BytesN<32>, TokenMetadata) {
@@ -30,10 +30,16 @@ fn deploy_interchain_token_succeeds() {
         &sender,
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
+    let interchain_token_deployed_event =
+        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -5);
+    let token_manager_deployed_event =
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -4);
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<
-        InterchainTokenDeployedEvent,
-    >(&env, -5));
+    goldie::assert!([
+        interchain_token_deployed_event,
+        token_manager_deployed_event
+    ]
+    .join("\n\n"));
 }
 
 #[test]

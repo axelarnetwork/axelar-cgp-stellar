@@ -11,3 +11,19 @@ interchain_token_id_claimed {
     #[topic] deployer: Address,
     #[topic] salt: BytesN < 32 >,
 }
+
+TokenManagerDeployedEvent {
+    token_id: BytesN<32>(109, 166, 189, 160, 172, 90, 4, 181, 216, 61, 219, 113, 117, 205, 99, 52, 22, 115, 242, 232, 242, 237, 220, 45, 215, 211, 154, 235, 33, 170, 162, 68),
+    token_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N),
+    token_manager: Contract(CBQHYYADS6KAHHHP34VG5V3AXWFVBIDQLCPUB5OAE6WO4YUEQAXXBMBZ),
+    token_manager_type: LockUnlock,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_manager_deployed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] token_manager: Address,
+    #[topic] token_manager_type: TokenManagerType,
+}

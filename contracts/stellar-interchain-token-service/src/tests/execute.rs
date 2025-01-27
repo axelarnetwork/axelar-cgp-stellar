@@ -9,7 +9,9 @@ use stellar_interchain_token::InterchainTokenClient;
 
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::error::ContractError;
-use crate::event::{InterchainTokenDeployedEvent, InterchainTransferReceivedEvent};
+use crate::event::{
+    InterchainTokenDeployedEvent, InterchainTransferReceivedEvent, TokenManagerDeployedEvent,
+};
 use crate::testutils::setup_its_token;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
@@ -118,9 +120,10 @@ fn deploy_interchain_token_message_execute_succeeds() {
 
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
-    goldie::assert!(events::fmt_emitted_event_at_idx::<
-        InterchainTokenDeployedEvent,
-    >(&env, -4));
+    let interchain_token_deployed_event =
+        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4);
+    let token_manager_deployed_event =
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -3);
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
@@ -132,6 +135,12 @@ fn deploy_interchain_token_message_execute_succeeds() {
         client.token_manager_type(&token_id),
         TokenManagerType::NativeInterchainToken
     );
+
+    goldie::assert!([
+        interchain_token_deployed_event,
+        token_manager_deployed_event
+    ]
+    .join("\n\n"));
 }
 
 #[test]
