@@ -296,7 +296,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     ) -> Result<BytesN<32>, ContractError> {
         spender.require_auth();
 
-        let token_id = Self::canonical_interchain_token_id(env, token_address.clone());
+        let token_id = Self::canonical_interchain_token_id(env, token_address);
 
         Self::deploy_remote_token(env, spender, token_id.clone(), destination_chain, gas_token)?;
 
@@ -589,7 +589,7 @@ impl InterchainTokenService {
         });
 
         InterchainTokenDeploymentStartedEvent {
-            token_id: token_id.clone(),
+            token_id,
             token_address,
             destination_chain: destination_chain.clone(),
             name,
