@@ -82,9 +82,7 @@ fn interchain_transfer_message_canonical_token_execute_succeeds() {
     let amount = 1000;
     let deployer = Address::generate(&env);
 
-    let token_address = env
-        .register_stellar_asset_contract_v2(deployer)
-        .address();
+    let token_address = env.register_stellar_asset_contract_v2(deployer).address();
     let token_id = client
         .mock_all_auths()
         .register_canonical_token(&token_address);
