@@ -108,8 +108,9 @@ fn interchain_transfer_fails_on_zero_amount() {
         .mock_all_auths()
         .set_trusted_chain(&client.its_hub_chain_name());
 
-    let amount = 0;
-    let (sender, gas_token, token_id) = setup_sender(&env, &client, amount);
+    let supply = 1000;
+    let transfer_amount = 0;
+    let (sender, gas_token, token_id) = setup_sender(&env, &client, supply);
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
 
     assert_contract_err!(
@@ -118,7 +119,7 @@ fn interchain_transfer_fails_on_zero_amount() {
             &token_id,
             &destination_chain,
             &destination_address,
-            &amount,
+            &transfer_amount,
             &data,
             &gas_token
         ),
