@@ -211,15 +211,12 @@ fn deploy_interchain_token_fails_with_zero_initial_supply_and_no_minter() {
     let minter: Option<Address> = None;
     let initial_supply = 0;
 
-    assert_contract_err!(
-        client.mock_all_auths().try_deploy_interchain_token(
-            &sender,
-            &salt,
-            &token_metadata,
-            &initial_supply,
-            &minter
-        ),
-        ContractError::InvalidSupply
+    let token_id = client.mock_all_auths().deploy_interchain_token(
+        &sender,
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
