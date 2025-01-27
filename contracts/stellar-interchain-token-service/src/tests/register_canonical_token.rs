@@ -3,7 +3,6 @@ use std::vec;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{Address, BytesN};
-use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_contract_err, events};
 
 use super::utils::setup_env;
@@ -66,13 +65,10 @@ fn canonical_token_id_derivation() {
 
     let chain_name = client.chain_name();
     let chain_name_hash: BytesN<32> = env.crypto().keccak256(&(chain_name).to_xdr(&env)).into();
-    let deploy_salt = client.canonical_token_deploy_salt(&token_address);
-
-    let token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
+    let token_id = client.canonical_interchain_token_id(&token_address);
 
     goldie::assert_json!(vec![
         hex::encode(chain_name_hash.to_array()),
-        hex::encode(deploy_salt.to_array()),
         hex::encode(token_id.to_array())
     ]);
 }

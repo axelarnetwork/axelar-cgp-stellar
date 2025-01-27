@@ -6,16 +6,8 @@ use stellar_axelar_std::events::Event;
 use crate::event::{InterchainTokenDeployedEvent, TokenManagerDeployedEvent};
 use crate::types::TokenManagerType;
 
-const PREFIX_INTERCHAIN_TOKEN_ID: &str = "its-interchain-token-id";
-const PREFIX_CANONICAL_TOKEN_SALT: &str = "canonical-token-salt";
 const PREFIX_INTERCHAIN_TOKEN_SALT: &str = "its-interchain-token-salt";
 const PREFIX_TOKEN_MANAGER: &str = "its-token-manager-salt";
-
-pub fn interchain_token_id(env: &Env, sender: Address, salt: BytesN<32>) -> BytesN<32> {
-    env.crypto()
-        .keccak256(&(PREFIX_INTERCHAIN_TOKEN_ID, sender, salt).to_xdr(env))
-        .into()
-}
 
 fn interchain_token_salt(env: &Env, token_id: BytesN<32>) -> BytesN<32> {
     env.crypto()

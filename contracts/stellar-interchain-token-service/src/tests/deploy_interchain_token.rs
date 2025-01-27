@@ -1,7 +1,6 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env};
 use soroban_token_sdk::metadata::TokenMetadata;
-use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 use stellar_interchain_token::InterchainTokenClient;
 
@@ -130,8 +129,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
     let minter = Some(Address::generate(&env));
     let initial_supply = 100;
 
-    let deploy_salt = client.interchain_token_deploy_salt(&sender, &salt);
-    let expected_token_id = client.interchain_token_id(&Address::zero(&env), &deploy_salt);
+    let expected_token_id = client.interchain_token_id(&sender, &salt);
 
     let token_id = assert_auth!(
         &sender,
