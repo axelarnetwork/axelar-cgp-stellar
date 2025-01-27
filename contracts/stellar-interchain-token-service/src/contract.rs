@@ -11,7 +11,9 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Pausable, Upgradable};
+use stellar_axelar_std::{
+    ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
+};
 use stellar_interchain_token::InterchainTokenClient;
 
 use crate::error::ContractError;
@@ -217,6 +219,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         flow_limit::set_flow_limit(env, token_id, flow_limit)
     }
 
+    #[when_not_paused]
     fn deploy_interchain_token(
         env: &Env,
         caller: Address,
@@ -225,8 +228,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         initial_supply: i128,
         minter: Option<Address>,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         caller.require_auth();
 
         ensure!(initial_supply >= 0, ContractError::InvalidSupply);
@@ -277,6 +278,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Ok(token_id)
     }
 
+    #[when_not_paused]
     fn deploy_remote_interchain_token(
         env: &Env,
         caller: Address,
@@ -284,8 +286,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         destination_chain: String,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         caller.require_auth();
 
         let deploy_salt = Self::interchain_token_deploy_salt(env, caller.clone(), salt);
@@ -293,12 +293,11 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Self::deploy_remote_token(env, caller, deploy_salt, destination_chain, gas_token)
     }
 
+    #[when_not_paused]
     fn register_canonical_token(
         env: &Env,
         token_address: Address,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address.clone());
         let token_id = Self::interchain_token_id(env, Address::zero(env), deploy_salt.clone());
 
@@ -328,6 +327,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Ok(token_id)
     }
 
+    #[when_not_paused]
     fn deploy_remote_canonical_token(
         env: &Env,
         token_address: Address,
@@ -335,8 +335,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         spender: Address,
         gas_token: Token,
     ) -> Result<BytesN<32>, ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         let deploy_salt = Self::canonical_token_deploy_salt(env, token_address);
 
         let token_id =
@@ -345,6 +343,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Ok(token_id)
     }
 
+    #[when_not_paused]
     fn interchain_transfer(
         env: &Env,
         caller: Address,
@@ -355,8 +354,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         data: Option<Bytes>,
         gas_token: Token,
     ) -> Result<(), ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         ensure!(amount > 0, ContractError::InvalidAmount);
 
         ensure!(
@@ -479,6 +476,7 @@ impl InterchainTokenService {
         Ok(())
     }
 
+    #[when_not_paused]
     fn execute_message(
         env: &Env,
         source_chain: String,
@@ -486,8 +484,6 @@ impl InterchainTokenService {
         source_address: String,
         payload: Bytes,
     ) -> Result<(), ContractError> {
-        ensure!(!Self::paused(env), ContractError::ContractPaused);
-
         let (source_chain, message) =
             Self::get_execute_params(env, source_chain, source_address, payload)?;
 

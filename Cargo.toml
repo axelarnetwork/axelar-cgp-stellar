@@ -20,8 +20,8 @@ hex = { version = "0.4", default-features = false }
 paste = { version = "1.0", default-features = false }
 proc-macro2 = { version = "1.0", default-features = false }
 rand = { version = "0.8.5", default-features = false }
-soroban-sdk = { version = "22.0.5" }
-soroban-token-sdk = { version = "22.0.5" }
+soroban-sdk = { version = "22.0.6" }
+soroban-token-sdk = { version = "22.0.6" }
 stellar-axelar-gas-service = { version = "^0.2.2", path = "contracts/stellar-axelar-gas-service" }
 stellar-axelar-gateway = { version = "^0.2.2", path = "contracts/stellar-axelar-gateway" }
 stellar-axelar-operators = { version = "^0.2.2", path = "contracts/stellar-axelar-operators" }

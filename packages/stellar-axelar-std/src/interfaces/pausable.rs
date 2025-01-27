@@ -57,11 +57,19 @@ pub struct UnpausedEvent {}
 #[cfg(test)]
 mod test {
     use soroban_sdk::testutils::Address as _;
-    use soroban_sdk::{contract, contractimpl, Address, Env};
+    use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 
     use super::{PausedEvent, UnpausedEvent};
+    use crate as stellar_axelar_std;
     use crate::interfaces::{OwnableInterface, PausableInterface};
-    use crate::{assert_auth, assert_auth_err, events};
+    use crate::{assert_auth, assert_auth_err, assert_contract_err, events, when_not_paused};
+
+    #[contracterror]
+    #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+    #[repr(u32)]
+    pub enum ContractError {
+        ContractPaused = 1,
+    }
 
     #[contract]
     pub struct Contract;
@@ -96,6 +104,14 @@ mod test {
 
         fn transfer_ownership(env: &Env, new_owner: Address) {
             crate::interfaces::ownable::transfer_ownership::<Self>(env, new_owner)
+        }
+    }
+
+    #[contractimpl]
+    impl Contract {
+        #[when_not_paused]
+        pub fn test(env: &Env) -> Result<u32, ContractError> {
+            Ok(42)
         }
     }
 
@@ -167,5 +183,19 @@ mod test {
         let (env, client) = setup();
 
         assert_auth_err!(Address::generate(&env), client.unpause());
+    }
+
+    #[test]
+    fn test_succeeds_when_not_paused() {
+        let (_, client) = setup();
+        assert_eq!(client.test(), 42);
+    }
+
+    #[test]
+    fn test_fails_when_paused() {
+        let (_, client) = setup();
+
+        client.mock_all_auths().pause();
+        assert_contract_err!(client.try_test(), ContractError::ContractPaused);
     }
 }

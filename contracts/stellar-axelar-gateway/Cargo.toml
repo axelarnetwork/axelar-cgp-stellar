@@ -29,7 +29,7 @@ stellar-axelar-std = { workspace = true, features = ["testutils"] }
 
 [features]
 library = [] # Only export the contract interface
-testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils", "ed25519-dalek", "rand"]
+testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils", "dep:ed25519-dalek", "dep:rand"]
 
 [lints]
 workspace = true
