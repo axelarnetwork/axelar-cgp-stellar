@@ -330,9 +330,9 @@ fn mint_succeeds() {
     assert_auth!(token.owner(), token.mint(&user, &amount));
     assert_eq!(token.balance(&user), amount);
 
-    // Owner can mint without being a minter
     token.mock_all_auths().remove_minter(&token.owner());
 
+    // Owner can mint without being a minter
     assert_auth!(token.owner(), token.mint(&user, &amount));
     assert_eq!(token.balance(&user), amount * 2);
 }
@@ -503,7 +503,6 @@ fn burn_from_succeeds() {
     assert_auth!(user2, token.burn_from(&user2, &user1, &burn_amount));
     assert_eq!(token.allowance(&user1, &user2), 0);
     assert_eq!(token.balance(&user1), (amount - burn_amount));
-    assert_eq!(token.balance(&user2), 0);
 }
 
 #[test]

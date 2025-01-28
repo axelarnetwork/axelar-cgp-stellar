@@ -327,6 +327,6 @@ fn deploy_interchain_token_fails_with_negative_supply() {
             &invalid_supply,
             &None
         ),
-        ContractError::InvalidSupply
+        ContractError::InvalidInitialSupply
     );
 }

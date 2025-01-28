@@ -231,7 +231,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     ) -> Result<BytesN<32>, ContractError> {
         caller.require_auth();
 
-        ensure!(initial_supply >= 0, ContractError::InvalidSupply);
+        ensure!(initial_supply >= 0, ContractError::InvalidInitialSupply);
 
         let token_id = Self::interchain_token_id(env, caller.clone(), salt);
 
@@ -270,7 +270,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     ) -> Result<BytesN<32>, ContractError> {
         let token_id = Self::canonical_interchain_token_id(env, token_address.clone());
 
-        Self::ensure_token_not_deployed(env, token_id.clone())?;
+        Self::ensure_token_not_registered(env, token_id.clone())?;
 
         let _: Address = Self::deploy_token_manager(
             env,
@@ -738,7 +738,7 @@ impl InterchainTokenService {
         token_metadata: TokenMetadata,
         minter: Option<Address>,
     ) -> Result<Address, ContractError> {
-        Self::ensure_token_not_deployed(env, token_id.clone())?;
+        Self::ensure_token_not_registered(env, token_id.clone())?;
 
         let token_address = deployer::deploy_interchain_token(
             env,
@@ -762,7 +762,7 @@ impl InterchainTokenService {
         Ok(token_address)
     }
 
-    fn ensure_token_not_deployed(env: &Env, token_id: BytesN<32>) -> Result<(), ContractError> {
+    fn ensure_token_not_registered(env: &Env, token_id: BytesN<32>) -> Result<(), ContractError> {
         ensure!(
             !env.storage()
                 .persistent()
