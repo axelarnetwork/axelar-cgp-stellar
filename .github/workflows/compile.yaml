@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - releases/**
+      - test/introduce-build-warnings
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
