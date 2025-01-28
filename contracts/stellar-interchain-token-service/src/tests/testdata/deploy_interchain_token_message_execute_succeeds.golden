@@ -1,6 +1,6 @@
 InterchainTokenDeployedEvent {
     token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-    token_address: Contract(CBAWP2LID52I5JPA77XDY5EX3ZIL3S4SVHZCMIYLG47ZT6MQQ44V5VVR),
+    token_address: Contract(CA36KTELKNXBETWXHHYV4C6GMPBTGSWCEQNREQR46T7P3D4WKMICRDU6),
     name: String(Test),
     symbol: String(TEST),
     decimals: 18,
@@ -22,8 +22,8 @@ interchain_token_deployed {
 
 TokenManagerDeployedEvent {
     token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-    token_address: Contract(CBAWP2LID52I5JPA77XDY5EX3ZIL3S4SVHZCMIYLG47ZT6MQQ44V5VVR),
-    token_manager: Contract(CCFYXHU3UMDYC7SFCELM3OSIS6XU6RT44ERJTVE5MYA6Z5GXRLMDJSIM),
+    token_address: Contract(CA36KTELKNXBETWXHHYV4C6GMPBTGSWCEQNREQR46T7P3D4WKMICRDU6),
+    token_manager: Contract(CCSVDGI4C4HI4NXYPFHVGDBMW336KYFMJ7WE75VKRA5LFL5F7EBZTHLZ),
     token_manager_type: NativeInterchainToken,
 }
 

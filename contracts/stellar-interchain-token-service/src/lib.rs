@@ -19,8 +19,10 @@ cfg_if::cfg_if! {
         pub use interface::{InterchainTokenServiceClient, InterchainTokenServiceInterface};
     } else {
         mod abi;
+        mod deployer;
         pub mod event;
         mod storage_types;
+        mod token_id;
         mod token_manager;
         mod token_metadata;
         mod token_handler;

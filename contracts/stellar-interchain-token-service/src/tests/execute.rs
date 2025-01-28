@@ -1,4 +1,5 @@
 use soroban_sdk::testutils::Address as _;
+use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::testutils::approve_gateway_messages;
@@ -69,6 +70,76 @@ fn interchain_transfer_message_execute_succeeds() {
 }
 
 #[test]
+fn interchain_transfer_message_canonical_token_execute_succeeds() {
+    let (env, client, gateway_client, _, signers) = setup_env();
+
+    let sender = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env).to_string_bytes();
+    let source_chain = client.its_hub_chain_name();
+    let source_address = client.its_hub_address();
+    let original_source_chain = String::from_str(&env, "ethereum");
+
+    let amount = 1000;
+    let deployer = Address::generate(&env);
+
+    let token_address = env.register_stellar_asset_contract_v2(deployer).address();
+    let token_id = client
+        .mock_all_auths()
+        .register_canonical_token(&token_address);
+    let token_manager = client.token_manager(&token_id);
+
+    StellarAssetClient::new(&env, &token_address)
+        .mock_all_auths()
+        .mint(&token_manager, &amount);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&original_source_chain);
+
+    let msg = HubMessage::ReceiveFromHub {
+        source_chain: original_source_chain,
+        message: Message::InterchainTransfer(InterchainTransfer {
+            token_id,
+            source_address: sender,
+            destination_address: recipient.clone(),
+            amount,
+            data: None,
+        }),
+    };
+    let message_id = String::from_str(&env, "test");
+    let payload = msg.abi_encode(&env).unwrap();
+    let payload_hash: BytesN<32> = env.crypto().keccak256(&payload).into();
+
+    let messages = vec![
+        &env,
+        GatewayMessage {
+            source_chain: source_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: source_address.clone(),
+            contract_address: client.address.clone(),
+            payload_hash,
+        },
+    ];
+
+    approve_gateway_messages(&env, &gateway_client, signers, messages);
+
+    client.execute(&source_chain, &message_id, &source_address, &payload);
+
+    goldie::assert!(events::fmt_last_emitted_event::<
+        InterchainTransferReceivedEvent,
+    >(&env));
+
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&token_manager),
+        0
+    );
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&Address::from_string_bytes(&recipient)),
+        amount
+    );
+}
+
+#[test]
 fn deploy_interchain_token_message_execute_succeeds() {
     let (env, client, gateway_client, _, signers) = setup_env();
     client
@@ -121,9 +192,9 @@ fn deploy_interchain_token_message_execute_succeeds() {
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
     let interchain_token_deployed_event =
-        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4);
+        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -3);
     let token_manager_deployed_event =
-        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -3);
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -2);
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
@@ -619,6 +690,6 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
 
     assert_contract_err!(
         client.try_execute(&source_chain, &second_message_id, &source_address, &payload),
-        ContractError::TokenAlreadyDeployed
+        ContractError::TokenAlreadyRegistered
     );
 }

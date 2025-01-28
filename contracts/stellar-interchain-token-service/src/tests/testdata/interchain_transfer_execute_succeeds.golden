@@ -3,7 +3,7 @@ ExecutedEvent {
     message_id: String(test),
     source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 89, 82, 69, 53),
     token_id: BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149),
-    token_address: Contract(CBQXZFUKGANX4DCFGMAEZNEIZ6KEN5RRIUPP25SRMZ6WGLVGFAFT5XSD),
+    token_address: Contract(CCSE5RCPZ5456Z6MJFMSTB6NYQOBDD76JVB2ZOFMYEYIXJLORPRHNA6T),
     amount: 1000,
     payload: Bytes(222, 173),
 }

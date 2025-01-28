@@ -1,6 +1,6 @@
 InterchainTokenDeploymentStartedEvent {
-    token_id: BytesN<32>(247, 214, 168, 250, 162, 27, 103, 121, 206, 126, 141, 252, 22, 96, 17, 104, 179, 98, 104, 231, 160, 3, 162, 197, 137, 24, 18, 183, 248, 208, 163, 109),
-    token_address: Contract(CCGZAZST4ZRJ6VF32SF3JQYKSDKDHJ3BITGC7SQNXCQW3K7MH7DJA42S),
+    token_id: BytesN<32>(60, 2, 220, 188, 8, 205, 164, 191, 58, 197, 58, 16, 100, 159, 151, 83, 114, 109, 109, 165, 242, 106, 241, 4, 32, 114, 77, 111, 202, 198, 203, 227),
+    token_address: Contract(CCWZVT7W4B7OUHS6F3MMVHPGHE3ZOJR6QX6HMJHZGGU6M5KBHQFHWCSH),
     destination_chain: String(ethereum),
     name: String(name),
     symbol: String(symbol),

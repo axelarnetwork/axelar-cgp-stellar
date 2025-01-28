@@ -8,8 +8,10 @@ use crate::{InterchainTokenService, InterchainTokenServiceClient};
 
 // Note: On changes to `interchain-token` and `token-manager` crates, recompile via `stellar contract build && ./optimize.sh`
 // and copy the built `target/wasm32-unknown-unknown/release/stellar_*.optimized.wasm` to ../testdata.
-pub const INTERCHAIN_TOKEN_WASM: &[u8] = include_bytes!("./testdata/interchain_token.wasm");
-pub const TOKEN_MANAGER_WASM: &[u8] = include_bytes!("./testdata/token_manager.wasm");
+pub const INTERCHAIN_TOKEN_WASM: &[u8] =
+    include_bytes!("./testdata/stellar_interchain_token.optimized.wasm");
+pub const TOKEN_MANAGER_WASM: &[u8] =
+    include_bytes!("./testdata/stellar_token_manager.optimized.wasm");
 
 pub fn setup_its<'a>(
     env: &Env,
