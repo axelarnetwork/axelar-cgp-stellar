@@ -3,7 +3,6 @@ use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::testutils::setup_gas_token;
-use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::{auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
@@ -23,8 +22,7 @@ fn deploy_remote_canonical_token_succeeds() {
         .mint(&spender, &initial_amount);
 
     let token_address = asset.address();
-    let expected_deploy_salt = client.canonical_token_deploy_salt(&token_address);
-    let expected_id = client.interchain_token_id(&Address::zero(&env), &expected_deploy_salt);
+    let expected_id = client.canonical_interchain_token_id(&token_address);
     assert_eq!(client.register_canonical_token(&token_address), expected_id);
     assert_eq!(client.token_address(&expected_id), token_address);
     assert_eq!(
@@ -171,8 +169,7 @@ fn deploy_remote_canonical_token_fail_no_actual_token() {
     let spender = Address::generate(&env);
     let gas_token = setup_gas_token(&env, &spender);
     let token_address = Address::generate(&env);
-    let expected_deploy_salt = client.canonical_token_deploy_salt(&token_address);
-    let expected_id = client.interchain_token_id(&Address::zero(&env), &expected_deploy_salt);
+    let expected_id = client.canonical_interchain_token_id(&token_address);
 
     assert_eq!(client.register_canonical_token(&token_address), expected_id);
     assert_eq!(client.token_address(&expected_id), token_address);
