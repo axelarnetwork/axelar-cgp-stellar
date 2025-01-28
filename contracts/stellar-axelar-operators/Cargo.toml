@@ -2,7 +2,7 @@
 name = "stellar-axelar-operators"
 version = "0.2.3"
 edition = { workspace = true }
-description = "Stellar Axelar Operators, which manages operators and enables invoking functions with access control and upgradeability."
+description = "AxelarOperators contract, which manages operators and enables invoking functions with access control and upgradeability."
 license = { workspace = true }
 publish = true
 

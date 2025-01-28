@@ -2,7 +2,7 @@
 name = "stellar-example"
 version = "0.1.0"
 edition = { workspace = true }
-description = "Stellar Example, which demonstrates interchain message and token transfers with Gateway, Gas Service, and Interchain Token Service."
+description = "Example contract, which demonstrates interchain message and token transfers with Gateway, Gas Service, and Interchain Token Service."
 license = { workspace = true }
 
 [lib]

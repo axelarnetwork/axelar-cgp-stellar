@@ -2,7 +2,7 @@
 name = "stellar-token-manager"
 version = "0.1.0"
 edition = { workspace = true }
-description = "Stellar Token Manager, which is used to manage tokens via the Stellar Interchain Token Service."
+description = "TokenManager contract, which is used to manage tokens via the Stellar Interchain Token Service."
 license = { workspace = true }
 publish = true
 
