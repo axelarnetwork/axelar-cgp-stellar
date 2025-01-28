@@ -2,7 +2,7 @@
 name = "stellar-interchain-token"
 version = "0.2.3"
 edition = { workspace = true }
-description = "InterchainToken contract, which implements an interchain token that is compatible with SEP-41."
+description = "InterchainToken contract, responsible for implementing an interchain token that is compatible with SEP-41."
 license = { workspace = true }
 publish = true
 
