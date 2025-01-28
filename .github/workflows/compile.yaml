@@ -25,7 +25,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Rust Cache
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@v3.0.1
         with:
           shared-key: "cache"
 

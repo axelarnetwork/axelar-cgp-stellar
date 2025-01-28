@@ -24,7 +24,7 @@ jobs:
           toolchain: 1.81.0
 
       - name: Rust Cache
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@v3.0.1
         with:
           shared-key: "cache"
 
