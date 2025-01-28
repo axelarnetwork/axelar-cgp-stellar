@@ -2,7 +2,7 @@
 name = "stellar-axelar-gateway"
 version = "0.2.3"
 edition = { workspace = true }
-description = "Contract related to Stellar Axelar Gateway."
+description = "Axelar Gateway, which serves as the gateway for cross-chain contract calls and token transfers within the Axelar network."
 license = { workspace = true }
 publish = true
 
