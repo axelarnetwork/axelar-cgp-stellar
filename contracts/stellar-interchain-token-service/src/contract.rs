@@ -237,13 +237,17 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         token_metadata.validate()?;
 
-        Self::deploy_token(
+        let token_address = Self::deploy_token(
             env,
             token_id.clone(),
             token_metadata,
             minter,
-            Some((initial_supply, caller)),
-        );
+        )?;
+
+        if initial_supply > 0 {
+            StellarAssetClient::new(env, &token_address)
+                .mint(&caller, &initial_supply);
+        }
 
         Ok(token_id)
     }
@@ -272,12 +276,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     ) -> Result<BytesN<32>, ContractError> {
         let token_id = Self::canonical_interchain_token_id(env, token_address.clone());
 
-        ensure!(
-            !env.storage()
-                .persistent()
-                .has(&DataKey::TokenIdConfig(token_id.clone())),
-            ContractError::TokenAlreadyRegistered
-        );
+        Self::ensure_token_not_deployed(env, token_id.clone())?;
 
         let _ = Self::deploy_token_manager(
             env,
@@ -494,7 +493,11 @@ impl InterchainTokenService {
         Ok((original_source_chain, message))
     }
 
-    fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
+    fn set_token_id_config(
+        env: &Env,
+        token_id: BytesN<32>,
+        token_data: TokenIdConfigValue,
+    ) {
         env.storage()
             .persistent()
             .set(&DataKey::TokenIdConfig(token_id), &token_data);
@@ -696,17 +699,12 @@ impl InterchainTokenService {
             minter,
         }: DeployInterchainToken,
     ) -> Result<(), ContractError> {
-        ensure!(
-            Self::token_id_config(env, token_id.clone()).is_err(),
-            ContractError::TokenAlreadyDeployed
-        );
-
         let token_metadata = TokenMetadata::new(name, symbol, decimals as u32)?;
 
         // Note: attempt to convert a byte string which doesn't represent a valid Soroban address fails at the Host level
         let minter = minter.map(|m| Address::from_string_bytes(&m));
 
-        Self::deploy_token(env, token_id, token_metadata, minter, None);
+        let _: Address = Self::deploy_token(env, token_id, token_metadata, minter)?;
 
         Ok(())
     }
@@ -744,14 +742,14 @@ impl InterchainTokenService {
     /// * `token_id` - The token ID for the interchain token being deployed.
     /// * `token_metadata` - The metadata for the interchain token being deployed.
     /// * `minter` - An optional address of an additional minter for the interchain token being deployed.
-    /// * `initial_mint` - The initial mint amount and recipient for the interchain token being deployed.
     fn deploy_token(
         env: &Env,
         token_id: BytesN<32>,
         token_metadata: TokenMetadata,
         minter: Option<Address>,
-        initial_mint: Option<(i128, Address)>,
-    ) {
+    ) -> Result<Address, ContractError> {
+        Self::ensure_token_not_deployed(env, token_id.clone())?;
+
         let token_address = deployer::deploy_interchain_token(
             env,
             Self::interchain_token_wasm_hash(env),
@@ -764,20 +762,22 @@ impl InterchainTokenService {
         let token_manager = Self::deploy_token_manager(
             env,
             token_id,
-            token_address,
+            token_address.clone(),
             TokenManagerType::NativeInterchainToken,
         );
 
-        match initial_mint {
-            Some((initial_supply, recipient)) if initial_supply > 0 => {
-                StellarAssetClient::new(env, &interchain_token_client.address)
-                    .mint(&recipient, &initial_supply);
-            }
-            _ => {}
-        }
-
-        // Transfer minter role to the token manager
+        // Give minter role to the token manager
         interchain_token_client.add_minter(&token_manager);
-        interchain_token_client.remove_minter(&env.current_contract_address());
+
+        Ok(token_address)
+    }
+
+    fn ensure_token_not_deployed(env: &Env, token_id: BytesN<32>) -> Result<(), ContractError> {
+        ensure!(
+            !env.storage().persistent().has(&DataKey::TokenIdConfig(token_id)),
+            ContractError::TokenAlreadyRegistered
+        );
+
+        Ok(())
     }
 }

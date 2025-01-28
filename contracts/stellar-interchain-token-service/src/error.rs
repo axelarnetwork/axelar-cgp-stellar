@@ -23,7 +23,7 @@ pub enum ContractError {
     NotHubAddress = 15,
     InvalidTokenMetaData = 16,
     InvalidTokenId = 17,
-    TokenAlreadyDeployed = 18,
+    TokenAlreadyRegistered = 18,
     InvalidFlowLimit = 19,
     FlowLimitExceeded = 20,
     FlowAmountOverflow = 21,
@@ -33,9 +33,8 @@ pub enum ContractError {
     InvalidTokenName = 25,
     InvalidTokenSymbol = 26,
     InvalidTokenDecimals = 27,
-    TokenAlreadyRegistered = 28,
-    ContractPaused = 29,
-    InvalidSupply = 30,
+    ContractPaused = 28,
+    InvalidSupply = 29,
 }
 
 impl_not_approved_error!(ContractError);
