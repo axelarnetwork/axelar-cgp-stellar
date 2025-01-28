@@ -213,9 +213,10 @@ fn its_example() {
         address: gas_token_contract.address(),
         amount: gas_amount,
     };
-    let gas_asset_client = StellarAssetClient::new(&env, &gas_token.address);
+    StellarAssetClient::new(&env, &gas_token.address)
+        .mock_all_auths()
+        .mint(&user, &gas_token.amount);
 
-    gas_asset_client.mock_all_auths().mint(&user, &gas_amount);
     original_source_its_client
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
