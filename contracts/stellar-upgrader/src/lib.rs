@@ -4,7 +4,7 @@ extern crate alloc;
 
 pub mod error;
 
-mod interface;
+pub mod interface;
 
 #[cfg(test)]
 mod tests;
