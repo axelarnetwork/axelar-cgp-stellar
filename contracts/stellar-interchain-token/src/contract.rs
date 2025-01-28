@@ -1,5 +1,5 @@
 use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
-use soroban_sdk::{assert_with_error, contract, contractimpl, token, Address, BytesN, Env, String, Val};
+use soroban_sdk::{assert_with_error, contract, contractimpl, token, Address, BytesN, Env, String};
 use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
@@ -12,6 +12,7 @@ use crate::error::ContractError;
 use crate::event::{MinterAddedEvent, MinterRemovedEvent};
 use crate::interface::InterchainTokenInterface;
 use crate::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
+use stellar_axelar_std::interfaces::UpgradableClient;
 
 #[contract]
 #[derive(Upgradable)]
