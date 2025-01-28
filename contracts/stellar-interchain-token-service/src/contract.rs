@@ -272,7 +272,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         Self::ensure_token_not_deployed(env, token_id.clone())?;
 
-        let _ = Self::deploy_token_manager(
+        let _: Address = Self::deploy_token_manager(
             env,
             token_id.clone(),
             token_address,
