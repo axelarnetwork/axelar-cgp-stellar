@@ -53,13 +53,6 @@ pub struct InterchainTokenDeploymentStartedEvent {
 }
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
-pub struct InterchainTokenIdClaimedEvent {
-    pub token_id: BytesN<32>,
-    pub deployer: Address,
-    pub salt: BytesN<32>,
-}
-
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
 pub struct InterchainTransferSentEvent {
     pub token_id: BytesN<32>,
     pub source_address: Address,
