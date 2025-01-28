@@ -1993,6 +1993,7 @@ dependencies = [
 name = "stellar-axelar-operators"
 version = "0.2.2"
 dependencies = [
+ "cfg-if",
  "goldie",
  "paste",
  "soroban-sdk",
@@ -2091,6 +2092,7 @@ dependencies = [
 name = "stellar-upgrader"
 version = "0.2.2"
 dependencies = [
+ "cfg-if",
  "soroban-sdk",
  "stellar-axelar-std",
 ]

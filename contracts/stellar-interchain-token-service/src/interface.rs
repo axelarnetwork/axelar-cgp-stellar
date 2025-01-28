@@ -44,12 +44,12 @@ pub trait InterchainTokenServiceInterface:
 
     /// Sets the specified chain as trusted for cross-chain messaging.
     /// # Authorization
-    /// - Must be called by [`Self::owner`].
+    /// - [`Self::owner`] must authorize.
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Removes the specified chain from trusted chains.
     /// # Authorization
-    /// - Must be called by the [`Self::owner`].
+    /// - [`Self::owner`] must authorize.
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Computes the unique identifier for an interchain token.
@@ -125,10 +125,10 @@ pub trait InterchainTokenServiceInterface:
     /// - `flow_limit`: The new flow limit value. Must be positive if Some.
     ///
     /// # Errors
-    /// - `ContractError::InvalidFlowLimit`: If the provided flow limit is not positive.
+    /// - [`ContractError::InvalidFlowLimit`]: If the provided flow limit is not positive.
     ///
     /// # Authorization
-    /// - Must be called by [`Self::operator`].
+    /// - [`Self::operator`] must authorize.
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
@@ -150,10 +150,10 @@ pub trait InterchainTokenServiceInterface:
     /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
-    /// - `ContractError::InvalidMinter`: If the minter address is invalid.
+    /// - [`ContractError::InvalidMinter`]: If the minter address is invalid.
     ///
     /// # Authorization
-    /// - The `deployer` must authenticate.
+    /// - The `deployer` must authorize.
     fn deploy_interchain_token(
         env: &Env,
         deployer: Address,
@@ -175,11 +175,11 @@ pub trait InterchainTokenServiceInterface:
     /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
-    /// - `ContractError::InvalidTokenId`: If the token ID does not exist in the persistent storage.
+    /// - [`ContractError::InvalidTokenId`]: If the token ID does not exist in the persistent storage.
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
-    /// - The `caller` must authenticate.
+    /// - The `caller` must authorize.
     fn deploy_remote_interchain_token(
         env: &Env,
         caller: Address,
@@ -197,7 +197,7 @@ pub trait InterchainTokenServiceInterface:
     /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
-    /// - `ContractError::TokenAlreadyRegistered`: If the token ID is already registered.
+    /// - [`ContractError::TokenAlreadyRegistered`]: If the token ID is already registered.
     fn register_canonical_token(
         env: &Env,
         token_address: Address,
@@ -219,7 +219,7 @@ pub trait InterchainTokenServiceInterface:
     /// - `Ok(BytesN<32>)`: Returns the token ID.
     ///
     /// # Errors
-    /// - `ContractError::InvalidTokenId`: If the token ID does not exist in the persistent storage.
+    /// - [`ContractError::InvalidTokenId`]: If the token ID does not exist in the persistent storage.
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
@@ -250,16 +250,13 @@ pub trait InterchainTokenServiceInterface:
     /// - `data`: Optional data to be handled by the destination address if it's a contract.
     /// - `gas_token`: The token used to pay for cross-chain message execution.
     ///
-    /// # Returns
-    /// - `Ok(())`
-    ///
     /// # Errors
-    /// - `ContractError::InvalidAmount`: If amount is not greater than 0.
-    /// - `ContractError::FlowLimitExceeded`: If transfer would exceed flow limits.
+    /// - [`ContractError::InvalidAmount`]: If amount is not greater than 0.
+    /// - [`ContractError::FlowLimitExceeded`]: If transfer would exceed flow limits.
     /// - Any error propagated from `pay_gas_and_call_contract`.
     ///
     /// # Authorization
-    /// - The `caller` must authenticate.
+    /// - The `caller` must authorize.
     fn interchain_transfer(
         env: &Env,
         caller: Address,

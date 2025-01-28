@@ -5,6 +5,7 @@ use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
+use crate::interface::AxelarOperatorsInterface;
 use crate::storage_types::DataKey;
 
 #[contract]
@@ -16,18 +17,17 @@ impl AxelarOperators {
     pub fn __constructor(env: Env, owner: Address) {
         interfaces::set_owner(&env, &owner);
     }
+}
 
-    /// Return true if the account is an operator.
-    pub fn is_operator(env: Env, account: Address) -> bool {
+#[contractimpl]
+impl AxelarOperatorsInterface for AxelarOperators {
+    fn is_operator(env: Env, account: Address) -> bool {
         let key = DataKey::Operators(account);
 
         env.storage().instance().has(&key)
     }
 
-    /// Add an address as an operator.
-    ///
-    /// Only callable by the contract owner.
-    pub fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
+    fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
 
         let key = DataKey::Operators(account.clone());
@@ -46,10 +46,7 @@ impl AxelarOperators {
         Ok(())
     }
 
-    /// Remove an address as an operator.
-    ///
-    /// Only callable by the contract owner.
-    pub fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
+    fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
 
         let key = DataKey::Operators(account.clone());
@@ -66,8 +63,7 @@ impl AxelarOperators {
         Ok(())
     }
 
-    /// Execute a function on a contract as an operator.
-    pub fn execute(
+    fn execute(
         env: Env,
         operator: Address,
         contract: Address,

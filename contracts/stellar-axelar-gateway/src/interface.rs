@@ -18,14 +18,40 @@ pub trait AxelarGatewayInterface:
     /// Returns the minimum delay between rotations.
     fn minimum_rotation_delay(env: &Env) -> u64;
 
-    /// Approves a collection of messages.
+    /// Approves a collection of messages with the provided proof.
+    ///
+    /// This function allows the approval of multiple messages using a cryptographic proof.
+    /// It ensures that the messages are not empty and prevents replay attacks by checking
+    /// if the messages have already been approved or executed.
+    ///
+    /// # Arguments
+    /// * `messages` - A vector of messages to be approved.
+    /// * `proof` - The cryptographic proof used to validate the approval.
+    ///
+    /// # Errors
+    /// - [`ContractError::EmptyMessages`]: If the provided messages vector is empty.
+    /// - Any error from `auth::validate_proof` due to an invalid proof.
     fn approve_messages(
         env: &Env,
         messages: Vec<Message>,
         proof: Proof,
     ) -> Result<(), ContractError>;
 
-    /// Rotates the signers.
+    /// Rotates to `signers` if the `proof` is valid.
+    ///
+    /// If `bypass_rotation_delay` is set to true, the `operator` must authorize the rotation.
+    ///
+    /// # Arguments
+    /// * `signers` - The new set of weighted signers to be rotated in.
+    /// * `proof` - The cryptographic proof used to validate the rotation.
+    /// * `bypass_rotation_delay` - A boolean indicating whether to bypass the rotation delay.
+    ///
+    /// # Errors
+    /// - [`ContractError::NotLatestSigners`]: If the provided signers are not the latest and `bypass_rotation_delay` is false.
+    /// - Any error from `auth::validate_proof` due to invalid proof.
+    ///
+    /// # Authorization
+    /// - The `operator` must authorize if `bypass_rotation_delay` is true.
     fn rotate_signers(
         env: &Env,
         signers: WeightedSigners,
@@ -42,7 +68,8 @@ pub trait AxelarGatewayInterface:
     /// Returns the signers hash by epoch.
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError>;
 
-    /// Validate the `proof` for `data_hash` created by the signers. Returns a boolean indicating if the proof was created by the latest signers.
+    /// Validate the `proof` for `data_hash` created by the signers.
+    /// Returns a boolean indicating if the proof was created by the latest signers.
     fn validate_proof(
         env: &Env,
         data_hash: BytesN<32>,
