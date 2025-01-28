@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-gas-service-v0.2.2...stellar-axelar-gas-service-v0.3.0)
+
+### 🚜 Refactor
+
+- *(axelar-gas-service)* [**breaking**] Switch gas_collector to operator ([#209](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/209)) - ([2553182](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/2553182ca510e4092b2b841e11fc4fcf66be3f75))
+
+### 📚 Documentation
+
+- Add docs to contract interfaces ([#175](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/175)) - ([2f17e32](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/2f17e32b33e6d04609c3014e161ce07f9dbbef63))
+
+### Contributors
+
+* @TanvirDeol
+* @milapsheth
+
 ## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-gas-service-v0.2.1...stellar-axelar-gas-service-v0.2.2)
 
 ### 🚜 Refactor
