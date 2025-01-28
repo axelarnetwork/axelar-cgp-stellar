@@ -1,5 +1,15 @@
 TrustedChainSetEvent {
-    chain: String(ethereum),
+    chain: String(source),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO)
+
+trusted_chain_set {
+    #[topic] chain: String,
+}
+
+TrustedChainSetEvent {
+    chain: String(destination),
 }
 
 Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N)
@@ -11,30 +21,30 @@ trusted_chain_set {
 MessageApprovedEvent {
     message: Message {
         source_chain: String(axelar),
-        message_id: String(message-id),
+        message_id: String(transfer-message-id),
         source_address: String(its_hub_address),
-        contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N),
-        payload_hash: BytesN<32>(237, 149, 219, 250, 141, 232, 32, 82, 24, 198, 205, 234, 25, 38, 169, 223, 11, 147, 254, 36, 100, 116, 38, 89, 4, 52, 132, 200, 218, 56, 83, 209),
+        contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO),
+        payload_hash: BytesN<32>(230, 214, 88, 245, 174, 248, 20, 10, 206, 50, 121, 178, 195, 199, 71, 151, 135, 243, 98, 124, 57, 80, 130, 70, 8, 193, 183, 238, 183, 231, 237, 240),
     },
 }
 
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4)
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6J5N)
 
 message_approved {
     #[topic] message: Message,
 }
 
 TokenReceivedEvent {
-    source_chain: String(ethereum),
-    message_id: String(message-id),
+    source_chain: String(source),
+    message_id: String(transfer-message-id),
     source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 68, 50, 75, 77),
-    token_id: BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149),
-    token_address: Contract(CC3SQJDCS3OA77SQI6ODO2FMMQHYS57O352TXNQ7EXE4AXVRPXX3WJ5U),
+    token_id: BytesN<32>(218, 212, 203, 128, 137, 130, 221, 179, 31, 34, 53, 109, 192, 54, 96, 44, 142, 247, 158, 111, 122, 211, 198, 148, 166, 90, 189, 239, 251, 41, 20, 73),
+    token_address: Contract(CD7FCTP5NDVVB6SOXIBBX2IBZ4W42IDKI43D653A6ZPSDW4RXRXJXLST),
     amount: 1000,
-    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 52, 66, 86, 53),
+    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 84, 85, 71, 55),
 }
 
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5)
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6)
 
 token_received {
     #[topic] source_chain: String,
