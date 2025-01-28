@@ -74,7 +74,7 @@ pub trait AxelarGasServiceInterface: OperatableInterface {
     /// - [`ContractError::InsufficientBalance`]: If the contract's token balance is insufficient to cover the transfer.
     ///
     /// # Authorization
-    /// - The `operator` must authorize.
+    /// - [`Self::operator`] must authorize.
     fn collect_fees(env: Env, receiver: Address, token: Token) -> Result<(), ContractError>;
 
     /// Refunds gas payment to the specified receiver in relation to a specific cross-chain message.
@@ -85,6 +85,6 @@ pub trait AxelarGasServiceInterface: OperatableInterface {
     /// * `token` - The token used for the refund, including the address and amount.
     ///
     /// # Authorization
-    /// - The `operator` must authorize.
+    /// - [`Self::operator`] must authorize.
     fn refund(env: Env, message_id: String, receiver: Address, token: Token);
 }

@@ -20,7 +20,7 @@ pub trait ExampleInterface: AxelarExecutableInterface {
     /// * `gas_token` - The token used to pay for gas during the transaction.
     ///
     /// # Authorization
-    /// - The `caller` address must authorize.
+    /// - The `caller` must authorize.
     fn send(
         env: &Env,
         caller: Address,
@@ -44,7 +44,7 @@ pub trait ExampleInterface: AxelarExecutableInterface {
     /// * `gas_token` - The token used to pay for gas during the transaction.
     ///
     /// # Authorization
-    /// - The `caller` address must authorize.
+    /// - The `caller` must authorize.
     fn send_token(
         env: &Env,
         caller: Address,

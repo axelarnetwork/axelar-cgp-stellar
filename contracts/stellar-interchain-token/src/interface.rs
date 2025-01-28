@@ -24,7 +24,7 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// - [`ContractError::InvalidAmount`]: If the specified amount is invalid (e.g. negative).
     ///
     /// # Authorization
-    /// - The `minter` address must authorize.
+    /// - The `minter` must authorize.
     fn mint_from(
         env: &Env,
         minter: Address,

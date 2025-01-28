@@ -54,7 +54,7 @@ pub trait AxelarOperatorsInterface: OwnableInterface {
     /// - [`ContractError::NotAnOperator`]: If the specified operator is not authorized.
     ///
     /// # Authorization
-    /// - The `operator` must authorize.
+    /// - An `operator` must authorize.
     fn execute(
         env: Env,
         operator: Address,
