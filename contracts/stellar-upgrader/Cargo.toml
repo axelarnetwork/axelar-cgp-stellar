@@ -1,6 +1,6 @@
 [package]
 name = "stellar-upgrader"
-version = "0.2.2"
+version = "0.2.3"
 edition = { workspace = true }
 description = "Contract related to Stellar Upgrader."
 license = { workspace = true }
@@ -10,11 +10,16 @@ publish = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+
+[features]
+library = [] # Only export the contract interface
+testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils"]
 
 [lints]
 workspace = true

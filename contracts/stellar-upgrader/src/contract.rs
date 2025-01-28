@@ -5,6 +5,7 @@ use stellar_axelar_std::ensure;
 use stellar_axelar_std::interfaces::UpgradableClient;
 
 use crate::error::ContractError;
+use crate::interface::UpgraderInterface;
 
 const MIGRATE: Symbol = symbol_short!("migrate");
 
@@ -14,8 +15,11 @@ pub struct Upgrader;
 #[contractimpl]
 impl Upgrader {
     pub fn __constructor(_env: Env) {}
+}
 
-    pub fn upgrade(
+#[contractimpl]
+impl UpgraderInterface for Upgrader {
+    fn upgrade(
         env: Env,
         contract_address: Address,
         new_version: String,

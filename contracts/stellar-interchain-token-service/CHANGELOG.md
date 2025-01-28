@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.2.2...stellar-interchain-token-service-v0.3.0)
+
+### ⛰️ Features
+
+- *(axelar-std)* [**breaking**] Add pausable interface ([#204](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/204)) - ([0d4af95](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/0d4af958562e502df15dcd6bc50ec4ec66cbae46))
+- *(axelar-std-derive)* Add macro to execute when contract is not paused ([#214](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/214)) - ([03d1a48](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/03d1a48b8ad9d0f4f87fc18d1ffbe6405c814fb5))
+- *(interchain-token-service)* Add spender require auth for deploying remote canonical token ([#217](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/217)) - ([9f3a1f3](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/9f3a1f36080d2dd297f066b355b52b59641a2ed4))
+- *(token-manager)* Add token manager for ITS ([#215](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/215)) - ([42d7b34](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/42d7b348a4b419ce77c35688f93ba803c2e5ef1e))
+
+### 🚜 Refactor
+
+- *(interchain-token-service)* Separate ITS logic into modules ([#219](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/219)) - ([86c7bac](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/86c7bac9cf2e52d515c841dc6c4e571e12645e90))
+
+### 📚 Documentation
+
+- Add docs to contract interfaces ([#175](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/175)) - ([2f17e32](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/2f17e32b33e6d04609c3014e161ce07f9dbbef63))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(interchain-token-service)* Verify input validation ([#208](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/208)) - ([f160c1d](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/f160c1d28ef30cf28b90c0a5a4942372fa7d5f24))
+
+### Contributors
+
+* @TanvirDeol
+* @milapsheth
+* @ahramy
+* @AttissNgo
+
 ## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.2.1...stellar-interchain-token-service-v0.2.2)
 
 ### 🚜 Refactor
