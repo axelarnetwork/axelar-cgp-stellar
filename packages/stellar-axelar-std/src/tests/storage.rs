@@ -7,23 +7,27 @@ use crate::contractstorage;
 #[contract]
 pub struct Contract;
 
-#[contractstorage]
-pub enum DataKey {
-    #[instance]
-    #[value(u32)]
-    Counter,
+mod storage {
+    use super::*;
 
-    #[persistent]
-    #[value(String)]
-    Message { sender: Address },
+    #[contractstorage]
+    enum DataKey {
+        #[instance]
+        #[value(u32)]
+        Counter,
 
-    #[temporary]
-    #[value(Address)]
-    LastCaller { timestamp: u64 },
+        #[persistent]
+        #[value(String)]
+        Message { sender: Address },
 
-    #[persistent]
-    #[value(bool)]
-    Flag { key: String, owner: Address },
+        #[temporary]
+        #[value(Address)]
+        LastCaller { timestamp: u64 },
+
+        #[persistent]
+        #[value(bool)]
+        Flag { key: String, owner: Address },
+    }
 }
 
 #[contractimpl]
@@ -31,34 +35,34 @@ impl Contract {
     pub const fn __constructor() {}
 
     pub fn increment_counter(env: &Env) -> u32 {
-        let current_counter = DataKey::get_counter(env).unwrap_or(0);
+        let current_counter = storage::DataKey::get_counter(env).unwrap_or(0);
         let new_counter = current_counter + 1;
-        DataKey::set_counter(env, &new_counter);
+        storage::DataKey::set_counter(env, &new_counter);
         new_counter
     }
 
     pub fn set_message(env: &Env, sender: Address, message: String) {
-        DataKey::set_message(env, sender, &message);
+        storage::DataKey::set_message(env, sender, &message);
     }
 
     pub fn message(env: &Env, sender: Address) -> Option<String> {
-        DataKey::get_message(env, sender)
+        storage::DataKey::get_message(env, sender)
     }
 
     pub fn set_last_caller(env: &Env, timestamp: u64, caller: Address) {
-        DataKey::set_last_caller(env, timestamp, &caller);
+        storage::DataKey::set_last_caller(env, timestamp, &caller);
     }
 
     pub fn last_caller(env: &Env, timestamp: u64) -> Option<Address> {
-        DataKey::get_last_caller(env, timestamp)
+        storage::DataKey::get_last_caller(env, timestamp)
     }
 
     pub fn set_flag(env: &Env, key: String, owner: Address, value: bool) {
-        DataKey::set_flag(env, key, owner, &value);
+        storage::DataKey::set_flag(env, key, owner, &value);
     }
 
     pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
-        DataKey::get_flag(env, key, owner)
+        storage::DataKey::get_flag(env, key, owner)
     }
 }
 

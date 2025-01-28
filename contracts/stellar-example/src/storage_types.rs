@@ -4,7 +4,7 @@ use stellar_interchain_token_service::types::TokenManagerType;
 
 #[contractstorage]
 #[derive(Clone, Debug)]
-pub enum DataKey {
+enum DataKey {
     #[instance]
     #[value(Address)]
     Gateway,
@@ -28,7 +28,7 @@ pub enum DataKey {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TokenIdConfig {
+struct TokenIdConfig {
     pub token_address: Address,
     pub token_manager_type: TokenManagerType,
 }

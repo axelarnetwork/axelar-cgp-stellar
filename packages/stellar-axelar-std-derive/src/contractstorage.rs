@@ -134,8 +134,7 @@ fn storage_fns(
             extend_persistent_ttl(env, &key);
         },
         StorageType::Instance => quote! {
-            use stellar_axelar_std::ttl::extend_instance_ttl;
-            extend_instance_ttl(env);
+            stellar_axelar_std::ttl::extend_instance_ttl(env);
         },
         _ => quote! {},
     };
