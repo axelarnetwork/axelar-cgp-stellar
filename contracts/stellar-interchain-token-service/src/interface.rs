@@ -52,29 +52,17 @@ pub trait InterchainTokenServiceInterface:
     /// - [`Self::owner`] must authorize.
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
-    /// Computes a 32-byte deployment salt for a new interchain token.
-    ///
-    /// The deployment salt is derived uniquely for the given chain, deployer, and salt combination.
-    ///
-    /// # Parameters
-    /// - `deployer`: The address of the token deployer.
-    /// - `salt`: A unique value provided by the deployer.
-    ///
-    /// # Returns
-    /// - A `BytesN<32>` value representing the computed deployment salt.
-    fn interchain_token_deploy_salt(env: &Env, deployer: Address, salt: BytesN<32>) -> BytesN<32>;
-
     /// Computes the unique identifier for an interchain token.
     ///
-    /// The token ID is derived uniquely from the sender's address and the provided salt.
+    /// The token ID is derived uniquely from the deployer's address and the provided salt.
     ///
     /// # Parameters
-    /// - `sender`: The address of the token deployer. In the case of tokens deployed by this contract, it will be Stellar's "dead" address.
+    /// - `deployer`: The address of the token deployer. In the case of tokens deployed by this contract, it will be Stellar's "dead" address.
     /// - `salt`: A unique value used to generate the token ID.
     ///
     /// # Returns
     /// - A `BytesN<32>` value representing the token's unique ID.
-    fn interchain_token_id(env: &Env, sender: Address, salt: BytesN<32>) -> BytesN<32>;
+    fn interchain_token_id(env: &Env, deployer: Address, salt: BytesN<32>) -> BytesN<32>;
 
     /// Computes a 32-byte deployment salt for a canonical token.
     ///
@@ -85,7 +73,25 @@ pub trait InterchainTokenServiceInterface:
     ///
     /// # Returns
     /// - A `BytesN<32>` value representing the computed deployment salt.
-    fn canonical_token_deploy_salt(env: &Env, token_address: Address) -> BytesN<32>;
+    fn canonical_interchain_token_id(env: &Env, token_address: Address) -> BytesN<32>;
+
+    /// Returns the predicted address of the native interchain token associated with the specified token ID.
+    ///
+    /// # Arguments
+    /// - `token_id`: The token ID for the interchain token.
+    ///
+    /// # Returns
+    /// - `Address`: The address of the interchain token.
+    fn interchain_token_address(env: &Env, token_id: BytesN<32>) -> Address;
+
+    /// Returns the predicted address of the token manager that will be deployed for the specified token ID.
+    ///
+    /// # Arguments
+    /// - `token_id`: The token ID for the interchain token.
+    ///
+    /// # Returns
+    /// - `Address`: The address of the token manager.
+    fn token_manager_address(env: &Env, token_id: BytesN<32>) -> Address;
 
     /// Returns the address of the token associated with the specified token ID.
     fn token_address(env: &Env, token_id: BytesN<32>) -> Address;
