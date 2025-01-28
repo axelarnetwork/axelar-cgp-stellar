@@ -331,7 +331,7 @@ fn its_example() {
     let proof = generate_proof(
         &env,
         get_approve_hash(&env, transfer_messages.clone()),
-        destination_signers.clone(),
+        destination_signers,
     );
 
     destination_gateway_client.approve_messages(&transfer_messages, &proof);
