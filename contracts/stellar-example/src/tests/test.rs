@@ -220,13 +220,15 @@ fn its_example() {
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
 
-    let original_source_trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+    let original_source_trusted_chain_set_event =
+        events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
 
     destination_its_client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
 
-    let destination_trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+    let destination_trusted_chain_set_event =
+        events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
 
     let data = Address::generate(&env).to_string_bytes();
 
@@ -243,7 +245,7 @@ fn its_example() {
         .mock_all_auths()
         .mint(&user, &transfer_amount);
 
-// DeployInterchainToken execute
+    // DeployInterchainToken execute
     let deploy_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain.clone(),
         message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
@@ -285,7 +287,7 @@ fn its_example() {
         &hub_source_address,
         &payload,
     );
-// END DeployInterchainToken execute
+    // END DeployInterchainToken execute
 
     original_source_app.mock_all_auths().send_token(
         &user,
@@ -297,7 +299,7 @@ fn its_example() {
         &gas_token,
     );
 
-// InterchainTransfer execute
+    // InterchainTransfer execute
     let transfer_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: original_source_chain,
         message: stellar_interchain_token_service::types::Message::InterchainTransfer(
@@ -341,7 +343,7 @@ fn its_example() {
         &hub_source_address,
         &payload,
     );
-// END InterchainTransfer execute
+    // END InterchainTransfer execute
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
@@ -353,13 +355,23 @@ fn its_example() {
     ]
     .join("\n\n"));
 
-    let destination_token_client = token::TokenClient::new(&env, &destination_its_client.token_address(&token_id));
-    assert_eq!(destination_token_client.balance(&destination_app.address), 0);
+    let destination_token_client =
+        token::TokenClient::new(&env, &destination_its_client.token_address(&token_id));
+    assert_eq!(
+        destination_token_client.balance(&destination_app.address),
+        0
+    );
 
     let recipient = Address::from_string_bytes(&data);
 
-    assert_eq!(destination_token_client.balance(&destination_app.address), 0);
-    assert_eq!(destination_token_client.balance(&recipient), transfer_amount);
+    assert_eq!(
+        destination_token_client.balance(&destination_app.address),
+        0
+    );
+    assert_eq!(
+        destination_token_client.balance(&recipient),
+        transfer_amount
+    );
 }
 
 #[test]
