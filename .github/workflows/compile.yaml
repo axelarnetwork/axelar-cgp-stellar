@@ -27,7 +27,7 @@ jobs:
       - name: Rust Cache
         uses: useblacksmith/rust-cache@v3.0.1
         with:
-          shared-key: "cache"
+          shared-key: "cache-compilation"
 
       - name: Build wasm release
         run: cargo wasm
