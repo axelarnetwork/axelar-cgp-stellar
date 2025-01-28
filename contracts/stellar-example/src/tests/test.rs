@@ -12,11 +12,12 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{auth_invocation, events};
+use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::{setup_its, setup_its_token};
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
+use crate::contract::ExampleError;
 use crate::event::{ExecutedEvent, TokenReceivedEvent};
 use crate::{Example, ExampleClient};
 
@@ -251,4 +252,84 @@ fn its_example() {
 
     let recipient = Address::from_string_bytes(&data);
     assert_eq!(token.balance(&recipient), amount);
+}
+
+#[test]
+fn constructor_succeeds() {
+    let env = Env::default();
+
+    let TestConfig {
+        gateway_client,
+        gas_service_client,
+        its_client,
+        ..
+    } = setup_app(&env);
+
+    let contract_id = env.register(
+        Example,
+        (
+            &gateway_client.address,
+            &gas_service_client.address,
+            &its_client.address,
+        ),
+    );
+    let client = ExampleClient::new(&env, &contract_id);
+
+    assert_eq!(client.gateway(), gateway_client.address);
+    assert_eq!(client.gas_service(), gas_service_client.address);
+    assert_eq!(client.interchain_token_service(), its_client.address);
+}
+
+#[test]
+fn execute_fails_with_not_approved() {
+    let env = Env::default();
+
+    let TestConfig { app, .. } = setup_app(&env);
+
+    let source_chain = String::from_str(&env, "ethereum");
+    let message_id = String::from_str(&env, "test");
+    let source_address = String::from_str(&env, "0x123");
+    let payload = Bytes::from_array(&env, &[1u8; 32]);
+
+    assert_contract_err!(
+        app.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ExampleError::NotApproved
+    );
+}
+
+#[test]
+fn send_token_succeeds() {
+    let env = Env::default();
+    let user = Address::generate(&env);
+
+    let TestConfig {
+        app, its_client, ..
+    } = setup_app(&env);
+
+    let amount: i128 = 100;
+    let token_id = setup_its_token(&env, &its_client, &user, amount);
+    let destination_chain = String::from_str(&env, "ethereum");
+    let destination_address = Bytes::from_array(&env, &[2u8; 32]);
+    let data = Some(Bytes::from_array(&env, &[3u8; 32]));
+    let gas_token_contract = env.register_stellar_asset_contract_v2(user.clone());
+    let gas_token = Token {
+        address: gas_token_contract.address(),
+        amount: 50,
+    };
+    let asset_client = StellarAssetClient::new(&env, &gas_token.address);
+
+    asset_client.mock_all_auths().mint(&user, &gas_token.amount);
+    its_client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    app.mock_all_auths().send_token(
+        &user,
+        &token_id,
+        &destination_chain,
+        &destination_address,
+        &amount,
+        &data,
+        &gas_token,
+    );
 }
