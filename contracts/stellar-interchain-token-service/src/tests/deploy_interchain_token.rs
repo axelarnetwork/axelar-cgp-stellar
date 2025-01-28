@@ -9,6 +9,10 @@ use crate::error::ContractError;
 use crate::event::{InterchainTokenDeployedEvent, TokenManagerDeployedEvent};
 use crate::types::TokenManagerType;
 
+const INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX: i32 = -4;
+const INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX: i32 = INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX + 1;
+const TOKEN_MANAGER_DEPLOYED_EVENT_IDX: i32 = INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX + 1;
+
 fn dummy_token_params(env: &Env) -> (Address, BytesN<32>, TokenMetadata) {
     let sender = Address::generate(env);
     let salt = BytesN::<32>::from_array(env, &[1; 32]);
@@ -29,10 +33,13 @@ fn deploy_interchain_token_succeeds() {
         &sender,
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
-    let interchain_token_deployed_event =
-        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -5);
-    let token_manager_deployed_event =
-        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -4);
+    let interchain_token_deployed_event = events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX);
+    let token_manager_deployed_event = events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(
+        &env,
+        TOKEN_MANAGER_DEPLOYED_EVENT_IDX,
+    );
 
     goldie::assert!([
         interchain_token_deployed_event,
@@ -60,6 +67,34 @@ fn deploy_interchain_token_fails_when_paused() {
 }
 
 #[test]
+fn deploy_interchain_token_fails_when_already_deployed() {
+    let (env, client, _, _, _) = setup_env();
+
+    let (sender, salt, token_metadata) = dummy_token_params(&env);
+    let minter: Option<Address> = None;
+    let initial_supply = 100;
+
+    client.mock_all_auths().deploy_interchain_token(
+        &sender,
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
+    );
+
+    assert_contract_err!(
+        client.mock_all_auths().try_deploy_interchain_token(
+            &sender,
+            &salt,
+            &token_metadata,
+            &initial_supply,
+            &minter
+        ),
+        ContractError::TokenAlreadyRegistered
+    );
+}
+
+#[test]
 fn deploy_interchain_token_with_initial_supply_no_minter() {
     let (env, client, _, _, _) = setup_env();
 
@@ -74,7 +109,7 @@ fn deploy_interchain_token_with_initial_supply_no_minter() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -5));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);
@@ -108,7 +143,7 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -5));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);
@@ -138,7 +173,7 @@ fn deploy_interchain_token_check_token_id_and_token_manager_type() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -5));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
     assert_eq!(token_id, expected_token_id);
     assert_eq!(
@@ -168,7 +203,7 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -4));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);
@@ -199,7 +234,7 @@ fn deploy_interchain_token_fails_with_zero_initial_supply_and_no_minter() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeployedEvent,
-    >(&env, -4));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX));
 
     let token_address = client.token_address(&token_id);
     let token_manager = client.token_manager(&token_id);
@@ -292,6 +327,6 @@ fn deploy_interchain_token_fails_with_negative_supply() {
             &invalid_supply,
             &None
         ),
-        ContractError::InvalidSupply
+        ContractError::InvalidInitialSupply
     );
 }
