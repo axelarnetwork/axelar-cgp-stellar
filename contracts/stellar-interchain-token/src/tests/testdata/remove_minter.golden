@@ -1,9 +1,0 @@
-MinterRemovedEvent {
-    minter: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM),
-}
-
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM)
-
-minter_removed {
-    #[topic] minter: Address,
-}
