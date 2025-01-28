@@ -2,12 +2,12 @@
 //!
 //! This ensures compatibility and prevents cyclic dependency issues during testing and release.
 
-mod contractstorage;
 mod into_event;
 mod its_executable;
 mod operatable;
 mod ownable;
 mod pausable;
+mod storage;
 mod upgradable;
 
 use proc_macro::TokenStream;
@@ -249,7 +249,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 ///
 /// #[contractstorage]
 /// #[derive(Clone, Debug)]
-/// pub enum DataKey {
+/// enum DataKey {
 ///     #[instance]
 ///     #[value(Address)]
 ///     Owner,
@@ -287,5 +287,5 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    contractstorage::contractstorage(&input).into()
+    storage::contractstorage(&input).into()
 }
