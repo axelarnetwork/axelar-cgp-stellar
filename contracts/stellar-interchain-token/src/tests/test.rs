@@ -127,7 +127,7 @@ fn set_admin_succeeds() {
 }
 
 #[test]
-fn set_admin_fails_when_not_() {
+fn set_admin_fails_when_not_owner() {
     let env = Env::default();
 
     let new_owner = Address::generate(&env);
