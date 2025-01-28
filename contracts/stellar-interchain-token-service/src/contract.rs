@@ -237,16 +237,10 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
         token_metadata.validate()?;
 
-        let token_address = Self::deploy_token(
-            env,
-            token_id.clone(),
-            token_metadata,
-            minter,
-        )?;
+        let token_address = Self::deploy_token(env, token_id.clone(), token_metadata, minter)?;
 
         if initial_supply > 0 {
-            StellarAssetClient::new(env, &token_address)
-                .mint(&caller, &initial_supply);
+            StellarAssetClient::new(env, &token_address).mint(&caller, &initial_supply);
         }
 
         Ok(token_id)
@@ -493,11 +487,7 @@ impl InterchainTokenService {
         Ok((original_source_chain, message))
     }
 
-    fn set_token_id_config(
-        env: &Env,
-        token_id: BytesN<32>,
-        token_data: TokenIdConfigValue,
-    ) {
+    fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
         env.storage()
             .persistent()
             .set(&DataKey::TokenIdConfig(token_id), &token_data);
@@ -774,7 +764,9 @@ impl InterchainTokenService {
 
     fn ensure_token_not_deployed(env: &Env, token_id: BytesN<32>) -> Result<(), ContractError> {
         ensure!(
-            !env.storage().persistent().has(&DataKey::TokenIdConfig(token_id)),
+            !env.storage()
+                .persistent()
+                .has(&DataKey::TokenIdConfig(token_id)),
             ContractError::TokenAlreadyRegistered
         );
 

@@ -33,10 +33,13 @@ fn deploy_interchain_token_succeeds() {
         &sender,
         client.deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter)
     );
-    let interchain_token_deployed_event =
-        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX);
-    let token_manager_deployed_event =
-        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, TOKEN_MANAGER_DEPLOYED_EVENT_IDX);
+    let interchain_token_deployed_event = events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeployedEvent,
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX);
+    let token_manager_deployed_event = events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(
+        &env,
+        TOKEN_MANAGER_DEPLOYED_EVENT_IDX,
+    );
 
     goldie::assert!([
         interchain_token_deployed_event,
@@ -71,10 +74,22 @@ fn deploy_interchain_token_fails_when_already_deployed() {
     let minter: Option<Address> = None;
     let initial_supply = 100;
 
-    client.mock_all_auths().deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter);
+    client.mock_all_auths().deploy_interchain_token(
+        &sender,
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
+    );
 
     assert_contract_err!(
-        client.mock_all_auths().try_deploy_interchain_token(&sender, &salt, &token_metadata, &initial_supply, &minter),
+        client.mock_all_auths().try_deploy_interchain_token(
+            &sender,
+            &salt,
+            &token_metadata,
+            &initial_supply,
+            &minter
+        ),
         ContractError::TokenAlreadyRegistered
     );
 }
