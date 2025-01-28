@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-gateway-v0.2.2...stellar-axelar-gateway-v0.2.3)
+
+### ⛰️ Features
+
+- *(axelar-gateway)* Add more queries ([#207](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/207)) - ([ca3b486](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/ca3b4861a1a26b63cad5f12daa86a71a29107cee))
+- *(axelar-gateway)* Add pausable to gateway ([#205](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/205)) - ([b97d9d9](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/b97d9d9ca521339d63ec3afcdaefae036ea2e15c))
+- *(axelar-std-derive)* Add macro to execute when contract is not paused ([#214](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/214)) - ([03d1a48](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/03d1a48b8ad9d0f4f87fc18d1ffbe6405c814fb5))
+
+### 🐛 Bug Fixes
+
+- *(axelar-std-derive)* Cleanup dependencies ([#213](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/213)) - ([c986ce8](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/c986ce8f689d118e78f6d1435bbe7bffd42ad3fd))
+
+### 📚 Documentation
+
+- Add docs to contract interfaces ([#175](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/175)) - ([2f17e32](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/2f17e32b33e6d04609c3014e161ce07f9dbbef63))
+
+### Contributors
+
+* @TanvirDeol
+* @milapsheth
+
 ## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-gateway-v0.2.1...stellar-axelar-gateway-v0.2.2)
 
 ### 🚜 Refactor
