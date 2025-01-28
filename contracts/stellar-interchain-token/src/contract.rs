@@ -1,8 +1,5 @@
 use soroban_sdk::token::{StellarAssetInterface, TokenInterface};
-use soroban_sdk::{
-    assert_with_error, contract, contractimpl, panic_with_error, token, Address, BytesN, Env,
-    String,
-};
+use soroban_sdk::{assert_with_error, contract, contractimpl, token, Address, BytesN, Env, String};
 use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
@@ -35,14 +32,31 @@ impl InterchainToken {
 
         env.storage().instance().set(&DataKey::TokenId, &token_id);
 
-        env.storage().instance().set(&DataKey::Minter(owner), &());
-
         if let Some(minter) = minter {
-            env.storage().instance().set(&DataKey::Minter(minter), &());
+            env.storage()
+                .instance()
+                .set(&DataKey::Minter(minter.clone()), &());
+
+            MinterAddedEvent { minter }.emit(&env);
         }
     }
 }
 
+#[contractimpl]
+impl OwnableInterface for InterchainToken {
+    fn owner(env: &Env) -> Address {
+        interfaces::owner(env)
+    }
+
+    fn transfer_ownership(env: &Env, new_owner: Address) {
+        interfaces::transfer_ownership::<Self>(env, new_owner.clone());
+
+        // Emit the standard soroban event for setting admin
+        TokenEvents::new(env).set_admin(Self::owner(env), new_owner);
+    }
+}
+
+// Note: Some methods below are intentionally unimplemented as they are not supported by this token
 #[contractimpl]
 impl StellarAssetInterface for InterchainToken {
     fn set_admin(env: Env, admin: Address) {
@@ -54,21 +68,28 @@ impl StellarAssetInterface for InterchainToken {
     }
 
     fn set_authorized(_env: Env, _id: Address, _authorize: bool) {
-        todo!()
+        unimplemented!()
     }
 
     fn authorized(_env: Env, _id: Address) -> bool {
-        todo!()
+        unimplemented!()
     }
 
     fn mint(env: Env, to: Address, amount: i128) {
-        if let Err(err) = Self::mint_from(&env, Self::owner(&env), to, amount) {
-            panic_with_error!(env, err);
-        }
+        let owner = Self::owner(&env);
+        owner.require_auth();
+
+        Self::validate_amount(&env, amount);
+
+        Self::receive_balance(&env, to.clone(), amount);
+
+        extend_instance_ttl(&env);
+
+        TokenUtils::new(&env).events().mint(owner, to, amount);
     }
 
     fn clawback(_env: Env, _from: Address, _amount: i128) {
-        todo!()
+        unimplemented!()
     }
 }
 
@@ -353,18 +374,5 @@ impl InterchainToken {
         env.storage().persistent().set(&key, &amount);
 
         extend_persistent_ttl(env, &key);
-    }
-}
-
-#[contractimpl]
-impl OwnableInterface for InterchainToken {
-    fn owner(env: &Env) -> Address {
-        interfaces::owner(env)
-    }
-
-    fn transfer_ownership(env: &Env, new_owner: Address) {
-        interfaces::transfer_ownership::<Self>(env, new_owner.clone());
-        // adhere to reference implementation for tokens and emit predefined soroban event
-        TokenEvents::new(env).set_admin(Self::owner(env), new_owner);
     }
 }
