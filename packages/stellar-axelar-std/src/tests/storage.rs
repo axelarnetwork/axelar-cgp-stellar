@@ -9,11 +9,12 @@ use crate::std::string::ToString;
 pub struct Contract;
 
 mod storage {
-    use super::*;
     use prettyplease;
     use quote::quote;
     use std::vec;
     use syn::parse_quote;
+
+    use super::*;
 
     #[contractstorage]
     enum DataKey {
