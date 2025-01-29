@@ -38,11 +38,7 @@ fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
     let its = setup_its(env, &gateway, &gas_service, Some(chain_name));
     let app = env.register(
         Example,
-        (
-            &gateway.address,
-            &gas_service.address,
-            &its.address,
-        ),
+        (&gateway.address, &gas_service.address, &its.address),
     );
     let app = ExampleClient::new(env, &app);
 
@@ -206,9 +202,9 @@ fn its_example() {
     let transfer_amount = 1000;
 
     // Setup source token
-    let (token_id, token_metadata) =
-        setup_its_token(&env, &source_its, &user, transfer_amount);
-    let token_address = source_its.token_address(&token_id);
+    let token = env.register_stellar_asset_contract_v2(user.clone());
+    let token_client = StellarAssetClient::new(&env, &token.address());
+    token_client.mock_all_auths().mint(&user, &transfer_amount);
 
     let gas_token = setup_gas_token(&env, &user);
 
@@ -228,16 +224,17 @@ fn its_example() {
     // Register and deploy tokens on ITS
     source_its
         .mock_all_auths()
-        .register_canonical_token(&token_address);
+        .register_canonical_token(&token.address());
 
-    source_its
-        .mock_all_auths()
-        .deploy_remote_canonical_token(&token_address, &destination_chain, &user, &gas_token);
+    let token_id = source_its.mock_all_auths().deploy_remote_canonical_token(
+        &token.address(),
+        &destination_chain,
+        &user,
+        &gas_token,
+    );
 
     let token_asset = StellarAssetClient::new(&env, &gas_token.address);
-    token_asset
-        .mock_all_auths()
-        .mint(&user, &transfer_amount);
+    token_asset.mock_all_auths().mint(&user, &transfer_amount);
 
     // Execute DeployInterchainToken message on destination
     let deploy_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
@@ -245,9 +242,9 @@ fn its_example() {
         message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
             stellar_interchain_token_service::types::DeployInterchainToken {
                 token_id: token_id.clone(),
-                name: token_metadata.name.clone(),
-                symbol: token_metadata.symbol.clone(),
-                decimals: token_metadata.decimal as u8,
+                name: String::from_str(&env, "Test"),
+                symbol: String::from_str(&env, "TEST"),
+                decimals: 18,
                 minter: None,
             },
         ),
@@ -275,12 +272,7 @@ fn its_example() {
 
     destination_gateway.approve_messages(&deploy_messages, &proof);
 
-    destination_its.execute(
-        &hub_chain,
-        &message_id,
-        &hub_address,
-        &payload,
-    );
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &payload);
 
     // Send tokens to destination app
     source_app.mock_all_auths().send_token(
@@ -331,12 +323,7 @@ fn its_example() {
 
     let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
-    destination_its.execute(
-        &hub_chain,
-        &message_id,
-        &hub_address,
-        &payload,
-    );
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &payload);
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
@@ -349,21 +336,12 @@ fn its_example() {
 
     let destination_token =
         token::TokenClient::new(&env, &destination_its.token_address(&token_id));
-    assert_eq!(
-        destination_token.balance(&destination_app.address),
-        0
-    );
+    assert_eq!(destination_token.balance(&destination_app.address), 0);
 
     let recipient = Address::from_string_bytes(&recipient.to_string_bytes());
 
-    assert_eq!(
-        destination_token.balance(&destination_app.address),
-        0
-    );
-    assert_eq!(
-        destination_token.balance(&recipient),
-        transfer_amount
-    );
+    assert_eq!(destination_token.balance(&destination_app.address), 0);
+    assert_eq!(destination_token.balance(&recipient), transfer_amount);
 }
 
 #[test]

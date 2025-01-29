@@ -14,7 +14,7 @@ MessageApprovedEvent {
         message_id: String(transfer-message-id),
         source_address: String(its_hub_address),
         contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO),
-        payload_hash: BytesN<32>(177, 240, 78, 104, 81, 166, 81, 113, 135, 39, 113, 233, 113, 28, 241, 54, 23, 66, 234, 222, 79, 166, 77, 169, 244, 231, 174, 142, 6, 1, 126, 217),
+        payload_hash: BytesN<32>(228, 211, 2, 123, 50, 148, 154, 203, 234, 45, 207, 167, 126, 77, 32, 64, 146, 91, 140, 185, 176, 232, 187, 143, 101, 144, 146, 191, 79, 150, 67, 209),
     },
 }
 
@@ -28,10 +28,10 @@ TokenReceivedEvent {
     source_chain: String(source),
     message_id: String(transfer-message-id),
     source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 68, 50, 75, 77),
-    token_id: BytesN<32>(218, 212, 203, 128, 137, 130, 221, 179, 31, 34, 53, 109, 192, 54, 96, 44, 142, 247, 158, 111, 122, 211, 198, 148, 166, 90, 189, 239, 251, 41, 20, 73),
-    token_address: Contract(CD7FCTP5NDVVB6SOXIBBX2IBZ4W42IDKI43D653A6ZPSDW4RXRXJXLST),
+    token_id: BytesN<32>(81, 94, 129, 205, 118, 41, 15, 203, 151, 127, 1, 32, 55, 203, 233, 203, 76, 163, 36, 116, 131, 235, 72, 231, 162, 49, 68, 163, 198, 12, 134, 240),
+    token_address: Contract(CAIRHFISRF5LVYKIVYJJOB6ZYYBVT4EJLSYWI3SBAQTNG7XUK7G52EIU),
     amount: 1000,
-    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 86, 77, 55, 80),
+    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 88, 69, 88, 55),
 }
 
 Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6)
