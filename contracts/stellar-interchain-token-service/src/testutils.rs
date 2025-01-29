@@ -17,11 +17,12 @@ pub fn setup_its<'a>(
     env: &Env,
     gateway: &AxelarGatewayClient,
     gas_service: &AxelarGasServiceClient,
+    chain_name: Option<String>,
 ) -> InterchainTokenServiceClient<'a> {
     let owner = Address::generate(env);
     let operator = Address::generate(env);
     let its_hub_address = String::from_str(env, "its_hub_address");
-    let chain_name = String::from_str(env, "chain_name");
+    let chain_name = chain_name.unwrap_or(String::from_str(env, "chain_name"));
 
     let interchain_token_wasm_hash = env.deployer().upload_contract_wasm(INTERCHAIN_TOKEN_WASM);
 
@@ -52,8 +53,8 @@ pub fn setup_its_token(
     client: &InterchainTokenServiceClient,
     sender: &Address,
     supply: i128,
-) -> BytesN<32> {
-    let salt = BytesN::from_array(env, &[1u8; 32]);
+) -> (BytesN<32>, TokenMetadata) {
+    let salt: BytesN<32> = BytesN::from_array(env, &[1u8; 32]);
     let token_metadata = TokenMetadata {
         name: String::from_str(env, "Test"),
         symbol: String::from_str(env, "TEST"),
@@ -68,5 +69,5 @@ pub fn setup_its_token(
         &None,
     );
 
-    token_id
+    (token_id, token_metadata)
 }

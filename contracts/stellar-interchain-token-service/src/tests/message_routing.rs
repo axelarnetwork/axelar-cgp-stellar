@@ -15,7 +15,7 @@ fn send_directly_to_hub_chain_fails() {
 
     let sender: Address = Address::generate(&env);
     let amount = 1;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &sender, amount);
     let gas_token = setup_gas_token(&env, &sender);
 
     assert_contract_err!(
@@ -41,7 +41,7 @@ fn send_to_untrusted_chain_fails() {
 
     let sender: Address = Address::generate(&env);
     let amount = 1;
-    let token_id = setup_its_token(&env, &client, &sender, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &sender, amount);
     let gas_token = setup_gas_token(&env, &sender);
 
     assert_contract_err!(

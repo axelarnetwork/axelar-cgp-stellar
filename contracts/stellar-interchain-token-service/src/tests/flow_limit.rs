@@ -60,7 +60,7 @@ fn setup<'a>() -> (
 
     let supply = i128::MAX;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, supply);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, supply);
 
     client
         .mock_all_auths()

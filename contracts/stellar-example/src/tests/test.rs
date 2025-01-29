@@ -1,7 +1,9 @@
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
+use soroban_sdk::testutils::{
+    Address as _, AuthorizedFunction, AuthorizedInvocation, StellarAssetContract,
+};
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
-use stellar_axelar_gas_service::testutils::setup_gas_service;
+use stellar_axelar_gas_service::testutils::{setup_gas_service, setup_gas_token};
 use stellar_axelar_gas_service::AxelarGasServiceClient;
 use stellar_axelar_gateway::event::{ContractCalledEvent, MessageApprovedEvent};
 use stellar_axelar_gateway::testutils::{
@@ -12,12 +14,12 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{auth_invocation, events};
-use stellar_interchain_token_service::event::TrustedChainSetEvent;
-use stellar_interchain_token_service::testutils::{setup_its, setup_its_token};
+use stellar_axelar_std::{assert_contract_err, assert_ok, auth_invocation, events};
+use stellar_interchain_token_service::testutils::setup_its;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
-use crate::event::{ExecutedEvent, TokenReceivedEvent};
+use crate::contract::ExampleError;
+use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
 use crate::{Example, ExampleClient};
 
 const SOURCE_CHAIN_NAME: &str = "source";
@@ -25,33 +27,43 @@ const DESTINATION_CHAIN_NAME: &str = "destination";
 
 struct TestConfig<'a> {
     signers: TestSignerSet,
-    gateway_client: AxelarGatewayClient<'a>,
-    gas_service_client: AxelarGasServiceClient<'a>,
-    its_client: InterchainTokenServiceClient<'a>,
+    gateway: AxelarGatewayClient<'a>,
+    gas_service: AxelarGasServiceClient<'a>,
+    its: InterchainTokenServiceClient<'a>,
     app: ExampleClient<'a>,
 }
 
-fn setup_app<'a>(env: &Env) -> TestConfig<'a> {
-    let (signers, gateway_client) = setup_gateway(env, 0, 5);
-    let gas_service_client = setup_gas_service(env);
-    let its_client = setup_its(env, &gateway_client, &gas_service_client);
+fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
+    let (signers, gateway) = setup_gateway(env, 0, 5);
+    let gas_service = setup_gas_service(env);
+    let its = setup_its(env, &gateway, &gas_service, Some(chain_name));
     let app = env.register(
         Example,
-        (
-            &gateway_client.address,
-            &gas_service_client.address,
-            &its_client.address,
-        ),
+        (&gateway.address, &gas_service.address, &its.address),
     );
     let app = ExampleClient::new(env, &app);
 
     TestConfig {
         signers,
-        gateway_client,
-        gas_service_client,
-        its_client,
+        gateway,
+        gas_service,
+        its,
         app,
     }
+}
+
+fn setup_tokens<'a>(env: &Env, user: &Address, amount: i128) -> (StellarAssetContract, Token) {
+    let token = env.register_stellar_asset_contract_v2(user.clone());
+    StellarAssetClient::new(env, &token.address())
+        .mock_all_auths()
+        .mint(user, &amount);
+
+    let gas_token = setup_gas_token(env, user);
+    StellarAssetClient::new(env, &gas_token.address)
+        .mock_all_auths()
+        .mint(user, &1);
+
+    (token, gas_token)
 }
 
 #[test]
@@ -63,19 +75,19 @@ fn gmp_example() {
     // Setup source Axelar gateway
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
     let TestConfig {
-        gas_service_client: source_gas_service_client,
+        gas_service: source_gas_service,
         app: source_app,
         ..
-    } = setup_app(&env);
+    } = setup_app(&env, source_chain.clone());
 
     // Setup destination Axelar gateway
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
     let TestConfig {
         signers: destination_signers,
-        gateway_client: destination_gateway_client,
+        gateway: destination_gateway_client,
         app: destination_app,
         ..
-    } = setup_app(&env);
+    } = setup_app(&env, destination_chain.clone());
 
     // Set cross-chain message params
     let source_address = source_app.address.to_string();
@@ -105,10 +117,10 @@ fn gmp_example() {
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(&user, &source_gas_service_client.address, gas_token.amount)
+        asset_client.transfer(&user, &source_gas_service.address, gas_token.amount)
     );
 
-    let source_gas_service_client = source_gas_service_client;
+    let source_gas_service_client = source_gas_service;
 
     let pay_gas_auth = auth_invocation!(
         &env,
@@ -179,76 +191,202 @@ fn gmp_example() {
 fn its_example() {
     let env = Env::default();
 
-    let user = Address::generate(&env).to_string_bytes();
+    let user = Address::generate(&env);
 
+    // Setup source app
+    let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
     let TestConfig {
-        signers,
-        gateway_client,
-        its_client,
-        app: example_app,
+        its: source_its,
+        app: source_app,
         ..
-    } = setup_app(&env);
-    let source_chain = its_client.its_hub_chain_name();
-    let source_address: String = its_client.its_hub_address();
+    } = setup_app(&env, source_chain.clone());
 
-    let amount = 1000;
-    let token_id = setup_its_token(&env, &its_client, &Address::generate(&env), amount);
+    let hub_chain = source_its.its_hub_chain_name();
+    let hub_address = source_its.its_hub_address();
 
-    let original_source_chain = String::from_str(&env, "ethereum");
-    its_client
+    // Setup destination app
+    let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
+    let TestConfig {
+        signers: destination_signers,
+        gateway: destination_gateway,
+        its: destination_its,
+        app: destination_app,
+        ..
+    } = setup_app(&env, destination_chain.clone());
+
+    let transfer_amount = 1000;
+
+    // Setup tokens
+    let (token, gas_token) = setup_tokens(&env, &user, transfer_amount);
+
+    source_its
         .mock_all_auths()
-        .set_trusted_chain(&original_source_chain);
+        .set_trusted_chain(&destination_chain);
 
-    let trusted_chain_set_event = events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+    destination_its
+        .mock_all_auths()
+        .set_trusted_chain(&source_chain);
 
-    let data = Address::generate(&env).to_string_bytes();
+    let recipient = Address::generate(&env);
 
-    let msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
-        source_chain: original_source_chain,
-        message: stellar_interchain_token_service::types::Message::InterchainTransfer(
-            stellar_interchain_token_service::types::InterchainTransfer {
-                token_id: token_id.clone(),
-                source_address: user,
-                destination_address: example_app.address.to_string_bytes(),
-                amount,
-                data: Some(data.clone()),
-            },
-        ),
-    };
-    let payload = msg.abi_encode(&env).unwrap();
+    // Register and deploy tokens on ITS
+    source_its
+        .mock_all_auths()
+        .register_canonical_token(&token.address());
 
-    let message_id = String::from_str(&env, "message-id");
+    let token_id = source_its.mock_all_auths().deploy_remote_canonical_token(
+        &token.address(),
+        &destination_chain,
+        &user,
+        &gas_token,
+    );
 
-    let messages = vec![
+    // Execute DeployInterchainToken message on destination
+    let deploy_msg_payload = assert_ok!(
+        stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+            source_chain: source_chain.clone(),
+            message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
+                stellar_interchain_token_service::types::DeployInterchainToken {
+                    token_id: token_id.clone(),
+                    name: String::from_str(&env, "Test"),
+                    symbol: String::from_str(&env, "TEST"),
+                    decimals: 18,
+                    minter: None,
+                },
+            ),
+        }
+        .abi_encode(&env)
+    );
+
+    let message_id = String::from_str(&env, "deploy-message-id");
+
+    let deploy_messages = vec![
         &env,
         Message {
-            source_chain: source_chain.clone(),
+            source_chain: hub_chain.clone(),
             message_id: message_id.clone(),
-            source_address: source_address.clone(),
-            contract_address: its_client.address.clone(),
-            payload_hash: env.crypto().keccak256(&payload).into(),
+            source_address: hub_address.clone(),
+            contract_address: destination_its.address.clone(),
+            payload_hash: env.crypto().keccak256(&deploy_msg_payload).into(),
         },
     ];
-    let proof = generate_proof(&env, get_approve_hash(&env, messages.clone()), signers);
 
-    gateway_client.approve_messages(&messages, &proof);
+    let proof = generate_proof(
+        &env,
+        get_approve_hash(&env, deploy_messages.clone()),
+        destination_signers.clone(),
+    );
+
+    destination_gateway.approve_messages(&deploy_messages, &proof);
+
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &deploy_msg_payload);
+
+    // Send tokens to destination app
+    source_app.mock_all_auths().send_token(
+        &user,
+        &token_id,
+        &destination_chain,
+        &destination_app.address.to_string_bytes(),
+        &transfer_amount,
+        &Some(recipient.to_string_bytes()),
+        &gas_token,
+    );
+
+    let token_sent_event = events::fmt_last_emitted_event::<TokenSentEvent>(&env);
+
+    // Execute InterchainTransfer message on destination
+    let transfer_msg_payload = assert_ok!(
+        stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+            source_chain,
+            message: stellar_interchain_token_service::types::Message::InterchainTransfer(
+                stellar_interchain_token_service::types::InterchainTransfer {
+                    token_id: token_id.clone(),
+                    source_address: user.to_string_bytes(),
+                    destination_address: destination_app.address.to_string_bytes(),
+                    amount: transfer_amount,
+                    data: Some(recipient.to_string_bytes()),
+                },
+            ),
+        }
+        .abi_encode(&env)
+    );
+
+    let message_id = String::from_str(&env, "transfer-message-id");
+
+    let transfer_messages = vec![
+        &env,
+        Message {
+            source_chain: hub_chain.clone(),
+            message_id: message_id.clone(),
+            source_address: hub_address.clone(),
+            contract_address: destination_its.address.clone(),
+            payload_hash: env.crypto().keccak256(&transfer_msg_payload).into(),
+        },
+    ];
+
+    let proof = generate_proof(
+        &env,
+        get_approve_hash(&env, transfer_messages.clone()),
+        destination_signers,
+    );
+
+    destination_gateway.approve_messages(&transfer_messages, &proof);
 
     let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
-    its_client.execute(&source_chain, &message_id, &source_address, &payload);
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &transfer_msg_payload);
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
     goldie::assert!([
-        trusted_chain_set_event,
+        token_sent_event,
         message_approved_event,
         token_received_event
     ]
     .join("\n\n"));
 
-    let token = token::TokenClient::new(&env, &its_client.token_address(&token_id));
-    assert_eq!(token.balance(&example_app.address), 0);
+    let destination_token =
+        token::TokenClient::new(&env, &destination_its.token_address(&token_id));
+    assert_eq!(destination_token.balance(&destination_app.address), 0);
 
-    let recipient = Address::from_string_bytes(&data);
-    assert_eq!(token.balance(&recipient), amount);
+    let recipient = Address::from_string_bytes(&recipient.to_string_bytes());
+
+    assert_eq!(destination_token.balance(&destination_app.address), 0);
+    assert_eq!(destination_token.balance(&recipient), transfer_amount);
+}
+
+#[test]
+fn constructor_succeeds() {
+    let env = Env::default();
+
+    let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
+    let TestConfig {
+        gateway,
+        gas_service,
+        its,
+        app,
+        ..
+    } = setup_app(&env, source_chain);
+
+    assert_eq!(app.gateway(), gateway.address);
+    assert_eq!(app.gas_service(), gas_service.address);
+    assert_eq!(app.interchain_token_service(), its.address);
+}
+
+#[test]
+fn execute_fails_with_not_approved() {
+    let env = Env::default();
+
+    let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
+    let TestConfig { app, .. } = setup_app(&env, source_chain);
+
+    let source_chain = String::from_str(&env, "ethereum");
+    let message_id = String::from_str(&env, "test");
+    let source_address = String::from_str(&env, "0x123");
+    let payload = Bytes::from_array(&env, &[1u8; 32]);
+
+    assert_contract_err!(
+        app.try_execute(&source_chain, &message_id, &source_address, &payload),
+        ExampleError::NotApproved
+    );
 }

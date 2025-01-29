@@ -117,7 +117,7 @@ fn interchain_transfer_execute_succeeds() {
 
     let amount = 1000;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, amount);
     let data = Bytes::from_hex(&env, "dead");
     let destination_address = executable_id.to_string_bytes();
     let original_source_chain = String::from_str(&env, "ethereum");
@@ -207,7 +207,7 @@ fn interchain_transfer_execute_fails_if_payload_is_len_one() {
 
     let amount = 1000;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, amount);
     let data_with_len_1 = Bytes::from_slice(&env, &[1]);
     let destination_address = executable_id.to_string_bytes();
     let original_source_chain = String::from_str(&env, "ethereum");
