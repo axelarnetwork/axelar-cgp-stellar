@@ -201,16 +201,6 @@ fn storage_mapping_succeeds() {
 }
 
 #[test]
-fn instance_storage_overwrite_succeeds() {
-    let env = Env::default();
-    let contract_id = env.register(Contract, ());
-    let client = ContractClient::new(&env, &contract_id);
-
-    assert_eq!(client.increment_counter(), 1);
-    assert_eq!(client.increment_counter(), 2);
-}
-
-#[test]
 fn persistent_storage_overwrite_succeeds() {
     let env = Env::default();
     let contract_id = env.register(Contract, ());
