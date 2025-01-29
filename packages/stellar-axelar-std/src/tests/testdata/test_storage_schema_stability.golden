@@ -11,4 +11,7 @@ enum DataKey {
     #[persistent]
     #[value(bool)]
     Flag { key: String, owner: Address },
+    #[persistent]
+    #[value(Option<String>)]
+    OptionalMessage { id: u32 },
 }

@@ -32,6 +32,10 @@ mod storage {
         #[persistent]
         #[value(bool)]
         Flag { key: String, owner: Address },
+
+        #[persistent]
+        #[value(Option<String>)]
+        OptionalMessage { id: u32 },
     }
 
     #[test]
@@ -53,6 +57,10 @@ mod storage {
                 #[persistent]
                 #[value(bool)]
                 Flag { key: String, owner: Address },
+
+                #[persistent]
+                #[value(Option<String>)]
+                OptionalMessage { id: u32 },
             }
         };
 
@@ -101,6 +109,14 @@ impl Contract {
 
     pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
         storage::DataKey::get_flag(env, key, owner)
+    }
+
+    pub fn set_optional_message(env: &Env, id: u32, message: Option<String>) {
+        storage::DataKey::set_optional_message(env, id, &message);
+    }
+
+    pub fn optional_message(env: &Env, id: u32) -> Option<Option<String>> {
+        storage::DataKey::get_optional_message(env, id)
     }
 }
 
@@ -248,4 +264,22 @@ fn all_storage_types_interaction_succeeds() {
     assert_eq!(client.message(&sender), Some(message));
     assert_eq!(client.last_caller(&timestamp), Some(caller));
     assert_eq!(client.flag(&key, &owner), Some(true));
+}
+
+#[test]
+fn optional_value_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let id = 1u32;
+
+    assert_eq!(client.optional_message(&id), None);
+
+    let message = String::from_str(&env, "Optional message");
+    client.set_optional_message(&id, &Some(message.clone()));
+    assert_eq!(client.optional_message(&id), Some(Some(message)));
+
+    client.set_optional_message(&id, &None);
+    assert_eq!(client.optional_message(&id), None);
 }
