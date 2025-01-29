@@ -15,12 +15,11 @@ use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, assert_ok, auth_invocation, events};
-use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::setup_its;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::contract::ExampleError;
-use crate::event::{ExecutedEvent, TokenReceivedEvent};
+use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
 use crate::{Example, ExampleClient};
 
 const SOURCE_CHAIN_NAME: &str = "source";
@@ -293,6 +292,8 @@ fn its_example() {
         &gas_token,
     );
 
+    let token_sent_event = events::fmt_last_emitted_event::<TokenSentEvent>(&env);
+
     // Execute InterchainTransfer message on destination
     let transfer_msg_payload = assert_ok!(
         stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
@@ -337,7 +338,12 @@ fn its_example() {
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
-    goldie::assert!([message_approved_event, token_received_event].join("\n\n"));
+    goldie::assert!([
+        token_sent_event,
+        message_approved_event,
+        token_received_event
+    ]
+    .join("\n\n"));
 
     let destination_token =
         token::TokenClient::new(&env, &destination_its.token_address(&token_id));
