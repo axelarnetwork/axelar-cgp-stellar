@@ -14,6 +14,16 @@ enum StorageType {
     Temporary,
 }
 
+impl StorageType {
+    pub fn storage_method(&self) -> TokenStream {
+        match self {
+            StorageType::Instance => quote! { instance },
+            StorageType::Persistent => quote! { persistent },
+            StorageType::Temporary => quote! { temporary },
+        }
+    }
+}
+
 pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     let name = &input.ident;
 
@@ -142,11 +152,7 @@ fn storage_fns(
     let getter_name = format_ident!("get_{}", variant_ident.to_string().to_snake_case());
     let setter_name = format_ident!("set_{}", variant_ident.to_string().to_snake_case());
 
-    let storage_method = match storage_attrs.storage_type {
-        StorageType::Instance => quote! { instance },
-        StorageType::Persistent => quote! { persistent },
-        StorageType::Temporary => quote! { temporary },
-    };
+    let storage_method = storage_attrs.storage_type.storage_method();
 
     let ttl_fn = match storage_attrs.storage_type {
         StorageType::Persistent => quote! {
