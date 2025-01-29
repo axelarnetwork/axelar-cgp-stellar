@@ -83,11 +83,6 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         #(#public_fns)*
     };
 
-    // TODO: Remove
-    println!("=== Generated Storage Code ===");
-    println!("{}", output.to_string());
-    println!("============================");
-
     output
 }
 
