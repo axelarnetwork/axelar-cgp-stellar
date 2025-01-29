@@ -16,7 +16,7 @@ use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
-use stellar_interchain_token_service::testutils::{setup_its, setup_its_token};
+use stellar_interchain_token_service::testutils::setup_its;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::contract::ExampleError;
