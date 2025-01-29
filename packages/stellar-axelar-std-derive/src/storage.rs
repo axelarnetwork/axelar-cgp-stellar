@@ -17,21 +17,21 @@ enum StorageType {
 impl StorageType {
     pub fn storage_method(&self) -> TokenStream {
         match self {
-            StorageType::Instance => quote! { instance },
-            StorageType::Persistent => quote! { persistent },
-            StorageType::Temporary => quote! { temporary },
+            Self::Instance => quote! { instance },
+            Self::Persistent => quote! { persistent },
+            Self::Temporary => quote! { temporary },
         }
     }
 
     pub fn ttl_method(&self) -> TokenStream {
         match self {
-            StorageType::Persistent => quote! {
+            Self::Persistent => quote! {
                 stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
             },
-            StorageType::Instance => quote! {
+            Self::Instance => quote! {
                 stellar_axelar_std::ttl::extend_instance_ttl(env);
             },
-            StorageType::Temporary => quote! {},
+            Self::Temporary => quote! {},
         }
     }
 }
@@ -180,7 +180,7 @@ fn storage_fns(
 
     let value_type = storage_attrs.value_type.clone();
 
-    let (getter_name, setter_name, deleter_name) = fn_names(&variant);
+    let (getter_name, setter_name, deleter_name) = fn_names(variant);
 
     let storage_method = storage_attrs.storage_type.storage_method();
     let ttl_fn = storage_attrs.storage_type.ttl_method();
@@ -286,14 +286,12 @@ fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
 
 #[cfg(test)]
 mod tests {
-    use prettyplease;
-    use syn::parse_quote;
 
     use super::*;
 
     #[test]
     fn test_storage_schema_generation() {
-        let input: DeriveInput = parse_quote! {
+        let input: DeriveInput = syn::parse_quote! {
             enum DataKey {
                 #[instance]
                 #[value(u32)]

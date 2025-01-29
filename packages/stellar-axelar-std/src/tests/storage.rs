@@ -8,6 +8,7 @@ use crate::contractstorage;
 pub struct Contract;
 
 mod storage {
+
     use super::*;
 
     #[contractstorage]
