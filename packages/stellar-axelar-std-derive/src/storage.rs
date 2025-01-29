@@ -332,4 +332,18 @@ mod tests {
 
         contractstorage(&input);
     }
+
+    #[test]
+    #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
+    fn test_tuple_variant_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[value(u32)]
+                TupleVariant(String, u32),
+            }
+        };
+
+        contractstorage(&input);
+    }
 }
