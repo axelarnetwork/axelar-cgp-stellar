@@ -3,15 +3,12 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Type, Variant};
 
-#[derive(Default)]
 struct StorageAttributes {
     storage_type: StorageType,
     value_type: Option<Type>,
 }
 
-#[derive(Default, Debug)]
 enum StorageType {
-    #[default]
     Instance,
     Persistent,
     Temporary,
@@ -29,8 +26,16 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     let storage_fns: Vec<_> = variants
         .iter()
         .map(|variant| {
-            let attrs = storage_attributes(&variant.attrs);
-            storage_fns(name, variant, &attrs)
+            let storage_type = storage_type(&variant.attrs);
+            let value_type = value_type(&variant.attrs);
+            storage_fns(
+                name,
+                variant,
+                &StorageAttributes {
+                    storage_type,
+                    value_type,
+                },
+            )
         })
         .collect();
 
@@ -48,6 +53,32 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     output
 }
 
+/// Transforms a contractstorage enum variant with named fields into a storage key map, or a single storage key for a unit variant.
+///
+/// The Unit variant must be captured here to avoid suffixing non-map variants with "{}".
+///
+/// # Example
+/// ```rust,ignore
+/// /* Original */
+/// #[contractstorage]
+/// enum DataKey {
+///     #[instance]
+///     #[value(Address)]
+///     Gateway, // Unit variant
+///
+///     #[temporary]
+///     #[value(Address)]
+///     Users { user: Address }, // Named variant
+/// }
+/// ```
+///
+/// /* Generated */
+/// #[contracttype]
+/// pub enum DataKey {
+///     Gateway, // Non-map
+///     Users(Address), // Map
+/// }
+/// ```
 fn transform_variant(variant: &Variant) -> TokenStream {
     let variant_name = &variant.ident;
 
@@ -67,34 +98,51 @@ fn transform_variant(variant: &Variant) -> TokenStream {
     }
 }
 
-fn storage_attributes(attrs: &[Attribute]) -> StorageAttributes {
-    let mut storage_attributes = StorageAttributes::default();
+fn storage_type(attrs: &[Attribute]) -> StorageType {
+    let mut found_type = None;
 
     for attr in attrs {
         let path_str = attr.path().to_token_stream().to_string();
-
         match path_str.as_str() {
-            "instance" => {
-                storage_attributes.storage_type = StorageType::Instance;
-            }
-            "persistent" => {
-                storage_attributes.storage_type = StorageType::Persistent;
-            }
-            "temporary" => {
-                storage_attributes.storage_type = StorageType::Temporary;
-            }
-            "value" => {
-                if let Meta::List(list) = &attr.meta {
-                    if let Ok(ty) = list.parse_args::<Type>() {
-                        storage_attributes.value_type = Some(ty);
-                    }
+            "instance" | "persistent" | "temporary" => {
+                if found_type.is_some() {
+                    panic!("Multiple storage types specified - must have exactly one of: 'instance', 'persistent', or 'temporary'.");
                 }
+                found_type = Some(match path_str.as_str() {
+                    "instance" => StorageType::Instance,
+                    "persistent" => StorageType::Persistent,
+                    "temporary" => StorageType::Temporary,
+                    _ => unreachable!(),
+                });
             }
-            _ => {}
+            "value" => continue,
+            unknown => panic!("Unknown storage attribute: {}", unknown),
         }
     }
 
-    storage_attributes
+    found_type.expect(
+        "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.",
+    )
+}
+
+fn value_type(attrs: &[Attribute]) -> Option<Type> {
+    let mut found_type = None;
+
+    for attr in attrs {
+        let path_str = attr.path().to_token_stream().to_string();
+        if path_str == "value" {
+            if found_type.is_some() {
+                panic!("multiple value types specified - must have at most one 'value' attribute");
+            }
+            if let Meta::List(list) = &attr.meta {
+                if let Ok(ty) = list.parse_args::<Type>() {
+                    found_type = Some(ty);
+                }
+            }
+        }
+    }
+
+    found_type
 }
 
 fn storage_fns(
