@@ -1,40 +1,52 @@
-TrustedChainSetEvent {
-    chain: String(ethereum),
+TokenSentEvent {
+    sender: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM),
+    token_id: BytesN<32>(81, 94, 129, 205, 118, 41, 15, 203, 151, 127, 1, 32, 55, 203, 233, 203, 76, 163, 36, 116, 131, 235, 72, 231, 162, 49, 68, 163, 198, 12, 134, 240),
+    destination_chain: String(destination),
+    destination_app_contract: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 79, 72, 82, 54),
+    amount: 1000,
+    recipient: Some(
+        Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 88, 69, 88, 55),
+    ),
 }
 
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N)
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5)
 
-trusted_chain_set {
-    #[topic] chain: String,
+token_sent {
+    #[topic] sender: Address,
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] destination_chain: String,
+    #[topic] destination_app_contract: Bytes,
+    #[topic] amount: i128,
+    #[data]  recipient: Option < Bytes >,
 }
 
 MessageApprovedEvent {
     message: Message {
         source_chain: String(axelar),
-        message_id: String(message-id),
+        message_id: String(transfer-message-id),
         source_address: String(its_hub_address),
-        contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N),
-        payload_hash: BytesN<32>(237, 149, 219, 250, 141, 232, 32, 82, 24, 198, 205, 234, 25, 38, 169, 223, 11, 147, 254, 36, 100, 116, 38, 89, 4, 52, 132, 200, 218, 56, 83, 209),
+        contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO),
+        payload_hash: BytesN<32>(228, 211, 2, 123, 50, 148, 154, 203, 234, 45, 207, 167, 126, 77, 32, 64, 146, 91, 140, 185, 176, 232, 187, 143, 101, 144, 146, 191, 79, 150, 67, 209),
     },
 }
 
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4)
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6J5N)
 
 message_approved {
     #[topic] message: Message,
 }
 
 TokenReceivedEvent {
-    source_chain: String(ethereum),
-    message_id: String(message-id),
+    source_chain: String(source),
+    message_id: String(transfer-message-id),
     source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 68, 50, 75, 77),
-    token_id: BytesN<32>(19, 164, 112, 128, 76, 247, 2, 236, 196, 20, 87, 206, 58, 2, 208, 102, 225, 238, 175, 151, 45, 250, 47, 204, 76, 253, 158, 193, 68, 73, 208, 149),
-    token_address: Contract(CC3SQJDCS3OA77SQI6ODO2FMMQHYS57O352TXNQ7EXE4AXVRPXX3WJ5U),
+    token_id: BytesN<32>(81, 94, 129, 205, 118, 41, 15, 203, 151, 127, 1, 32, 55, 203, 233, 203, 76, 163, 36, 116, 131, 235, 72, 231, 162, 49, 68, 163, 198, 12, 134, 240),
+    token_address: Contract(CAIRHFISRF5LVYKIVYJJOB6ZYYBVT4EJLSYWI3SBAQTNG7XUK7G52EIU),
     amount: 1000,
-    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 52, 66, 86, 53),
+    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 88, 69, 88, 55),
 }
 
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5)
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6)
 
 token_received {
     #[topic] source_chain: String,

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.3.0...stellar-interchain-token-service-v0.3.1)
+
+### 🐛 Bug Fixes
+
+- *(interchain-token)* Unimplemented notice for SAC methods ([#225](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/225)) - ([8c31f8e](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/8c31f8e6f56ebed5909c0e448e2758ce988aadbe))
+
+### 🧪 Testing
+
+- *(example)* Increase ITS coverage ([#221](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/221)) - ([996f2bc](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/996f2bc8524d4c25005f5bd2b5b026b0dfaef2da))
+
+### Contributors
+
+* @nbayindirli
+* @milapsheth
+
 ## [0.3.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-interchain-token-service-v0.2.2...stellar-interchain-token-service-v0.3.0)
 
 ### ⛰️ Features
