@@ -132,7 +132,9 @@ fn storage_type(attrs: &[Attribute]) -> StorageType {
         }
     }
 
-    panic!("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
+    panic!(
+        "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'."
+    )
 }
 
 fn value_type(attrs: &[Attribute]) -> Type {
@@ -140,7 +142,9 @@ fn value_type(attrs: &[Attribute]) -> Type {
         let path_str = attr.path().to_token_stream().to_string();
         if path_str == "value" {
             if let Meta::List(list) = &attr.meta {
-                return list.parse_args::<Type>().expect("Failed to parse value type.");
+                return list
+                    .parse_args::<Type>()
+                    .expect("Failed to parse value type.");
             } else {
                 panic!("Value attribute must contain a type parameter: #[value(Type)]");
             }
@@ -167,7 +171,7 @@ fn storage_fns(
     let storage_method = storage_attrs.storage_type.storage_method();
     let ttl_fn = storage_attrs.storage_type.ttl_method();
 
-    let key_construction = if field_names.is_empty() {
+    let key = if field_names.is_empty() {
         quote! { #enum_name::#variant_ident }
     } else {
         quote! { #enum_name::#variant_ident(#(#field_names),*) }
@@ -181,10 +185,10 @@ fn storage_fns(
 
     quote! {
         pub fn #getter_name(#param_list) -> Option<#value_type> {
-            let key = #key_construction;
+            let key = #key;
             let value = env.storage()
                 .#storage_method()
-                .get(&key);
+                .get::<_, #value_type>(&key);
 
             if value.is_some() { #ttl_fn }
 
@@ -192,7 +196,7 @@ fn storage_fns(
         }
 
         pub fn #setter_name(#param_list, value: &#value_type) {
-            let key = #key_construction;
+            let key = #key;
 
             env.storage()
                 .#storage_method()
