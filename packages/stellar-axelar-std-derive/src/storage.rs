@@ -402,4 +402,14 @@ mod tests {
 
         contractstorage(&input);
     }
+
+    #[test]
+    #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
+    fn test_fields_data_tuple_variant_fails() {
+        let fields = Fields::Unnamed(syn::parse_quote! {
+            (String, u32)
+        });
+
+        fields_data(&fields);
+    }
 }
