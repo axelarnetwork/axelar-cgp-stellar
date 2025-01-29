@@ -207,6 +207,8 @@ fn its_example() {
     token_client.mock_all_auths().mint(&user, &transfer_amount);
 
     let gas_token = setup_gas_token(&env, &user);
+    let gas_token_client = StellarAssetClient::new(&env, &gas_token.address);
+    gas_token_client.mock_all_auths().mint(&user, &1);
 
     source_its
         .mock_all_auths()
@@ -233,11 +235,8 @@ fn its_example() {
         &gas_token,
     );
 
-    let token_asset = StellarAssetClient::new(&env, &gas_token.address);
-    token_asset.mock_all_auths().mint(&user, &transfer_amount);
-
     // Execute DeployInterchainToken message on destination
-    let deploy_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+    let deploy_msg_payload = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: source_chain.clone(),
         message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
             stellar_interchain_token_service::types::DeployInterchainToken {
@@ -248,8 +247,7 @@ fn its_example() {
                 minter: None,
             },
         ),
-    };
-    let payload = deploy_msg.abi_encode(&env).unwrap();
+    }.abi_encode(&env).unwrap();
 
     let message_id = String::from_str(&env, "deploy-message-id");
 
@@ -260,7 +258,7 @@ fn its_example() {
             message_id: message_id.clone(),
             source_address: hub_address.clone(),
             contract_address: destination_its.address.clone(),
-            payload_hash: env.crypto().keccak256(&payload).into(),
+            payload_hash: env.crypto().keccak256(&deploy_msg_payload).into(),
         },
     ];
 
@@ -272,7 +270,7 @@ fn its_example() {
 
     destination_gateway.approve_messages(&deploy_messages, &proof);
 
-    destination_its.execute(&hub_chain, &message_id, &hub_address, &payload);
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &deploy_msg_payload);
 
     // Send tokens to destination app
     source_app.mock_all_auths().send_token(
@@ -286,7 +284,7 @@ fn its_example() {
     );
 
     // Execute InterchainTransfer message on destination
-    let transfer_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+    let transfer_msg_payload = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain,
         message: stellar_interchain_token_service::types::Message::InterchainTransfer(
             stellar_interchain_token_service::types::InterchainTransfer {
@@ -297,8 +295,7 @@ fn its_example() {
                 data: Some(recipient.to_string_bytes()),
             },
         ),
-    };
-    let payload = transfer_msg.abi_encode(&env).unwrap();
+    }.abi_encode(&env).unwrap();
 
     let message_id = String::from_str(&env, "transfer-message-id");
 
@@ -309,7 +306,7 @@ fn its_example() {
             message_id: message_id.clone(),
             source_address: hub_address.clone(),
             contract_address: destination_its.address.clone(),
-            payload_hash: env.crypto().keccak256(&payload).into(),
+            payload_hash: env.crypto().keccak256(&transfer_msg_payload).into(),
         },
     ];
 
@@ -323,7 +320,7 @@ fn its_example() {
 
     let message_approved_event = events::fmt_last_emitted_event::<MessageApprovedEvent>(&env);
 
-    destination_its.execute(&hub_chain, &message_id, &hub_address, &payload);
+    destination_its.execute(&hub_chain, &message_id, &hub_address, &transfer_msg_payload);
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
