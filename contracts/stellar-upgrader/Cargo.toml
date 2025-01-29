@@ -1,6 +1,6 @@
 [package]
 name = "stellar-upgrader"
-version = "0.2.3"
+version = "0.2.4"
 edition = { workspace = true }
 description = "Contract related to Stellar Upgrader."
 license = { workspace = true }
