@@ -360,4 +360,44 @@ mod tests {
 
         contractstorage(&input);
     }
+
+    #[test]
+    #[should_panic(expected = "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")]
+    fn test_missing_storage_type_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[value(u32)]
+                Counter,
+            }
+        };
+
+        contractstorage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "Value attribute must contain a type parameter: #[value(Type)]")]
+    fn test_missing_value_type_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[value]
+                Counter,
+            }
+        };
+
+        contractstorage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "Missing required #[value(Type)] attribute.")]
+    fn test_missing_value_attribute_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                Counter,
+            }
+        };
+
+        contractstorage(&input);
+    }
 }
