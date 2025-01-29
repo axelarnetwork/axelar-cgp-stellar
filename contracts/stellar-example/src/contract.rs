@@ -62,7 +62,7 @@ impl CustomInterchainTokenExecutable for Example {
     type Error = ExampleError;
 
     fn __interchain_token_service(env: &Env) -> Address {
-        DataKey::get_interchain_token_service(env).expect("ITS not found")
+        DataKey::get_interchain_token_service(env).expect("interchain token service not found")
     }
 
     fn __authorized_execute_with_token(
