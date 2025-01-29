@@ -346,4 +346,18 @@ mod tests {
 
         contractstorage(&input);
     }
+
+    #[test]
+    #[should_panic(expected = "Unknown storage attribute: invalid_storage_type")]
+    fn test_unknown_storage_attribute_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[invalid_storage_type]
+                #[value(u32)]
+                Counter,
+            }
+        };
+
+        contractstorage(&input);
+    }
 }
