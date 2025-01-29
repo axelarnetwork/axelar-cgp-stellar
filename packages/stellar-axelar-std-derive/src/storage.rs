@@ -167,6 +167,7 @@ fn storage_fns(
 
     let getter_name = format_ident!("get_{}", variant_ident.to_string().to_snake_case());
     let setter_name = format_ident!("set_{}", variant_ident.to_string().to_snake_case());
+    let deleter_name = format_ident!("delete_{}", variant_ident.to_string().to_snake_case());
 
     let storage_method = storage_attrs.storage_type.storage_method();
     let ttl_fn = storage_attrs.storage_type.ttl_method();
@@ -190,7 +191,9 @@ fn storage_fns(
                 .#storage_method()
                 .get::<_, #value_type>(&key);
 
-            if value.is_some() { #ttl_fn }
+            if value.is_some() {
+                #ttl_fn
+            }
 
             value
         }
@@ -203,6 +206,13 @@ fn storage_fns(
                 .set(&key, value);
 
             #ttl_fn
+        }
+
+        pub fn #deleter_name(#param_list) {
+            let key = #key;
+            env.storage()
+                .#storage_method()
+                .remove(&key);
         }
     }
 }
