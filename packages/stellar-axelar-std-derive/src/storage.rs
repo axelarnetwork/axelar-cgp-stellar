@@ -362,7 +362,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")]
+    #[should_panic(
+        expected = "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'."
+    )]
     fn test_missing_storage_type_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
