@@ -290,7 +290,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_storage_schema_generation() {
+    fn storage_schema_generation_succeeds() {
         let input: DeriveInput = syn::parse_quote! {
             enum DataKey {
                 #[instance]
@@ -319,5 +319,17 @@ mod tests {
         let file: syn::File = syn::parse2(generated).unwrap();
         let formatted = prettyplease::unparse(&file);
         goldie::assert!(formatted);
+    }
+
+    #[test]
+    #[should_panic(expected = "contractstorage can only be used on enums.")]
+    fn non_enum_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            struct NotAnEnum {
+                field: u32,
+            }
+        };
+
+        contractstorage(&input);
     }
 }
