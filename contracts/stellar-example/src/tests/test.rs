@@ -1,4 +1,6 @@
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
+use soroban_sdk::testutils::{
+    Address as _, AuthorizedFunction, AuthorizedInvocation, StellarAssetContract,
+};
 use soroban_sdk::token::{self, StellarAssetClient};
 use soroban_sdk::{vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol};
 use stellar_axelar_gas_service::testutils::{setup_gas_service, setup_gas_token};
@@ -49,6 +51,20 @@ fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
         its,
         app,
     }
+}
+
+fn setup_token<'a>(env: &Env, user: &Address, amount: i128) -> (StellarAssetContract, Token) {
+    let token = env.register_stellar_asset_contract_v2(user.clone());
+    StellarAssetClient::new(env, &token.address())
+        .mock_all_auths()
+        .mint(user, &amount);
+
+    let gas_token = setup_gas_token(env, user);
+    StellarAssetClient::new(env, &gas_token.address)
+        .mock_all_auths()
+        .mint(user, &1);
+
+    (token, gas_token)
 }
 
 #[test]
@@ -201,14 +217,8 @@ fn its_example() {
 
     let transfer_amount = 1000;
 
-    // Setup source token
-    let token = env.register_stellar_asset_contract_v2(user.clone());
-    let token_client = StellarAssetClient::new(&env, &token.address());
-    token_client.mock_all_auths().mint(&user, &transfer_amount);
-
-    let gas_token = setup_gas_token(&env, &user);
-    let gas_token_client = StellarAssetClient::new(&env, &gas_token.address);
-    gas_token_client.mock_all_auths().mint(&user, &1);
+    // Setup tokens
+    let (token, gas_token) = setup_token(&env, &user, transfer_amount);
 
     source_its
         .mock_all_auths()
@@ -247,7 +257,9 @@ fn its_example() {
                 minter: None,
             },
         ),
-    }.abi_encode(&env).unwrap();
+    }
+    .abi_encode(&env)
+    .unwrap();
 
     let message_id = String::from_str(&env, "deploy-message-id");
 
@@ -284,18 +296,21 @@ fn its_example() {
     );
 
     // Execute InterchainTransfer message on destination
-    let transfer_msg_payload = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
-        source_chain,
-        message: stellar_interchain_token_service::types::Message::InterchainTransfer(
-            stellar_interchain_token_service::types::InterchainTransfer {
-                token_id: token_id.clone(),
-                source_address: user.to_string_bytes(),
-                destination_address: destination_app.address.to_string_bytes(),
-                amount: transfer_amount,
-                data: Some(recipient.to_string_bytes()),
-            },
-        ),
-    }.abi_encode(&env).unwrap();
+    let transfer_msg_payload =
+        stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+            source_chain,
+            message: stellar_interchain_token_service::types::Message::InterchainTransfer(
+                stellar_interchain_token_service::types::InterchainTransfer {
+                    token_id: token_id.clone(),
+                    source_address: user.to_string_bytes(),
+                    destination_address: destination_app.address.to_string_bytes(),
+                    amount: transfer_amount,
+                    data: Some(recipient.to_string_bytes()),
+                },
+            ),
+        }
+        .abi_encode(&env)
+        .unwrap();
 
     let message_id = String::from_str(&env, "transfer-message-id");
 
