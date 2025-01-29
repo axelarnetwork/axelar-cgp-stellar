@@ -286,10 +286,10 @@ fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use prettyplease;
     use syn::parse_quote;
+
+    use super::*;
 
     #[test]
     fn test_storage_schema_generation() {
