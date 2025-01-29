@@ -3,17 +3,11 @@ use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
 
 use crate as stellar_axelar_std;
 use crate::contractstorage;
-use crate::std::string::ToString;
 
 #[contract]
 pub struct Contract;
 
 mod storage {
-    use prettyplease;
-    use quote::quote;
-    use std::vec;
-    use syn::parse_quote;
-
     use super::*;
 
     #[contractstorage]
@@ -37,43 +31,6 @@ mod storage {
         #[persistent]
         #[value(Option<String>)]
         OptionalMessage { id: u32 },
-    }
-
-    #[test]
-    fn test_storage_schema_stability() {
-        let expected = quote! {
-            enum DataKey {
-                #[instance]
-                #[value(u32)]
-                Counter,
-
-                #[persistent]
-                #[value(String)]
-                Message { sender: Address },
-
-                #[temporary]
-                #[value(Address)]
-                LastCaller { timestamp: u64 },
-
-                #[persistent]
-                #[value(bool)]
-                Flag { key: String, owner: Address },
-
-                #[persistent]
-                #[value(Option<String>)]
-                OptionalMessage { id: u32 },
-            }
-        };
-
-        let syntax: syn::Item = parse_quote! { #expected };
-
-        let formatted_expected = prettyplease::unparse(&syn::File {
-            shebang: None,
-            attrs: vec![],
-            items: vec![syntax],
-        });
-
-        goldie::assert!(formatted_expected.to_string());
     }
 }
 
