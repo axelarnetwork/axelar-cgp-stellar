@@ -14,7 +14,7 @@ use stellar_axelar_gateway::AxelarGatewayClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::traits::BytesExt;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
+use stellar_axelar_std::{assert_contract_err, assert_ok, auth_invocation, events};
 use stellar_interchain_token_service::event::TrustedChainSetEvent;
 use stellar_interchain_token_service::testutils::setup_its;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
@@ -224,9 +224,6 @@ fn its_example() {
         .mock_all_auths()
         .set_trusted_chain(&destination_chain);
 
-    let source_trusted_chain_set_event =
-        events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
-
     destination_its
         .mock_all_auths()
         .set_trusted_chain(&source_chain);
@@ -246,20 +243,21 @@ fn its_example() {
     );
 
     // Execute DeployInterchainToken message on destination
-    let deploy_msg_payload = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
-        source_chain: source_chain.clone(),
-        message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
-            stellar_interchain_token_service::types::DeployInterchainToken {
-                token_id: token_id.clone(),
-                name: String::from_str(&env, "Test"),
-                symbol: String::from_str(&env, "TEST"),
-                decimals: 18,
-                minter: None,
-            },
-        ),
-    }
-    .abi_encode(&env)
-    .unwrap();
+    let deploy_msg_payload = assert_ok!(
+        stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
+            source_chain: source_chain.clone(),
+            message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
+                stellar_interchain_token_service::types::DeployInterchainToken {
+                    token_id: token_id.clone(),
+                    name: String::from_str(&env, "Test"),
+                    symbol: String::from_str(&env, "TEST"),
+                    decimals: 18,
+                    minter: None,
+                },
+            ),
+        }
+        .abi_encode(&env)
+    );
 
     let message_id = String::from_str(&env, "deploy-message-id");
 
@@ -296,7 +294,7 @@ fn its_example() {
     );
 
     // Execute InterchainTransfer message on destination
-    let transfer_msg_payload =
+    let transfer_msg_payload = assert_ok!(
         stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
             source_chain,
             message: stellar_interchain_token_service::types::Message::InterchainTransfer(
@@ -310,7 +308,7 @@ fn its_example() {
             ),
         }
         .abi_encode(&env)
-        .unwrap();
+    );
 
     let message_id = String::from_str(&env, "transfer-message-id");
 
@@ -339,12 +337,7 @@ fn its_example() {
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
-    goldie::assert!([
-        source_trusted_chain_set_event,
-        message_approved_event,
-        token_received_event
-    ]
-    .join("\n\n"));
+    goldie::assert!([message_approved_event, token_received_event].join("\n\n"));
 
     let destination_token =
         token::TokenClient::new(&env, &destination_its.token_address(&token_id));

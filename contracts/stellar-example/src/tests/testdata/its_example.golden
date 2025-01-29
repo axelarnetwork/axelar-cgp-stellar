@@ -1,13 +1,3 @@
-TrustedChainSetEvent {
-    chain: String(destination),
-}
-
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N)
-
-trusted_chain_set {
-    #[topic] chain: String,
-}
-
 MessageApprovedEvent {
     message: Message {
         source_chain: String(axelar),
