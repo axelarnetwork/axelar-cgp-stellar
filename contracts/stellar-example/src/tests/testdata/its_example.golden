@@ -24,7 +24,7 @@ MessageApprovedEvent {
         message_id: String(transfer-message-id),
         source_address: String(its_hub_address),
         contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO),
-        payload_hash: BytesN<32>(230, 214, 88, 245, 174, 248, 20, 10, 206, 50, 121, 178, 195, 199, 71, 151, 135, 243, 98, 124, 57, 80, 130, 70, 8, 193, 183, 238, 183, 231, 237, 240),
+        payload_hash: BytesN<32>(177, 240, 78, 104, 81, 166, 81, 113, 135, 39, 113, 233, 113, 28, 241, 54, 23, 66, 234, 222, 79, 166, 77, 169, 244, 231, 174, 142, 6, 1, 126, 217),
     },
 }
 
@@ -41,7 +41,7 @@ TokenReceivedEvent {
     token_id: BytesN<32>(218, 212, 203, 128, 137, 130, 221, 179, 31, 34, 53, 109, 192, 54, 96, 44, 142, 247, 158, 111, 122, 211, 198, 148, 166, 90, 189, 239, 251, 41, 20, 73),
     token_address: Contract(CD7FCTP5NDVVB6SOXIBBX2IBZ4W42IDKI43D653A6ZPSDW4RXRXJXLST),
     amount: 1000,
-    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 84, 85, 71, 55),
+    payload: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 86, 77, 55, 80),
 }
 
 Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6)
