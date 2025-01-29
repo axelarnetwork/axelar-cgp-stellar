@@ -2,7 +2,7 @@
 name = "stellar-upgrader"
 version = "0.2.4"
 edition = { workspace = true }
-description = "Contract related to Stellar Upgrader."
+description = "Upgrader contract, responsible for upgrading contracts and migrate data in an atomic transaction."
 license = { workspace = true }
 publish = true
 

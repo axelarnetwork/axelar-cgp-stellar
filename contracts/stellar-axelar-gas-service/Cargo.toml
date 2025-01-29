@@ -2,7 +2,7 @@
 name = "stellar-axelar-gas-service"
 version = "0.3.0"
 edition = { workspace = true }
-description = "Contract related to Stellar Axelar Gas Service."
+description = "AxelarGasService contract, responsible for managing gas payments and refunds for cross-chain communication on the Axelar network."
 license = { workspace = true }
 publish = true
 
