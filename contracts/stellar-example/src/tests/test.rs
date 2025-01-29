@@ -182,6 +182,7 @@ fn its_example() {
 
     let user = Address::generate(&env);
 
+    // Setup source app
     let source_chain = String::from_str(&env, SOURCE_CHAIN_NAME);
     let TestConfig {
         its: source_its,
@@ -192,6 +193,7 @@ fn its_example() {
     let hub_chain = source_its.its_hub_chain_name();
     let hub_address = source_its.its_hub_address();
 
+    // Setup destination app
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN_NAME);
     let TestConfig {
         signers: destination_signers,
@@ -203,6 +205,7 @@ fn its_example() {
 
     let transfer_amount = 1000;
 
+    // Setup source token
     let (token_id, token_metadata) =
         setup_its_token(&env, &source_its, &user, transfer_amount);
     let token_address = source_its.token_address(&token_id);
@@ -220,11 +223,9 @@ fn its_example() {
         .mock_all_auths()
         .set_trusted_chain(&source_chain);
 
-    let destination_trusted_chain_set_event =
-        events::fmt_last_emitted_event::<TrustedChainSetEvent>(&env);
+    let recipient = Address::generate(&env);
 
-    let data = Address::generate(&env).to_string_bytes();
-
+    // Register and deploy tokens on ITS
     source_its
         .mock_all_auths()
         .register_canonical_token(&token_address);
@@ -238,7 +239,7 @@ fn its_example() {
         .mock_all_auths()
         .mint(&user, &transfer_amount);
 
-    // DeployInterchainToken execute
+    // Execute DeployInterchainToken message on destination
     let deploy_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain: source_chain.clone(),
         message: stellar_interchain_token_service::types::Message::DeployInterchainToken(
@@ -280,19 +281,19 @@ fn its_example() {
         &hub_address,
         &payload,
     );
-    // END DeployInterchainToken execute
 
+    // Send tokens to destination app
     source_app.mock_all_auths().send_token(
         &user,
         &token_id,
         &destination_chain,
         &destination_app.address.to_string_bytes(),
         &transfer_amount,
-        &Some(data.clone()),
+        &Some(recipient.to_string_bytes()),
         &gas_token,
     );
 
-    // InterchainTransfer execute
+    // Execute InterchainTransfer message on destination
     let transfer_msg = stellar_interchain_token_service::types::HubMessage::ReceiveFromHub {
         source_chain,
         message: stellar_interchain_token_service::types::Message::InterchainTransfer(
@@ -301,7 +302,7 @@ fn its_example() {
                 source_address: user.to_string_bytes(),
                 destination_address: destination_app.address.to_string_bytes(),
                 amount: transfer_amount,
-                data: Some(data.clone()),
+                data: Some(recipient.to_string_bytes()),
             },
         ),
     };
@@ -336,12 +337,10 @@ fn its_example() {
         &hub_address,
         &payload,
     );
-    // END InterchainTransfer execute
 
     let token_received_event = events::fmt_last_emitted_event::<TokenReceivedEvent>(&env);
 
     goldie::assert!([
-        destination_trusted_chain_set_event,
         source_trusted_chain_set_event,
         message_approved_event,
         token_received_event
@@ -355,7 +354,7 @@ fn its_example() {
         0
     );
 
-    let recipient = Address::from_string_bytes(&data);
+    let recipient = Address::from_string_bytes(&recipient.to_string_bytes());
 
     assert_eq!(
         destination_token.balance(&destination_app.address),

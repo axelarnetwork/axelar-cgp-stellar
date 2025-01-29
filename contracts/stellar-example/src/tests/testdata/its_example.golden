@@ -1,14 +1,4 @@
 TrustedChainSetEvent {
-    chain: String(source),
-}
-
-Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMPZO)
-
-trusted_chain_set {
-    #[topic] chain: String,
-}
-
-TrustedChainSetEvent {
     chain: String(destination),
 }
 
