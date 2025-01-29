@@ -283,3 +283,43 @@ fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
         format_ident!("delete_{}", variant.ident.to_string().to_snake_case()),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use prettyplease;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_storage_schema_generation() {
+        let input: DeriveInput = parse_quote! {
+            enum DataKey {
+                #[instance]
+                #[value(u32)]
+                Counter,
+
+                #[persistent]
+                #[value(String)]
+                Message { sender: Address },
+
+                #[temporary]
+                #[value(Address)]
+                LastCaller { timestamp: u64 },
+
+                #[persistent]
+                #[value(bool)]
+                Flag { key: String, owner: Address },
+
+                #[persistent]
+                #[value(Option<String>)]
+                OptionalMessage { id: u32 },
+            }
+        };
+
+        let generated = contractstorage(&input);
+        let file: syn::File = syn::parse2(generated).unwrap();
+        let formatted = prettyplease::unparse(&file);
+        goldie::assert!(formatted);
+    }
+}

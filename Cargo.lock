@@ -2007,19 +2007,18 @@ dependencies = [
  "goldie",
  "hex",
  "paste",
- "prettyplease",
- "quote",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-std-derive",
- "syn 2.0.87",
 ]
 
 [[package]]
 name = "stellar-axelar-std-derive"
 version = "1.0.0"
 dependencies = [
+ "goldie",
  "heck",
+ "prettyplease",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
