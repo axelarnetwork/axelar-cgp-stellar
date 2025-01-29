@@ -72,7 +72,7 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
 
     let output = quote! {
         #[contracttype]
-        pub enum #name {
+        enum #name {
             #(#transformed_variants,)*
         }
 
@@ -82,6 +82,11 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
 
         #(#public_fns)*
     };
+
+    // TODO: Remove
+    println!("=== Generated Storage Code ===");
+    println!("{}", output.to_string());
+    println!("============================");
 
     output
 }
@@ -180,9 +185,7 @@ fn storage_fns(
 
     let value_type = storage_attrs.value_type.clone();
 
-    let getter_name = format_ident!("get_{}", variant_ident.to_string().to_snake_case());
-    let setter_name = format_ident!("set_{}", variant_ident.to_string().to_snake_case());
-    let deleter_name = format_ident!("delete_{}", variant_ident.to_string().to_snake_case());
+    let (getter_name, setter_name, deleter_name) = fn_names(&variant);
 
     let storage_method = storage_attrs.storage_type.storage_method();
     let ttl_fn = storage_attrs.storage_type.ttl_method();
@@ -234,11 +237,7 @@ fn storage_fns(
 
 /// Generates the public module-level storage functions.
 fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -> TokenStream {
-    let variant_name = &variant.ident.to_string().to_snake_case();
-    let fn_name = format_ident!("{}", variant_name);
-    let get_fn_name = format_ident!("get_{}", fn_name);
-    let set_fn_name = format_ident!("set_{}", fn_name);
-    let delete_fn_name = format_ident!("delete_{}", fn_name);
+    let (getter_name, setter_name, deleter_name) = fn_names(variant);
 
     let (field_names, field_types) = fields_data(&variant.fields);
 
@@ -255,16 +254,16 @@ fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -
     };
 
     quote! {
-        pub fn #fn_name(#param_list) -> Option<#value_type> {
-            #enum_name::#get_fn_name(#fn_args)
+        pub fn #getter_name(#param_list) -> Option<#value_type> {
+            #enum_name::#getter_name(#fn_args)
         }
 
-        pub fn #set_fn_name(#param_list, value: &#value_type) {
-            #enum_name::#set_fn_name(#fn_args, value)
+        pub fn #setter_name(#param_list, value: &#value_type) {
+            #enum_name::#setter_name(#fn_args, value)
         }
 
-        pub fn #delete_fn_name(#param_list) {
-            #enum_name::#delete_fn_name(#fn_args)
+        pub fn #deleter_name(#param_list) {
+            #enum_name::#deleter_name(#fn_args)
         }
     }
 }
@@ -280,4 +279,12 @@ fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
         }
         _ => panic!("Only unit variants or named fields are supported in storage enums."),
     }
+}
+
+fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
+    (
+        format_ident!("{}", variant.ident.to_string().to_snake_case()),
+        format_ident!("set_{}", variant.ident.to_string().to_snake_case()),
+        format_ident!("delete_{}", variant.ident.to_string().to_snake_case()),
+    )
 }

@@ -12,7 +12,7 @@ use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
 use crate::interface::ExampleInterface;
-use crate::storage_types::DataKey;
+use crate::storage_types as storage;
 
 #[contract]
 #[derive(InterchainTokenExecutable)]
@@ -34,7 +34,7 @@ impl AxelarExecutableInterface for Example {
     type Error = ExampleError;
 
     fn gateway(env: &Env) -> Address {
-        DataKey::get_gateway(env).expect("gateway not found")
+        storage::gateway(env).expect("gateway not found")
     }
 
     fn execute(
@@ -62,7 +62,7 @@ impl CustomInterchainTokenExecutable for Example {
     type Error = ExampleError;
 
     fn __interchain_token_service(env: &Env) -> Address {
-        DataKey::get_interchain_token_service(env).expect("interchain token service not found")
+        storage::interchain_token_service(env).expect("interchain token service not found")
     }
 
     fn __authorized_execute_with_token(
@@ -109,16 +109,16 @@ impl Example {
         gas_service: Address,
         interchain_token_service: Address,
     ) {
-        DataKey::set_gateway(env, &gateway);
-        DataKey::set_gas_service(env, &gas_service);
-        DataKey::set_interchain_token_service(env, &interchain_token_service);
+        storage::set_gateway(env, &gateway);
+        storage::set_gas_service(env, &gas_service);
+        storage::set_interchain_token_service(env, &interchain_token_service);
     }
 }
 
 #[contractimpl]
 impl ExampleInterface for Example {
     fn gas_service(env: &Env) -> Address {
-        DataKey::get_gas_service(env).expect("gas service not found")
+        storage::gas_service(env).expect("gas service not found")
     }
 
     fn send(

@@ -81,42 +81,42 @@ impl Contract {
     pub const fn __constructor() {}
 
     pub fn increment_counter(env: &Env) -> u32 {
-        let current_counter = storage::DataKey::get_counter(env).unwrap_or(0);
+        let current_counter = storage::counter(env).unwrap_or(0);
         let new_counter = current_counter + 1;
-        storage::DataKey::set_counter(env, &new_counter);
+        storage::set_counter(env, &new_counter);
         new_counter
     }
 
     pub fn set_message(env: &Env, sender: Address, message: String) {
-        storage::DataKey::set_message(env, sender, &message);
+        storage::set_message(env, sender, &message);
     }
 
     pub fn message(env: &Env, sender: Address) -> Option<String> {
-        storage::DataKey::get_message(env, sender)
+        storage::message(env, sender)
     }
 
     pub fn set_last_caller(env: &Env, timestamp: u64, caller: Address) {
-        storage::DataKey::set_last_caller(env, timestamp, &caller);
+        storage::set_last_caller(env, timestamp, &caller);
     }
 
     pub fn last_caller(env: &Env, timestamp: u64) -> Option<Address> {
-        storage::DataKey::get_last_caller(env, timestamp)
+        storage::last_caller(env, timestamp)
     }
 
     pub fn set_flag(env: &Env, key: String, owner: Address, value: bool) {
-        storage::DataKey::set_flag(env, key, owner, &value);
+        storage::set_flag(env, key, owner, &value);
     }
 
     pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
-        storage::DataKey::get_flag(env, key, owner)
+        storage::flag(env, key, owner)
     }
 
     pub fn set_optional_message(env: &Env, id: u32, message: Option<String>) {
-        storage::DataKey::set_optional_message(env, id, &message);
+        storage::set_optional_message(env, id, &message);
     }
 
     pub fn optional_message(env: &Env, id: u32) -> Option<Option<String>> {
-        storage::DataKey::get_optional_message(env, id)
+        storage::optional_message(env, id)
     }
 }
 
