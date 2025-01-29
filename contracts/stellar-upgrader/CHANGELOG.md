@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-upgrader-v0.2.3...stellar-upgrader-v0.2.4)
+
+### ⚙️ Miscellaneous Tasks
+
+- Add build check to fail on warnings ([#227](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/227)) - ([af05c6f](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/af05c6f670f7d324eebbadb6f611412527761603))
+
+### Contributors
+
+* @TanvirDeol
+
 ## [0.2.3](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-upgrader-v0.2.2...stellar-upgrader-v0.2.3)
 
 ### 📚 Documentation
