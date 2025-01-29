@@ -5,7 +5,7 @@ use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Typ
 
 struct StorageAttributes {
     storage_type: StorageType,
-    value_type: Option<Type>,
+    value_type: Type,
 }
 
 enum StorageType {
@@ -53,7 +53,7 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     output
 }
 
-/// Transforms a contractstorage enum variant with named fields into a storage key map, or a single storage key for a unit variant.
+/// Transforms a contractstorage enum variant with named fields into a storage key map (tuple variant), or a single storage key for a unit variant.
 ///
 /// The Unit variant must be captured here to avoid suffixing non-map variants with "{}".
 ///
@@ -64,19 +64,19 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
 /// enum DataKey {
 ///     #[instance]
 ///     #[value(Address)]
-///     Gateway, // Unit variant
+///     Gateway, // Unit variant (would need `Gateway {},` otherwise)
 ///
 ///     #[temporary]
 ///     #[value(Address)]
-///     Users { user: Address }, // Named variant
+///     Users { user: Address }, // Named variant (one or more fields)
 /// }
 /// ```
 ///
 /// /* Generated */
 /// #[contracttype]
 /// pub enum DataKey {
-///     Gateway, // Non-map
-///     Users(Address), // Map
+///     Gateway, // Unit variant (storage key)
+///     Users(Address), // Tuple variant (storage key map)
 /// }
 /// ```
 fn transform_variant(variant: &Variant) -> TokenStream {
@@ -99,50 +99,33 @@ fn transform_variant(variant: &Variant) -> TokenStream {
 }
 
 fn storage_type(attrs: &[Attribute]) -> StorageType {
-    let mut found_type = None;
-
     for attr in attrs {
         let path_str = attr.path().to_token_stream().to_string();
         match path_str.as_str() {
-            "instance" | "persistent" | "temporary" => {
-                if found_type.is_some() {
-                    panic!("Multiple storage types specified - must have exactly one of: 'instance', 'persistent', or 'temporary'.");
-                }
-                found_type = Some(match path_str.as_str() {
-                    "instance" => StorageType::Instance,
-                    "persistent" => StorageType::Persistent,
-                    "temporary" => StorageType::Temporary,
-                    _ => unreachable!(),
-                });
-            }
+            "instance" => return StorageType::Instance,
+            "persistent" => return StorageType::Persistent,
+            "temporary" => return StorageType::Temporary,
             "value" => continue,
             unknown => panic!("Unknown storage attribute: {}", unknown),
         }
     }
 
-    found_type.expect(
-        "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.",
-    )
+    panic!("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
 }
 
-fn value_type(attrs: &[Attribute]) -> Option<Type> {
-    let mut found_type = None;
-
+fn value_type(attrs: &[Attribute]) -> Type {
     for attr in attrs {
         let path_str = attr.path().to_token_stream().to_string();
         if path_str == "value" {
-            if found_type.is_some() {
-                panic!("multiple value types specified - must have at most one 'value' attribute");
-            }
             if let Meta::List(list) = &attr.meta {
-                if let Ok(ty) = list.parse_args::<Type>() {
-                    found_type = Some(ty);
-                }
+                return list.parse_args::<Type>().expect("Failed to parse value type.");
+            } else {
+                panic!("Value attribute must contain a type parameter: #[value(Type)]");
             }
         }
     }
 
-    found_type
+    panic!("Missing required #[value(Type)] attribute.")
 }
 
 fn storage_fns(
@@ -152,20 +135,9 @@ fn storage_fns(
 ) -> TokenStream {
     let variant_ident = &variant.ident;
 
-    let (field_names, field_types) = match &variant.fields {
-        Fields::Unit => (vec![], vec![]),
-        Fields::Named(fields) => {
-            let names = fields.named.iter().map(|f| &f.ident).collect();
-            let types = fields.named.iter().map(|f| &f.ty).collect();
-            (names, types)
-        }
-        _ => panic!("Only unit variants or named fields are supported in storage enums."),
-    };
+    let (field_names, field_types) = fields_data(&variant.fields);
 
-    let value_type = storage_attrs
-        .value_type
-        .as_ref()
-        .expect("value type required");
+    let value_type = storage_attrs.value_type.clone();
 
     let getter_name = format_ident!("get_{}", variant_ident.to_string().to_snake_case());
     let setter_name = format_ident!("set_{}", variant_ident.to_string().to_snake_case());
@@ -220,5 +192,17 @@ fn storage_fns(
 
             #ttl_fn
         }
+    }
+}
+
+fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
+    match fields {
+        Fields::Unit => (vec![], vec![]),
+        Fields::Named(fields) => {
+            let names = fields.named.iter().map(|f| &f.ident).collect();
+            let types = fields.named.iter().map(|f| &f.ty).collect();
+            (names, types)
+        }
+        _ => panic!("Only unit variants or named fields are supported in storage enums."),
     }
 }
