@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.3.0...stellar-axelar-std-v0.3.1)
+## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.3.0...stellar-axelar-std-v1.0.0)
 
 ### ⚙️ Miscellaneous Tasks
 
