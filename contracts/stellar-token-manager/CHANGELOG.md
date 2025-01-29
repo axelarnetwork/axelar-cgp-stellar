@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-token-manager-v0.1.0...stellar-token-manager-v0.1.1)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update package descriptions ([#226](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/226)) - ([1881ec7](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/1881ec723644734f0c19c32db143e7a539f74ad3))
+
+### Contributors
+
+* @ahramy
+
 ## [0.1.0]
 
 ### ⛰️ Features

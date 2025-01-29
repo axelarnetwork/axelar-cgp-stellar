@@ -1,6 +1,6 @@
 [package]
 name = "stellar-axelar-operators"
-version = "0.2.3"
+version = "0.2.4"
 edition = { workspace = true }
 description = "AxelarOperators contract, responsible for managing operators and enabling invoking functions with access control and upgradeability."
 license = { workspace = true }
