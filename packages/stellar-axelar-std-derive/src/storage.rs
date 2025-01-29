@@ -22,6 +22,18 @@ impl StorageType {
             StorageType::Temporary => quote! { temporary },
         }
     }
+
+    pub fn ttl_method(&self) -> TokenStream {
+        match self {
+            StorageType::Persistent => quote! {
+                stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+            },
+            StorageType::Instance => quote! {
+                stellar_axelar_std::ttl::extend_instance_ttl(env);
+            },
+            StorageType::Temporary => quote! {},
+        }
+    }
 }
 
 pub fn contractstorage(input: &DeriveInput) -> TokenStream {
@@ -153,17 +165,7 @@ fn storage_fns(
     let setter_name = format_ident!("set_{}", variant_ident.to_string().to_snake_case());
 
     let storage_method = storage_attrs.storage_type.storage_method();
-
-    let ttl_fn = match storage_attrs.storage_type {
-        StorageType::Persistent => quote! {
-            use stellar_axelar_std::ttl::extend_persistent_ttl;
-            extend_persistent_ttl(env, &key);
-        },
-        StorageType::Instance => quote! {
-            stellar_axelar_std::ttl::extend_instance_ttl(env);
-        },
-        _ => quote! {},
-    };
+    let ttl_fn = storage_attrs.storage_type.ttl_method();
 
     let key_construction = if field_names.is_empty() {
         quote! { #enum_name::#variant_ident }
