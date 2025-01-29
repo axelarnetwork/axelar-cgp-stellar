@@ -11,6 +11,7 @@ use stellar_interchain_token_service::executable::CustomInterchainTokenExecutabl
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
+use crate::interface::ExampleInterface;
 use crate::storage_types::DataKey;
 
 #[contract]
@@ -112,12 +113,15 @@ impl Example {
         DataKey::set_gas_service(env, &gas_service);
         DataKey::set_interchain_token_service(env, &interchain_token_service);
     }
+}
 
-    pub fn gas_service(env: &Env) -> Address {
+#[contractimpl]
+impl ExampleInterface for Example {
+    fn gas_service(env: &Env) -> Address {
         DataKey::get_gas_service(env).expect("gas service not found")
     }
 
-    pub fn send(
+    fn send(
         env: &Env,
         caller: Address,
         destination_chain: String,
@@ -148,7 +152,7 @@ impl Example {
         );
     }
 
-    pub fn send_token(
+    fn send_token(
         env: &Env,
         caller: Address,
         token_id: BytesN<32>,

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-operators-v0.2.3...stellar-axelar-operators-v1.0.0)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update package descriptions ([#226](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/226)) - ([1881ec7](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/1881ec723644734f0c19c32db143e7a539f74ad3))
+
+### Contributors
+
+* @ahramy
+
+## [0.2.3](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-operators-v0.2.2...stellar-axelar-operators-v0.2.3)
+
+### 📚 Documentation
+
+- Add docs to contract interfaces ([#175](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/175)) - ([2f17e32](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/2f17e32b33e6d04609c3014e161ce07f9dbbef63))
+
+### Contributors
+
+* @TanvirDeol
+
 ## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-operators-v0.2.1...stellar-axelar-operators-v0.2.2)
 
 ### 🚜 Refactor

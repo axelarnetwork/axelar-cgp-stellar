@@ -24,9 +24,9 @@ jobs:
           toolchain: 1.81.0
 
       - name: Rust Cache
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@v3.0.1
         with:
-          shared-key: "cache"
+          shared-key: "cache-test"
 
       - name: Run tests for contracts
         run: for C in contracts/*; do cd $C; RUSTFLAGS="-D warnings" cargo test --locked; cd ../../ ; done

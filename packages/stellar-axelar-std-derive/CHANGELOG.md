@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-derive-v0.3.0...stellar-axelar-std-derive-v1.0.0)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update package descriptions ([#226](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/226)) - ([1881ec7](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/1881ec723644734f0c19c32db143e7a539f74ad3))
+
+### Contributors
+
+* @ahramy
+
+## [0.3.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-derive-v0.2.1...stellar-axelar-std-derive-v0.3.0)
+
+### ⛰️ Features
+
+- *(axelar-std)* [**breaking**] Add pausable interface ([#204](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/204)) - ([0d4af95](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/0d4af958562e502df15dcd6bc50ec4ec66cbae46))
+- *(axelar-std-derive)* Add macro to execute when contract is not paused ([#214](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/214)) - ([03d1a48](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/03d1a48b8ad9d0f4f87fc18d1ffbe6405c814fb5))
+
+### 🐛 Bug Fixes
+
+- *(axelar-std-derive)* Cleanup dependencies ([#213](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/213)) - ([c986ce8](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/c986ce8f689d118e78f6d1435bbe7bffd42ad3fd))
+
+### 🎨 Styling
+
+- *(axelar-std-derive)* Conform IntoEvent nomenclature to other derive macros ([#206](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/206)) - ([b583c7f](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/b583c7f5d11f1e865ce3283dc7b762f51b89a2ae))
+
+### Contributors
+
+* @milapsheth
+* @nbayindirli
+
 ## [0.2.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-derive-v0.2.0...stellar-axelar-std-derive-v0.2.1)
 
 ### 🐛 Bug Fixes

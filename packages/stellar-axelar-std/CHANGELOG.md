@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.3.0...stellar-axelar-std-v1.0.0)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update package descriptions ([#226](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/226)) - ([1881ec7](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/1881ec723644734f0c19c32db143e7a539f74ad3))
+
+### Contributors
+
+* @ahramy
+
+## [0.3.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.2.2...stellar-axelar-std-v0.3.0)
+
+### ⛰️ Features
+
+- *(axelar-gateway)* Add more queries ([#207](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/207)) - ([ca3b486](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/ca3b4861a1a26b63cad5f12daa86a71a29107cee))
+- *(axelar-std)* [**breaking**] Add pausable interface ([#204](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/204)) - ([0d4af95](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/0d4af958562e502df15dcd6bc50ec4ec66cbae46))
+- *(axelar-std-derive)* Add macro to execute when contract is not paused ([#214](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/214)) - ([03d1a48](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/03d1a48b8ad9d0f4f87fc18d1ffbe6405c814fb5))
+- *(token-manager)* Add token manager for ITS ([#215](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/215)) - ([42d7b34](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/42d7b348a4b419ce77c35688f93ba803c2e5ef1e))
+
+### 🐛 Bug Fixes
+
+- *(axelar-std-derive)* Cleanup dependencies ([#213](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/213)) - ([c986ce8](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/c986ce8f689d118e78f6d1435bbe7bffd42ad3fd))
+
+### 🚜 Refactor
+
+- *(interchain-token-service)* Separate ITS logic into modules ([#219](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/219)) - ([86c7bac](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/86c7bac9cf2e52d515c841dc6c4e571e12645e90))
+
+### Contributors
+
+* @milapsheth
+
 ## [0.2.2](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-v0.2.1...stellar-axelar-std-v0.2.2)
 
 ### 🚜 Refactor

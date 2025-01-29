@@ -20,7 +20,7 @@ pub fn setup_env<'a>() -> (
     let (signers, gateway_client) = setup_gateway(&env, 0, 5);
     let gas_service_client: AxelarGasServiceClient<'_> = setup_gas_service(&env);
 
-    let client = setup_its(&env, &gateway_client, &gas_service_client);
+    let client = setup_its(&env, &gateway_client, &gas_service_client, None);
 
     (env, client, gateway_client, gas_service_client, signers)
 }

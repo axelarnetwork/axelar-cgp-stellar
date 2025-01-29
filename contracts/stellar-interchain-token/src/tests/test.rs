@@ -4,7 +4,8 @@ extern crate std;
 use soroban_sdk::testutils::{Address as _, BytesN as _, Ledger};
 use soroban_sdk::{Address, BytesN, Env, IntoVal as _};
 use soroban_token_sdk::metadata::TokenMetadata;
-use stellar_axelar_std::events::fmt_last_emitted_event;
+use stellar_axelar_std::events::{fmt_emitted_event_at_idx, fmt_last_emitted_event};
+use stellar_axelar_std::interfaces::OwnershipTransferredEvent;
 use stellar_axelar_std::{assert_auth, assert_auth_err};
 
 use crate::event::{MinterAddedEvent, MinterRemovedEvent};
@@ -18,7 +19,7 @@ fn setup_token_metadata(env: &Env, name: &str, symbol: &str, decimal: u32) -> To
     }
 }
 
-fn setup_token<'a>(env: &Env) -> (InterchainTokenClient<'a>, Address, Address) {
+fn setup_token<'a>(env: &Env) -> (InterchainTokenClient<'a>, Address) {
     let owner = Address::generate(env);
     let minter = Address::generate(env);
     let token_id: BytesN<32> = BytesN::<32>::random(env);
@@ -26,11 +27,11 @@ fn setup_token<'a>(env: &Env) -> (InterchainTokenClient<'a>, Address, Address) {
 
     let contract_id = env.register(
         InterchainToken,
-        (owner.clone(), minter.clone(), &token_id, token_metadata),
+        (owner, minter.clone(), &token_id, token_metadata),
     );
 
     let token = InterchainTokenClient::new(env, &contract_id);
-    (token, owner, minter)
+    (token, minter)
 }
 
 #[test]
@@ -59,12 +60,12 @@ fn register_interchain_token() {
     assert_eq!(token.symbol(), token_metadata.symbol);
     assert_eq!(token.decimals(), token_metadata.decimal);
     assert_eq!(token.owner(), owner);
-    assert!(token.is_minter(&owner));
+    assert!(!token.is_minter(&owner));
     assert!(token.is_minter(&minter));
 }
 
 #[test]
-fn register_interchain_token_without_minter() {
+fn register_interchain_token_succeeds_without_minter() {
     let env = Env::default();
 
     let owner = Address::generate(&env);
@@ -80,7 +81,22 @@ fn register_interchain_token_without_minter() {
     let token = InterchainTokenClient::new(&env, &contract_id);
 
     assert_eq!(token.owner(), owner);
-    assert!(token.is_minter(&owner));
+    assert!(!token.is_minter(&owner));
+}
+
+#[test]
+fn transfer_ownership_succeeds() {
+    let env = Env::default();
+    let new_owner = Address::generate(&env);
+
+    let (token, _) = setup_token(&env);
+
+    assert_auth!(token.owner(), token.transfer_ownership(&new_owner));
+    goldie::assert!(fmt_emitted_event_at_idx::<OwnershipTransferredEvent>(
+        &env, -2
+    ));
+
+    assert_eq!(token.owner(), new_owner);
 }
 
 #[test]
@@ -90,23 +106,36 @@ fn transfer_ownership_from_non_owner_fails() {
     let new_owner = Address::generate(&env);
     let user = Address::generate(&env);
 
-    let (token, _owner, _minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
     assert_auth_err!(user, token.transfer_ownership(&new_owner));
 }
 
 #[test]
-fn transfer_ownership() {
+fn set_admin_succeeds() {
     let env = Env::default();
     let new_owner = Address::generate(&env);
 
-    let (token, owner, _minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
-    assert_eq!(token.owner(), owner);
-
-    assert_auth!(owner, token.transfer_ownership(&new_owner));
+    assert_auth!(token.owner(), token.set_admin(&new_owner));
+    goldie::assert!(fmt_emitted_event_at_idx::<OwnershipTransferredEvent>(
+        &env, -2
+    ));
 
     assert_eq!(token.owner(), new_owner);
+}
+
+#[test]
+fn set_admin_fails_when_not_owner() {
+    let env = Env::default();
+
+    let new_owner = Address::generate(&env);
+    let user = Address::generate(&env);
+
+    let (token, _) = setup_token(&env);
+
+    assert_auth_err!(user, token.set_admin(&new_owner));
 }
 
 #[test]
@@ -118,7 +147,7 @@ fn transfer_fails_with_negative_amount() {
     let user2 = Address::generate(&env);
     let amount = -1;
 
-    let (token, _owner, _minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
     token.mock_all_auths().transfer(&user1, &user2, &amount);
 }
@@ -132,7 +161,7 @@ fn transfer_fails_with_insufficient_balance() {
     let user2 = Address::generate(&env);
     let amount = 1000;
 
-    let (token, _owner, _minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
     token.mock_all_auths().transfer(&user1, &user2, &amount);
 }
@@ -145,7 +174,7 @@ fn transfer() {
     let user2 = Address::generate(&env);
     let amount = 1000;
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &amount));
     assert_eq!(token.balance(&user1), amount);
@@ -165,7 +194,7 @@ fn transfer_from_fails_with_negative_amount() {
     let user3 = Address::generate(&env);
     let amount = -1;
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &1000_i128));
     assert_eq!(token.balance(&user1), 1000_i128);
@@ -192,7 +221,7 @@ fn transfer_from_fails_without_approval() {
     let user2 = Address::generate(&env);
     let user3 = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &1000_i128));
     assert_eq!(token.balance(&user1), 1000_i128);
@@ -211,7 +240,7 @@ fn transfer_from_fails_with_insufficient_allowance() {
     let user2 = Address::generate(&env);
     let user3 = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &1000_i128));
     assert_eq!(token.balance(&user1), 1000_i128);
@@ -238,7 +267,7 @@ fn transfer_from_fails_with_expired_allowance() {
     let user2 = Address::generate(&env);
     let user3 = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     token
         .mock_all_auths()
@@ -260,14 +289,14 @@ fn transfer_from_fails_with_expired_allowance() {
 }
 
 #[test]
-fn transfer_from() {
+fn transfer_from_succeeds() {
     let env = Env::default();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
     let user3 = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &1000_i128));
     assert_eq!(token.balance(&user1), 1000_i128);
@@ -290,34 +319,53 @@ fn transfer_from() {
 }
 
 #[test]
-fn mint_from_invalid_minter_fails() {
+fn mint_succeeds() {
     let env = Env::default();
 
     let amount = 1000;
-
     let user = Address::generate(&env);
 
-    let (token, owner, minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
-    assert_auth_err!(owner, token.mint_from(&minter, &user, &amount));
-    assert_auth_err!(user, token.mint_from(&minter, &user, &amount));
-    assert_auth_err!(user, token.mint(&user, &amount));
+    assert_auth!(token.owner(), token.mint(&user, &amount));
+    assert_eq!(token.balance(&user), amount);
+
+    token.mock_all_auths().remove_minter(&token.owner());
+
+    // Owner can mint without being a minter
+    assert_auth!(token.owner(), token.mint(&user, &amount));
+    assert_eq!(token.balance(&user), amount * 2);
 }
 
 #[test]
-fn mint_from_minter_succeeds() {
+fn mint_from_succeeds() {
     let env = Env::default();
 
     let amount = 1000;
     let user = Address::generate(&env);
 
-    let (token, owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
 
     assert_auth!(minter, token.mint_from(&minter, &user, &amount));
     assert_eq!(token.balance(&user), amount);
 
-    assert_auth!(owner, token.mint(&user, &amount));
+    assert_auth!(token.owner(), token.mint(&user, &amount));
     assert_eq!(token.balance(&user), amount * 2);
+}
+
+#[test]
+fn mint_from_fails_with_invalid_minter() {
+    let env = Env::default();
+
+    let amount = 1000;
+
+    let user = Address::generate(&env);
+
+    let (token, minter) = setup_token(&env);
+
+    assert_auth_err!(token.owner(), token.mint_from(&minter, &user, &amount));
+    assert_auth_err!(user, token.mint_from(&minter, &user, &amount));
+    assert_auth_err!(user, token.mint(&user, &amount));
 }
 
 #[test]
@@ -327,7 +375,7 @@ fn add_minter_fails_without_owner_auth() {
     let minter2 = Address::generate(&env);
     let user = Address::generate(&env);
 
-    let (token, _owner, _minter1) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
     assert_auth_err!(user, token.add_minter(&minter2));
 }
@@ -340,9 +388,9 @@ fn add_minter_succeeds() {
     let minter2 = Address::generate(&env);
     let user = Address::generate(&env);
 
-    let (token, owner, _minter1) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
-    assert_auth!(owner, token.add_minter(&minter2));
+    assert_auth!(token.owner(), token.add_minter(&minter2));
 
     goldie::assert!(fmt_last_emitted_event::<MinterAddedEvent>(&env));
 
@@ -351,32 +399,48 @@ fn add_minter_succeeds() {
 }
 
 #[test]
-fn remove_minter_fails_without_owner_auth() {
-    let env = Env::default();
-
-    let minter1 = Address::generate(&env);
-    let user = Address::generate(&env);
-
-    let (token, _owner, _minter) = setup_token(&env);
-
-    assert_auth_err!(user, token.remove_minter(&minter1));
-}
-
-#[test]
-fn remove_minter() {
+fn remove_minter_succeeds() {
     let env = Env::default();
 
     let amount = 1000;
     let minter1 = Address::generate(&env);
     let user = Address::generate(&env);
 
-    let (token, owner, _minter) = setup_token(&env);
+    let (token, _) = setup_token(&env);
 
-    assert_auth!(owner, token.remove_minter(&minter1));
+    assert_auth!(token.owner(), token.remove_minter(&minter1));
 
     goldie::assert!(fmt_last_emitted_event::<MinterRemovedEvent>(&env));
 
     assert_auth_err!(minter1, token.mint_from(&minter1, &user, &amount));
+}
+
+#[test]
+fn remove_minter_fails_without_minter_auth() {
+    let env = Env::default();
+
+    let minter1 = Address::generate(&env);
+    let user = Address::generate(&env);
+
+    let (token, _) = setup_token(&env);
+
+    assert_auth_err!(user, token.remove_minter(&minter1));
+}
+
+#[test]
+fn burn_succeeds() {
+    let env = Env::default();
+
+    let user = Address::generate(&env);
+
+    let (token, minter) = setup_token(&env);
+    let amount = 1000;
+
+    assert_auth!(minter, token.mint_from(&minter, &user, &amount));
+    assert_eq!(token.balance(&user), amount);
+
+    assert_auth!(user, token.burn(&user, &amount));
+    assert_eq!(token.balance(&user), 0);
 }
 
 #[test]
@@ -386,7 +450,7 @@ fn burn_fails_with_negative_amount() {
 
     let user = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
     let amount = 1000;
 
     assert_auth!(minter, token.mint_from(&minter, &user, &amount));
@@ -404,7 +468,7 @@ fn burn_fails_with_insufficient_balance() {
 
     let user = Address::generate(&env);
 
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
     let amount = 1000;
 
     assert_auth!(minter, token.mint_from(&minter, &user, &amount));
@@ -416,64 +480,12 @@ fn burn_fails_with_insufficient_balance() {
 }
 
 #[test]
-fn burn_succeeds() {
-    let env = Env::default();
-
-    let user = Address::generate(&env);
-
-    let (token, _owner, minter) = setup_token(&env);
-    let amount = 1000;
-
-    assert_auth!(minter, token.mint_from(&minter, &user, &amount));
-    assert_eq!(token.balance(&user), amount);
-
-    assert_auth!(user, token.burn(&user, &amount));
-    assert_eq!(token.balance(&user), 0);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
-fn burn_from_fails_with_negative_amount() {
-    let env = Env::default();
-
-    let user1 = Address::generate(&env);
-    let user2 = Address::generate(&env);
-    let (token, _owner, _minter) = setup_token(&env);
-
-    let burn_amount = -1;
-
-    token
-        .mock_all_auths()
-        .burn_from(&user2, &user1, &burn_amount);
-}
-
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
-fn burn_from_fails_without_approval() {
-    let env = Env::default();
-
-    let user1 = Address::generate(&env);
-    let user2 = Address::generate(&env);
-    let (token, _owner, minter) = setup_token(&env);
-    let amount = 1000;
-
-    assert_auth!(minter, token.mint_from(&minter, &user1, &amount));
-    assert_eq!(token.balance(&user1), amount);
-
-    let burn_amount = 500;
-
-    token
-        .mock_all_auths()
-        .burn_from(&user2, &user1, &burn_amount);
-}
-
-#[test]
 fn burn_from_succeeds() {
     let env = Env::default();
 
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
-    let (token, _owner, minter) = setup_token(&env);
+    let (token, minter) = setup_token(&env);
     let amount = 1000;
 
     assert_auth!(minter, token.mint_from(&minter, &user1, &amount));
@@ -491,5 +503,70 @@ fn burn_from_succeeds() {
     assert_auth!(user2, token.burn_from(&user2, &user1, &burn_amount));
     assert_eq!(token.allowance(&user1, &user2), 0);
     assert_eq!(token.balance(&user1), (amount - burn_amount));
-    assert_eq!(token.balance(&user2), 0);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #6)")] // NegativeAmount
+fn burn_from_fails_with_negative_amount() {
+    let env = Env::default();
+
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let (token, _) = setup_token(&env);
+
+    let burn_amount = -1;
+
+    token
+        .mock_all_auths()
+        .burn_from(&user2, &user1, &burn_amount);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #8)")] // InsufficientAllowance
+fn burn_from_fails_without_approval() {
+    let env = Env::default();
+
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let (token, minter) = setup_token(&env);
+    let amount = 1000;
+
+    assert_auth!(minter, token.mint_from(&minter, &user1, &amount));
+    assert_eq!(token.balance(&user1), amount);
+
+    let burn_amount = 500;
+
+    token
+        .mock_all_auths()
+        .burn_from(&user2, &user1, &burn_amount);
+}
+
+#[test]
+#[should_panic(expected = "not implemented")]
+fn set_authorized_fails() {
+    let env = Env::default();
+
+    let (token, _) = setup_token(&env);
+
+    token.set_authorized(&token.owner(), &true);
+}
+
+#[test]
+#[should_panic(expected = "not implemented")]
+fn authorized_fails() {
+    let env = Env::default();
+
+    let (token, _) = setup_token(&env);
+
+    token.authorized(&token.owner());
+}
+
+#[test]
+#[should_panic(expected = "not implemented")]
+fn clawback_fails() {
+    let env = Env::default();
+
+    let (token, _) = setup_token(&env);
+
+    token.clawback(&token.owner(), &1);
 }

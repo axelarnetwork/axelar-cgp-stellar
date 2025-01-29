@@ -1,8 +1,8 @@
 [package]
 name = "stellar-axelar-operators"
-version = "0.2.2"
+version = "1.0.0"
 edition = { workspace = true }
-description = "Contract related to Stellar Axelar Operators."
+description = "AxelarOperators contract, responsible for managing operators and enabling invoking functions with access control and upgradeability."
 license = { workspace = true }
 publish = true
 
@@ -10,9 +10,11 @@ publish = true
 crate-type = ["cdylib", "rlib"]
 
 [features]
+library = [] # Only export the contract interface
 testutils = ["stellar-axelar-std/testutils"]
 
 [dependencies]
+cfg-if = { workspace = true }
 soroban-sdk = { workspace = true }
 stellar-axelar-std = { workspace = true }
 

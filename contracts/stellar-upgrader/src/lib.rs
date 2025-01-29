@@ -2,10 +2,19 @@
 #[cfg(test)]
 extern crate alloc;
 
-mod contract;
 pub mod error;
 
-pub use contract::{Upgrader, UpgraderClient};
+pub mod interface;
 
 #[cfg(test)]
 mod tests;
+
+cfg_if::cfg_if! {
+    if #[cfg(all(feature = "library", not(feature = "testutils")))] {
+        pub use interface::{UpgraderClient, UpgraderInterface};
+    } else {
+        mod contract;
+
+        pub use contract::{Upgrader, UpgraderClient};
+    }
+}

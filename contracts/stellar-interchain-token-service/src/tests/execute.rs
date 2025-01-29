@@ -30,7 +30,7 @@ fn interchain_transfer_message_execute_succeeds() {
 
     let amount = 1000;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, amount);
     client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
@@ -192,9 +192,9 @@ fn deploy_interchain_token_message_execute_succeeds() {
     client.execute(&source_chain, &message_id, &source_address, &payload);
 
     let interchain_token_deployed_event =
-        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -4);
+        events::fmt_emitted_event_at_idx::<InterchainTokenDeployedEvent>(&env, -3);
     let token_manager_deployed_event =
-        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -3);
+        events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -2);
 
     let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
 
@@ -306,7 +306,7 @@ fn execute_fails_with_invalid_message_type() {
 
     let amount = 1000;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, amount);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, amount);
     client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
@@ -456,7 +456,7 @@ fn execute_fails_with_invalid_amount() {
 
     let invalid_amount = 0;
     let deployer = Address::generate(&env);
-    let token_id = setup_its_token(&env, &client, &deployer, invalid_amount);
+    let (token_id, _) = setup_its_token(&env, &client, &deployer, invalid_amount);
     client
         .mock_all_auths()
         .set_trusted_chain(&original_source_chain);
@@ -690,6 +690,6 @@ fn deploy_interchain_token_message_execute_fails_token_already_deployed() {
 
     assert_contract_err!(
         client.try_execute(&source_chain, &second_message_id, &source_address, &payload),
-        ContractError::TokenAlreadyDeployed
+        ContractError::TokenAlreadyRegistered
     );
 }
