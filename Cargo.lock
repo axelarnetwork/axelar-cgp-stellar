@@ -2007,9 +2007,12 @@ dependencies = [
  "goldie",
  "hex",
  "paste",
+ "prettyplease",
+ "quote",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-std-derive",
+ "syn 2.0.87",
 ]
 
 [[package]]
