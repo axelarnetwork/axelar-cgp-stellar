@@ -36,6 +36,7 @@ impl StorageType {
     }
 }
 
+/// Generates the storage enum and its associated functions.
 pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     let name = &input.ident;
 
@@ -61,6 +62,14 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         })
         .collect();
 
+    let public_fns: Vec<_> = variants
+        .iter()
+        .map(|variant| {
+            let value_type = value_type(&variant.attrs);
+            public_storage_fns(name, variant, &value_type)
+        })
+        .collect();
+
     let output = quote! {
         #[contracttype]
         pub enum #name {
@@ -70,12 +79,15 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         impl #name {
             #(#storage_fns)*
         }
+
+        #(#public_fns)*
     };
 
     output
 }
 
-/// Transforms a contractstorage enum variant with named fields into a storage key map (tuple variant), or a single storage key for a unit variant.
+/// Transforms a contractstorage enum variant with named fields into a storage key map (tuple variant),
+/// or a single storage key for a unit variant.
 ///
 /// The Unit variant must be captured here to avoid suffixing non-map variants with "{}".
 ///
@@ -120,6 +132,7 @@ fn transform_variant(variant: &Variant) -> TokenStream {
     }
 }
 
+/// Returns the storage type of a storage enum variant.
 fn storage_type(attrs: &[Attribute]) -> StorageType {
     for attr in attrs {
         let path_str = attr.path().to_token_stream().to_string();
@@ -137,6 +150,7 @@ fn storage_type(attrs: &[Attribute]) -> StorageType {
     )
 }
 
+/// Returns the value type of a storage enum variant.
 fn value_type(attrs: &[Attribute]) -> Type {
     for attr in attrs {
         let path_str = attr.path().to_token_stream().to_string();
@@ -154,6 +168,7 @@ fn value_type(attrs: &[Attribute]) -> Type {
     panic!("Missing required #[value(Type)] attribute.")
 }
 
+/// Generates the storage getter, setter, and deleter functions for a storage enum variant.
 fn storage_fns(
     enum_name: &Ident,
     variant: &Variant,
@@ -217,6 +232,44 @@ fn storage_fns(
     }
 }
 
+/// Generates the public module-level storage functions.
+fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -> TokenStream {
+    let variant_name = &variant.ident.to_string().to_snake_case();
+    let fn_name = format_ident!("{}", variant_name);
+    let get_fn_name = format_ident!("get_{}", fn_name);
+    let set_fn_name = format_ident!("set_{}", fn_name);
+    let delete_fn_name = format_ident!("delete_{}", fn_name);
+
+    let (field_names, field_types) = fields_data(&variant.fields);
+
+    let param_list = if field_names.is_empty() {
+        quote! { env: &soroban_sdk::Env }
+    } else {
+        quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
+    };
+
+    let fn_args = if field_names.is_empty() {
+        quote! { env }
+    } else {
+        quote! { env, #(#field_names),* }
+    };
+
+    quote! {
+        pub fn #fn_name(#param_list) -> Option<#value_type> {
+            #enum_name::#get_fn_name(#fn_args)
+        }
+
+        pub fn #set_fn_name(#param_list, value: &#value_type) {
+            #enum_name::#set_fn_name(#fn_args, value)
+        }
+
+        pub fn #delete_fn_name(#param_list) {
+            #enum_name::#delete_fn_name(#fn_args)
+        }
+    }
+}
+
+/// Returns the field names and types of a storage enum variant.
 fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
     match fields {
         Fields::Unit => (vec![], vec![]),
