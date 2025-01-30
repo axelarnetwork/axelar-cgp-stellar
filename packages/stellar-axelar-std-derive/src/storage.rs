@@ -1,6 +1,7 @@
 use heck::ToSnakeCase;
+use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote, ToTokens};
+use quote::{format_ident, quote};
 use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Type, Variant};
 
 struct StorageAttributes {
@@ -8,6 +9,7 @@ struct StorageAttributes {
     value_type: Type,
 }
 
+#[derive(Debug)]
 enum StorageType {
     Instance,
     Persistent,
@@ -134,38 +136,35 @@ fn transform_variant(variant: &Variant) -> TokenStream {
 
 /// Returns the storage type of a storage enum variant.
 fn storage_type(attrs: &[Attribute]) -> StorageType {
-    for attr in attrs {
-        let path_str = attr.path().to_token_stream().to_string();
-        match path_str.as_str() {
-            "instance" => return StorageType::Instance,
-            "persistent" => return StorageType::Persistent,
-            "temporary" => return StorageType::Temporary,
-            "value" => continue,
-            unknown => panic!("Unknown storage attribute: {}", unknown),
-        }
-    }
-
-    panic!(
-        "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'."
-    )
+    attrs.iter().flat_map(|attr| match attr {
+        _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
+        _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
+        _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
+        _ => None})
+    .exactly_one()
+    .expect("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
 }
 
 /// Returns the value type of a storage enum variant.
 fn value_type(attrs: &[Attribute]) -> Type {
-    for attr in attrs {
-        let path_str = attr.path().to_token_stream().to_string();
-        if path_str == "value" {
-            if let Meta::List(list) = &attr.meta {
-                return list
-                    .parse_args::<Type>()
-                    .expect("Failed to parse value type.");
+    attrs
+        .iter()
+        .flat_map(|attr| {
+            if attr.path().is_ident("value") {
+                if let Meta::List(list) = &attr.meta {
+                    Some(
+                        list.parse_args::<Type>()
+                            .expect("Failed to parse value type."),
+                    )
+                } else {
+                    panic!("Value attribute must contain a type parameter: #[value(Type)]");
+                }
             } else {
-                panic!("Value attribute must contain a type parameter: #[value(Type)]");
+                None
             }
-        }
-    }
-
-    panic!("Missing required #[value(Type)] attribute.")
+        })
+        .exactly_one()
+        .expect("Missing required #[value(Type)] attribute.")
 }
 
 /// Generates the storage getter, setter, and deleter functions for a storage enum variant.
@@ -335,7 +334,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
-    fn test_tuple_variant_fails() {
+    fn tuple_variant_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
@@ -348,24 +347,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Unknown storage attribute: invalid_storage_type")]
-    fn test_unknown_storage_attribute_fails() {
-        let input: DeriveInput = syn::parse_quote! {
-            enum InvalidEnum {
-                #[invalid_storage_type]
-                #[value(u32)]
-                Counter,
-            }
-        };
-
-        contractstorage(&input);
-    }
-
-    #[test]
     #[should_panic(
         expected = "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'."
     )]
-    fn test_missing_storage_type_fails() {
+    fn missing_storage_type_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[value(u32)]
@@ -378,7 +363,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Value attribute must contain a type parameter: #[value(Type)]")]
-    fn test_missing_value_type_fails() {
+    fn missing_value_type_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
@@ -392,7 +377,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Missing required #[value(Type)] attribute.")]
-    fn test_missing_value_attribute_fails() {
+    fn missing_value_attribute_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
@@ -405,7 +390,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
-    fn test_fields_data_tuple_variant_fails() {
+    fn fields_data_tuple_variant_fails() {
         let fields = Fields::Unnamed(syn::parse_quote! {
             (String, u32)
         });

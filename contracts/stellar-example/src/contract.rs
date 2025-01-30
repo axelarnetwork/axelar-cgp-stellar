@@ -12,7 +12,7 @@ use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
 use crate::interface::ExampleInterface;
-use crate::storage_types as storage;
+use crate::storage;
 
 #[contract]
 #[derive(InterchainTokenExecutable)]
