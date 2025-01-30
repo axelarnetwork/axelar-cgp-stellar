@@ -1,0 +1,19 @@
+InterchainTransferReceivedEvent {
+    source_chain: String(ethereum),
+    token_id: BytesN<32>(176, 82, 11, 134, 46, 148, 119, 103, 208, 219, 201, 52, 236, 230, 170, 39, 215, 103, 118, 78, 122, 72, 213, 57, 75, 143, 90, 231, 223, 12, 26, 102),
+    source_address: Bytes(67, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 88, 73, 55, 78),
+    destination_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
+    amount: 1000,
+    data: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+interchain_transfer_received {
+    #[topic] source_chain: String,
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] source_address: Bytes,
+    #[topic] destination_address: Address,
+    #[topic] amount: i128,
+    #[data]  data: Option < Bytes >,
+}

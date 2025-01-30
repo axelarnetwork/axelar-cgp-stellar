@@ -1,0 +1,13 @@
+FlowLimitSetEvent {
+    token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+    flow_limit: Some(
+        1000,
+    ),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+flow_limit_set {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] flow_limit: Option < i128 >,
+}

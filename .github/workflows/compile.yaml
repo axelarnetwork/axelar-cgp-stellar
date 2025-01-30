@@ -25,9 +25,14 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Rust Cache
-        uses: useblacksmith/rust-cache@v3
+        uses: useblacksmith/rust-cache@v3.0.1
         with:
-          shared-key: "cache"
+          shared-key: "cache-compilation"
+      
+      - name: Run build
+        run: RUSTFLAGS="-D warnings" cargo build --locked --release
+        env:
+          RUST_BACKTRACE: 1
 
       - name: Build wasm release
         run: cargo wasm

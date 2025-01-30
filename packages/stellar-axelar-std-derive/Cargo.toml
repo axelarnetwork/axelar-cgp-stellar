@@ -1,0 +1,23 @@
+[package]
+name = "stellar-axelar-std-derive"
+version = "1.0.0"
+edition = { workspace = true }
+description = "Proc macros for Axelar contracts."
+license = { workspace = true }
+publish = true
+
+[lib]
+proc-macro = true
+
+[features]
+
+[dependencies]
+heck = "0.5"
+proc-macro2 = { workspace = true }
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,49 @@
+ContractCalledEvent {
+    caller: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
+    destination_chain: String(destination),
+    destination_address: String(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6),
+    payload_hash: BytesN<32>(57, 5, 211, 68, 113, 126, 253, 86, 36, 71, 164, 150, 14, 234, 148, 28, 18, 68, 173, 195, 31, 83, 82, 93, 14, 193, 57, 127, 246, 149, 28, 156),
+    payload: Bytes(222, 173),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4)
+
+contract_called {
+    #[topic] caller: Address,
+    #[topic] destination_chain: String,
+    #[topic] destination_address: String,
+    #[topic] payload_hash: BytesN < 32 >,
+    #[data]  payload: Bytes,
+}
+
+MessageApprovedEvent {
+    message: Message {
+        source_chain: String(source),
+        message_id: String(test),
+        source_address: String(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
+        contract_address: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6),
+        payload_hash: BytesN<32>(57, 5, 211, 68, 113, 126, 253, 86, 36, 71, 164, 150, 14, 234, 148, 28, 18, 68, 173, 195, 31, 83, 82, 93, 14, 193, 57, 127, 246, 149, 28, 156),
+    },
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6J5N)
+
+message_approved {
+    #[topic] message: Message,
+}
+
+ExecutedEvent {
+    source_chain: String(source),
+    message_id: String(test),
+    source_address: String(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5),
+    payload: Bytes(222, 173),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOHR6)
+
+executed {
+    #[topic] source_chain: String,
+    #[topic] message_id: String,
+    #[topic] source_address: String,
+    #[data]  payload: Bytes,
+}

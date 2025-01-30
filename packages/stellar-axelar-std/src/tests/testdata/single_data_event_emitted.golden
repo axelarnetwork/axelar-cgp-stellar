@@ -1,0 +1,13 @@
+SingleDataEvent {
+    topic1: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4),
+    topic2: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M),
+    data: String(100),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
+
+single_data {
+    #[topic] topic1: Address,
+    #[topic] topic2: Address,
+    #[data]  data: String,
+}

@@ -1,0 +1,37 @@
+InterchainTokenDeployedEvent {
+    token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+    token_address: Contract(CA36KTELKNXBETWXHHYV4C6GMPBTGSWCEQNREQR46T7P3D4WKMICRDU6),
+    name: String(Test),
+    symbol: String(TEST),
+    decimals: 18,
+    minter: Some(
+        Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N),
+    ),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+interchain_token_deployed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] name: String,
+    #[topic] symbol: String,
+    #[topic] decimals: u32,
+    #[topic] minter: Option < Address >,
+}
+
+TokenManagerDeployedEvent {
+    token_id: BytesN<32>(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+    token_address: Contract(CA36KTELKNXBETWXHHYV4C6GMPBTGSWCEQNREQR46T7P3D4WKMICRDU6),
+    token_manager: Contract(CCSVDGI4C4HI4NXYPFHVGDBMW336KYFMJ7WE75VKRA5LFL5F7EBZTHLZ),
+    token_manager_type: NativeInterchainToken,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_manager_deployed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] token_manager: Address,
+    #[topic] token_manager_type: TokenManagerType,
+}

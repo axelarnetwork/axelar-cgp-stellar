@@ -1,0 +1,15 @@
+MultiDataEvent {
+    topic1: String(topic-1),
+    topic2: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4),
+    data1: String(data-1),
+    data2: String(data-2),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
+
+multi_data {
+    #[topic] topic1: String,
+    #[topic] topic2: Address,
+    #[data]  data1: String,
+    #[data]  data2: String,
+}

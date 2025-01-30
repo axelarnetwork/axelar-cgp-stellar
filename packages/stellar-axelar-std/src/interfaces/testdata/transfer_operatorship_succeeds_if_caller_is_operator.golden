@@ -1,0 +1,11 @@
+OperatorshipTransferredEvent {
+    previous_operator: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM),
+    new_operator: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+
+operatorship_transferred {
+    #[topic] previous_operator: Address,
+    #[topic] new_operator: Address,
+}

@@ -1,0 +1,21 @@
+InterchainTokenDeploymentStartedEvent {
+    token_id: BytesN<32>(60, 2, 220, 188, 8, 205, 164, 191, 58, 197, 58, 16, 100, 159, 151, 83, 114, 109, 109, 165, 242, 106, 241, 4, 32, 114, 77, 111, 202, 198, 203, 227),
+    token_address: Contract(CCWZVT7W4B7OUHS6F3MMVHPGHE3ZOJR6QX6HMJHZGGU6M5KBHQFHWCSH),
+    destination_chain: String(ethereum),
+    name: String(name),
+    symbol: String(symbol),
+    decimals: 255,
+    minter: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_deployment_started {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] destination_chain: String,
+    #[topic] name: String,
+    #[topic] symbol: String,
+    #[topic] decimals: u32,
+    #[topic] minter: Option < Address >,
+}

@@ -1,0 +1,17 @@
+SignersRotatedEvent {
+    epoch: 2,
+    signers_hash: BytesN<32>(79, 125, 7, 61, 238, 189, 252, 176, 48, 32, 79, 176, 203, 92, 149, 125, 152, 60, 101, 150, 252, 142, 6, 1, 129, 237, 53, 148, 200, 179, 94, 61),
+    signers: WeightedSigners {
+        signers: Vec(Ok(WeightedSigner { signer: BytesN<32>(68, 90, 19, 85, 133, 3, 237, 203, 21, 86, 117, 98, 188, 74, 121, 53, 16, 52, 68, 25, 204, 99, 104, 167, 80, 142, 122, 139, 1, 25, 75, 42), weight: 5 }), Ok(WeightedSigner { signer: BytesN<32>(120, 237, 162, 27, 160, 74, 21, 226, 0, 15, 232, 129, 15, 227, 229, 103, 65, 210, 59, 185, 174, 68, 170, 157, 91, 178, 27, 118, 103, 95, 243, 75), weight: 2 }), Ok(WeightedSigner { signer: BytesN<32>(219, 91, 51, 135, 174, 15, 74, 51, 89, 253, 73, 127, 236, 141, 204, 208, 247, 70, 96, 126, 204, 184, 156, 137, 43, 127, 115, 191, 8, 254, 124, 53), weight: 7 }), Ok(WeightedSigner { signer: BytesN<32>(240, 69, 191, 229, 152, 177, 114, 169, 135, 55, 145, 48, 9, 45, 234, 111, 184, 117, 52, 98, 8, 132, 39, 161, 116, 33, 69, 95, 107, 210, 46, 178), weight: 5 }), Ok(WeightedSigner { signer: BytesN<32>(243, 15, 106, 107, 42, 1, 183, 180, 201, 111, 113, 31, 168, 127, 107, 169, 143, 143, 253, 68, 77, 191, 134, 30, 35, 52, 232, 222, 20, 95, 171, 45), weight: 2 })),
+        threshold: 3,
+        nonce: BytesN<32>(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    },
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+
+signers_rotated {
+    #[topic] epoch: u64,
+    #[topic] signers_hash: BytesN < 32 >,
+    #[data]  signers: WeightedSigners,
+}

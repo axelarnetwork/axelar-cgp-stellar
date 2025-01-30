@@ -1,0 +1,9 @@
+TrustedChainRemovedEvent {
+    chain: String(chain),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+trusted_chain_removed {
+    #[topic] chain: String,
+}

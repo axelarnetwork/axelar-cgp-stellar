@@ -1,0 +1,35 @@
+[package]
+name = "stellar-axelar-gateway"
+version = "1.0.0"
+edition = { workspace = true }
+description = "AxelarGateway contract, responsible for serving as the gateway for cross-chain contract calls and token transfers within the Axelar network."
+license = { workspace = true }
+publish = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cfg-if = { workspace = true }
+ed25519-dalek = { version = "^2.1", default-features = false, optional = true }
+rand = { workspace = true, optional = true }
+soroban-sdk = { workspace = true }
+stellar-axelar-std = { workspace = true }
+
+[dev-dependencies]
+ed25519-dalek = { version = "^2.1" }
+goldie = { workspace = true }
+hex = { workspace = true }
+hex-literal = "0.4"
+paste = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { version = "0.3" }
+soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils"] }
+
+[features]
+library = [] # Only export the contract interface
+testutils = ["soroban-sdk/testutils", "stellar-axelar-std/testutils", "dep:ed25519-dalek", "dep:rand"]
+
+[lints]
+workspace = true

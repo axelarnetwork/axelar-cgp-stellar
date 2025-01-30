@@ -1,0 +1,19 @@
+InterchainTokenDeployedEvent {
+    token_id: BytesN<32>(125, 96, 86, 2, 12, 87, 185, 38, 24, 69, 45, 187, 113, 21, 59, 197, 31, 115, 71, 89, 174, 148, 246, 246, 88, 83, 233, 86, 107, 151, 39, 140),
+    token_address: Contract(CCLJONNNVXPGI3EUIEDRFFEUGRNZL2F2MWRYG3MIF7THONTE3T4INXXL),
+    name: String(Test),
+    symbol: String(TEST),
+    decimals: 6,
+    minter: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+interchain_token_deployed {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] name: String,
+    #[topic] symbol: String,
+    #[topic] decimals: u32,
+    #[topic] minter: Option < Address >,
+}

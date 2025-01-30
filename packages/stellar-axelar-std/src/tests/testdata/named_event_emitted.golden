@@ -1,0 +1,11 @@
+NamedEvent {
+    topic: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4),
+    data: String(100),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
+
+custom_name {
+    #[topic] topic: Address,
+    #[data]  data: String,
+}

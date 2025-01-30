@@ -1,0 +1,9 @@
+TrustedChainSetEvent {
+    chain: String(chain),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+trusted_chain_set {
+    #[topic] chain: String,
+}

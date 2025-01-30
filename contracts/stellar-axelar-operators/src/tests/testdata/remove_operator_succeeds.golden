@@ -1,0 +1,9 @@
+OperatorRemovedEvent {
+    operator: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4)
+
+operator_removed {
+    #[topic] operator: Address,
+}

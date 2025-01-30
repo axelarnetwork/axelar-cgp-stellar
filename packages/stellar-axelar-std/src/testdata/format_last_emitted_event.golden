@@ -1,0 +1,17 @@
+TestEvent {
+    topic1: Symbol(topic1),
+    topic2: String(topic2),
+    topic3: 10,
+    data1: String(data1),
+    data2: BytesN<32>(3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM)
+
+test {
+    #[topic] topic1: Symbol,
+    #[topic] topic2: String,
+    #[topic] topic3: Int32,
+    #[data]  data1: String,
+    #[data]  data2: BytesN < 32 >,
+}

@@ -1,0 +1,11 @@
+OwnershipTransferredEvent {
+    previous_owner: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM),
+    new_owner: Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4),
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M)
+
+ownership_transferred {
+    #[topic] previous_owner: Address,
+    #[topic] new_owner: Address,
+}
