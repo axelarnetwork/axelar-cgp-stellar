@@ -68,11 +68,13 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
         .collect();
 
     let contract_storage = quote! {
+        #[doc = "\n* Storage Enum\n"]
         #[contracttype]
         enum #name {
             #(#transformed_variants,)*
         }
 
+        #[doc = "\n* Public Functions\n"]
         #(#public_fns)*
     };
 
@@ -81,6 +83,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     quote! {
         #contract_storage
 
+        #[doc = "\n* Contract Storage Tests\n"]
         #contract_storage_tests
     }
 }
@@ -216,18 +219,21 @@ fn value_status_fns(
     let (getter_name, setter_name, remover_name) = fn_names(variant, true);
 
     quote! {
+        #[doc = " Status Getter"]
         pub fn #getter_name(#param_list) -> bool {
             env.storage()
                 .#storage_method()
                 .has(&#key)
         }
 
+        #[doc = " Status Setter"]
         pub fn #setter_name(#param_list) {
             env.storage()
                 .#storage_method()
                 .set(&#key, &());
         }
 
+        #[doc = " Status Remover"]
         pub fn #remover_name(#param_list) {
             env.storage()
                 .#storage_method()
@@ -247,6 +253,7 @@ fn value_type_fns(
     let (getter_name, setter_name, remover_name) = fn_names(variant, false);
 
     quote! {
+        #[doc = " Value Type Getter"]
         pub fn #getter_name(#param_list) -> Option<#value_type> {
             let key = #key;
             let value = env.storage()
@@ -260,6 +267,7 @@ fn value_type_fns(
             value
         }
 
+        #[doc = " Value Type Setter"]
         pub fn #setter_name(#param_list, value: &#value_type) {
             let key = #key;
 
@@ -270,6 +278,7 @@ fn value_type_fns(
             #ttl_fn
         }
 
+        #[doc = " Value Type Remover"]
         pub fn #remover_name(#param_list) {
             env.storage()
                 .#storage_method()
