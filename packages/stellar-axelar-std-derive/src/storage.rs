@@ -76,7 +76,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
         #(#public_fns)*
     };
 
-    let contract_storage_tests = contract_storage_tests(name, &contract_storage);
+    let contract_storage_tests = contract_storage_tests(name, input);
 
     quote! {
         #contract_storage
@@ -136,7 +136,7 @@ fn storage_type(attrs: &[Attribute]) -> StorageType {
         _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
         _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
         _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
-        _ => None,})
+        _ => None})
     .exactly_one()
     .expect("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
 }
@@ -179,7 +179,6 @@ fn public_storage_fns(
     let variant_ident = &variant.ident;
 
     let (field_names, field_types) = fields_data(&variant.fields);
-    let (getter_name, setter_name, remover_name) = fn_names(variant);
 
     let storage_method = storage_type.storage_method();
     let ttl_fn = storage_type.ttl_method();
@@ -196,55 +195,61 @@ fn public_storage_fns(
     };
 
     match &value {
-        Value::Status => quote! {
-            pub fn #getter_name(#param_list) -> bool {
-                env.storage()
-                    .#storage_method()
-                    .has(&#key)
-            }
+        Value::Status => {
+            let (getter_name, setter_name, remover_name) = fn_names(variant, true);
+            quote! {
+                pub fn #getter_name(#param_list) -> bool {
+                    env.storage()
+                        .#storage_method()
+                        .has(&#key)
+                }
 
-            pub fn #setter_name(#param_list) {
-                env.storage()
-                    .#storage_method()
-                    .set(&#key, &());
-            }
+                pub fn #setter_name(#param_list) {
+                    env.storage()
+                        .#storage_method()
+                        .set(&#key, &());
+                }
 
-            pub fn #remover_name(#param_list) {
-                env.storage()
-                    .#storage_method()
-                    .remove(&#key);
+                pub fn #remover_name(#param_list) {
+                    env.storage()
+                        .#storage_method()
+                        .remove(&#key);
+                }
             }
-        },
-        Value::Type(value_type) => quote! {
-            pub fn #getter_name(#param_list) -> Option<#value_type> {
-                let key = #key;
-                let value = env.storage()
-                    .#storage_method()
-                    .get::<_, #value_type>(&key);
+        }
+        Value::Type(value_type) => {
+            let (getter_name, setter_name, remover_name) = fn_names(variant, false);
+            quote! {
+                pub fn #getter_name(#param_list) -> Option<#value_type> {
+                    let key = #key;
+                    let value = env.storage()
+                        .#storage_method()
+                        .get::<_, #value_type>(&key);
 
-                if value.is_some() {
+                    if value.is_some() {
+                        #ttl_fn
+                    }
+
+                    value
+                }
+
+                pub fn #setter_name(#param_list, value: &#value_type) {
+                    let key = #key;
+
+                    env.storage()
+                        .#storage_method()
+                        .set(&key, value);
+
                     #ttl_fn
                 }
 
-                value
+                pub fn #remover_name(#param_list) {
+                    env.storage()
+                        .#storage_method()
+                        .remove(&#key);
+                }
             }
-
-            pub fn #setter_name(#param_list, value: &#value_type) {
-                let key = #key;
-
-                env.storage()
-                    .#storage_method()
-                    .set(&key, value);
-
-                #ttl_fn
-            }
-
-            pub fn #remover_name(#param_list) {
-                env.storage()
-                    .#storage_method()
-                    .remove(&#key);
-            }
-        },
+        }
     }
 }
 
@@ -261,15 +266,26 @@ fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
     }
 }
 
-fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
-    (
-        format_ident!("{}", variant.ident.to_string().to_snake_case()),
-        format_ident!("set_{}", variant.ident.to_string().to_snake_case()),
-        format_ident!("remove_{}", variant.ident.to_string().to_snake_case()),
-    )
+fn fn_names(variant: &Variant, status: bool) -> (Ident, Ident, Ident) {
+    if status {
+        (
+            format_ident!("is_{}", variant.ident.to_string().to_snake_case()),
+            format_ident!("set_{}_status", variant.ident.to_string().to_snake_case()),
+            format_ident!(
+                "remove_{}_status",
+                variant.ident.to_string().to_snake_case()
+            ),
+        )
+    } else {
+        (
+            format_ident!("{}", variant.ident.to_string().to_snake_case()),
+            format_ident!("set_{}", variant.ident.to_string().to_snake_case()),
+            format_ident!("remove_{}", variant.ident.to_string().to_snake_case()),
+        )
+    }
 }
 
-fn contract_storage_tests(enum_name: &Ident, storage_enum: &TokenStream) -> TokenStream {
+fn contract_storage_tests(enum_name: &Ident, input: &DeriveInput) -> TokenStream {
     let test_module_name = format_ident!(
         "{}_storage_layout_tests",
         enum_name.to_string().to_snake_case()
@@ -285,7 +301,7 @@ fn contract_storage_tests(enum_name: &Ident, storage_enum: &TokenStream) -> Toke
         mod #test_module_name {
             #[test]
             fn #test_name() {
-                goldie::assert!(stringify!(#storage_enum));
+                goldie::assert!(stringify!(#input));
             }
         }
     }
