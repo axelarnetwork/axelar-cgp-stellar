@@ -57,7 +57,7 @@ jobs:
       # The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)
       cf-config-bucket-root-key: "${{ vars.CF_BUCKET_ROOT_KEY }}"
 
-      # we just want to upload to CF, do not run a github release
+      # We only want to upload to CF, do not run a github release
       github-release: false
 
     secrets:
