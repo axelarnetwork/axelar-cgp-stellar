@@ -5,6 +5,8 @@ enum DataKey {
     LastCaller(u64),
     Flag(String, Address),
     OptionalMessage(u32),
+    Initialized,
+    Paused,
 }
 impl DataKey {
     pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
@@ -20,7 +22,7 @@ impl DataKey {
         env.storage().instance().set(&key, value);
         stellar_axelar_std::ttl::extend_instance_ttl(env);
     }
-    pub fn delete_counter(env: &soroban_sdk::Env) {
+    pub fn remove_counter(env: &soroban_sdk::Env) {
         let key = DataKey::Counter;
         env.storage().instance().remove(&key);
     }
@@ -37,7 +39,7 @@ impl DataKey {
         env.storage().persistent().set(&key, value);
         stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
     }
-    pub fn delete_message(env: &soroban_sdk::Env, sender: Address) {
+    pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
         let key = DataKey::Message(sender);
         env.storage().persistent().remove(&key);
     }
@@ -51,7 +53,7 @@ impl DataKey {
         let key = DataKey::LastCaller(timestamp);
         env.storage().temporary().set(&key, value);
     }
-    pub fn delete_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
+    pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
         let key = DataKey::LastCaller(timestamp);
         env.storage().temporary().remove(&key);
     }
@@ -68,7 +70,7 @@ impl DataKey {
         env.storage().persistent().set(&key, value);
         stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
     }
-    pub fn delete_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
+    pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
         let key = DataKey::Flag(key, owner);
         env.storage().persistent().remove(&key);
     }
@@ -89,8 +91,32 @@ impl DataKey {
         env.storage().persistent().set(&key, value);
         stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
     }
-    pub fn delete_optional_message(env: &soroban_sdk::Env, id: u32) {
+    pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
         let key = DataKey::OptionalMessage(id);
+        env.storage().persistent().remove(&key);
+    }
+    pub fn initialized(env: &soroban_sdk::Env) -> bool {
+        let key = DataKey::Initialized;
+        env.storage().instance().has(&key)
+    }
+    pub fn set_initialized(env: &soroban_sdk::Env) {
+        let key = DataKey::Initialized;
+        env.storage().instance().set(&key, &());
+    }
+    pub fn remove_initialized(env: &soroban_sdk::Env) {
+        let key = DataKey::Initialized;
+        env.storage().instance().remove(&key);
+    }
+    pub fn paused(env: &soroban_sdk::Env) -> bool {
+        let key = DataKey::Paused;
+        env.storage().persistent().has(&key)
+    }
+    pub fn set_paused(env: &soroban_sdk::Env) {
+        let key = DataKey::Paused;
+        env.storage().persistent().set(&key, &());
+    }
+    pub fn remove_paused(env: &soroban_sdk::Env) {
+        let key = DataKey::Paused;
         env.storage().persistent().remove(&key);
     }
 }
@@ -100,8 +126,8 @@ pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
 pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
     DataKey::set_counter(env, value)
 }
-pub fn delete_counter(env: &soroban_sdk::Env) {
-    DataKey::delete_counter(env)
+pub fn remove_counter(env: &soroban_sdk::Env) {
+    DataKey::remove_counter(env)
 }
 pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
     DataKey::message(env, sender)
@@ -109,8 +135,8 @@ pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
 pub fn set_message(env: &soroban_sdk::Env, sender: Address, value: &String) {
     DataKey::set_message(env, sender, value)
 }
-pub fn delete_message(env: &soroban_sdk::Env, sender: Address) {
-    DataKey::delete_message(env, sender)
+pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
+    DataKey::remove_message(env, sender)
 }
 pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
     DataKey::last_caller(env, timestamp)
@@ -118,8 +144,8 @@ pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
 pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) {
     DataKey::set_last_caller(env, timestamp, value)
 }
-pub fn delete_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
-    DataKey::delete_last_caller(env, timestamp)
+pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
+    DataKey::remove_last_caller(env, timestamp)
 }
 pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool> {
     DataKey::flag(env, key, owner)
@@ -127,8 +153,8 @@ pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool>
 pub fn set_flag(env: &soroban_sdk::Env, key: String, owner: Address, value: &bool) {
     DataKey::set_flag(env, key, owner, value)
 }
-pub fn delete_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
-    DataKey::delete_flag(env, key, owner)
+pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
+    DataKey::remove_flag(env, key, owner)
 }
 pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String>> {
     DataKey::optional_message(env, id)
@@ -136,6 +162,24 @@ pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String
 pub fn set_optional_message(env: &soroban_sdk::Env, id: u32, value: &Option<String>) {
     DataKey::set_optional_message(env, id, value)
 }
-pub fn delete_optional_message(env: &soroban_sdk::Env, id: u32) {
-    DataKey::delete_optional_message(env, id)
+pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
+    DataKey::remove_optional_message(env, id)
+}
+pub fn initialized(env: &soroban_sdk::Env) -> bool {
+    DataKey::initialized(env)
+}
+pub fn set_initialized(env: &soroban_sdk::Env) {
+    DataKey::set_initialized(env)
+}
+pub fn remove_initialized(env: &soroban_sdk::Env) {
+    DataKey::remove_initialized(env)
+}
+pub fn paused(env: &soroban_sdk::Env) -> bool {
+    DataKey::paused(env)
+}
+pub fn set_paused(env: &soroban_sdk::Env) {
+    DataKey::set_paused(env)
+}
+pub fn remove_paused(env: &soroban_sdk::Env) {
+    DataKey::remove_paused(env)
 }

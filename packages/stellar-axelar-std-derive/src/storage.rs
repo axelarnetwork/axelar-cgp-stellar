@@ -4,9 +4,14 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Type, Variant};
 
+enum Value {
+    Status,
+    Type(Type),
+}
+
 struct StorageAttributes {
     storage_type: StorageType,
-    value_type: Type,
+    value: Value,
 }
 
 #[derive(Debug)]
@@ -51,14 +56,12 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     let storage_fns: Vec<_> = variants
         .iter()
         .map(|variant| {
-            let storage_type = storage_type(&variant.attrs);
-            let value_type = value_type(&variant.attrs);
             storage_fns(
                 name,
                 variant,
                 &StorageAttributes {
-                    storage_type,
-                    value_type,
+                    storage_type: storage_type(&variant.attrs),
+                    value: value(&variant.attrs),
                 },
             )
         })
@@ -67,8 +70,14 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
     let public_fns: Vec<_> = variants
         .iter()
         .map(|variant| {
-            let value_type = value_type(&variant.attrs);
-            public_storage_fns(name, variant, &value_type)
+            public_storage_fns(
+                name,
+                variant,
+                &StorageAttributes {
+                    storage_type: storage_type(&variant.attrs),
+                    value: value(&variant.attrs),
+                },
+            )
         })
         .collect();
 
@@ -140,34 +149,38 @@ fn storage_type(attrs: &[Attribute]) -> StorageType {
         _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
         _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
         _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
-        _ => None})
+        _ => None,})
     .exactly_one()
     .expect("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
 }
 
-/// Returns the value type of a storage enum variant.
-fn value_type(attrs: &[Attribute]) -> Type {
-    attrs
+/// Returns the status xor value type of a storage enum variant.
+fn value(attrs: &[Attribute]) -> Value {
+    let has_status = attrs.iter().any(|attr| attr.path().is_ident("status"));
+    let value_attrs: Vec<_> = attrs
         .iter()
-        .flat_map(|attr| {
-            if attr.path().is_ident("value") {
-                if let Meta::List(list) = &attr.meta {
-                    Some(
-                        list.parse_args::<Type>()
-                            .expect("Failed to parse value type."),
-                    )
-                } else {
-                    panic!("Value attribute must contain a type parameter: #[value(Type)]");
-                }
+        .filter(|attr| attr.path().is_ident("value"))
+        .collect();
+
+    match (has_status, !value_attrs.is_empty()) {
+        (true, false) => Value::Status,
+        (false, true) => {
+            let attr = value_attrs[0];
+            if let Meta::List(list) = &attr.meta {
+                Value::Type(
+                    list.parse_args::<Type>()
+                        .expect("Failed to parse value type."),
+                )
             } else {
-                None
+                panic!("Value attribute must contain a type parameter: #[value(Type)]");
             }
-        })
-        .exactly_one()
-        .expect("Missing required #[value(Type)] attribute.")
+        }
+        (false, false) => panic!("Missing required attribute: either #[status] xor #[value(Type)]"),
+        _ => panic!("A storage key cannot have both #[status] and #[value] attributes."),
+    }
 }
 
-/// Generates the storage getter, setter, and deleter functions for a storage enum variant.
+/// Generates the storage getter, setter, and remover functions for a storage enum variant.
 fn storage_fns(
     enum_name: &Ident,
     variant: &Variant,
@@ -176,10 +189,7 @@ fn storage_fns(
     let variant_ident = &variant.ident;
 
     let (field_names, field_types) = fields_data(&variant.fields);
-
-    let value_type = storage_attrs.value_type.clone();
-
-    let (getter_name, setter_name, deleter_name) = fn_names(variant);
+    let (getter_name, setter_name, remover_name) = fn_names(variant);
 
     let storage_method = storage_attrs.storage_type.storage_method();
     let ttl_fn = storage_attrs.storage_type.ttl_method();
@@ -196,6 +206,70 @@ fn storage_fns(
         quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
     };
 
+    match &storage_attrs.value {
+        Value::Status => status_impl(
+            &key,
+            &getter_name,
+            &setter_name,
+            &remover_name,
+            &param_list,
+            &storage_method,
+        ),
+        Value::Type(value_type) => value_impl(
+            &key,
+            &value_type,
+            &getter_name,
+            &setter_name,
+            &remover_name,
+            &param_list,
+            &storage_method,
+            &ttl_fn,
+        ),
+    }
+}
+
+fn status_impl(
+    key: &TokenStream,
+    getter_name: &Ident,
+    setter_name: &Ident,
+    remover_name: &Ident,
+    param_list: &TokenStream,
+    storage_method: &TokenStream,
+) -> TokenStream {
+    quote! {
+        pub fn #getter_name(#param_list) -> bool {
+            let key = #key;
+            env.storage()
+                .#storage_method()
+                .has(&key)
+        }
+
+        pub fn #setter_name(#param_list) {
+            let key = #key;
+            env.storage()
+                .#storage_method()
+                .set(&key, &());
+        }
+
+        pub fn #remover_name(#param_list) {
+            let key = #key;
+            env.storage()
+                .#storage_method()
+                .remove(&key);
+        }
+    }
+}
+
+fn value_impl(
+    key: &TokenStream,
+    value_type: &Type,
+    getter_name: &Ident,
+    setter_name: &Ident,
+    remover_name: &Ident,
+    param_list: &TokenStream,
+    storage_method: &TokenStream,
+    ttl_fn: &TokenStream,
+) -> TokenStream {
     quote! {
         pub fn #getter_name(#param_list) -> Option<#value_type> {
             let key = #key;
@@ -220,7 +294,7 @@ fn storage_fns(
             #ttl_fn
         }
 
-        pub fn #deleter_name(#param_list) {
+        pub fn #remover_name(#param_list) {
             let key = #key;
             env.storage()
                 .#storage_method()
@@ -230,8 +304,12 @@ fn storage_fns(
 }
 
 /// Generates the public module-level storage functions.
-fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -> TokenStream {
-    let (getter_name, setter_name, deleter_name) = fn_names(variant);
+fn public_storage_fns(
+    enum_name: &Ident,
+    variant: &Variant,
+    storage_attrs: &StorageAttributes,
+) -> TokenStream {
+    let (getter_name, setter_name, remover_name) = fn_names(variant);
 
     let (field_names, field_types) = fields_data(&variant.fields);
 
@@ -247,6 +325,59 @@ fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -
         quote! { env, #(#field_names),* }
     };
 
+    match &storage_attrs.value {
+        Value::Status => public_status_impl(
+            &enum_name,
+            &getter_name,
+            &setter_name,
+            &remover_name,
+            &param_list,
+            &fn_args,
+        ),
+        Value::Type(value_type) => public_value_impl(
+            &enum_name,
+            &value_type,
+            &getter_name,
+            &setter_name,
+            &remover_name,
+            &param_list,
+            &fn_args,
+        ),
+    }
+}
+
+fn public_status_impl(
+    enum_name: &Ident,
+    getter_name: &Ident,
+    setter_name: &Ident,
+    remover_name: &Ident,
+    param_list: &TokenStream,
+    fn_args: &TokenStream,
+) -> TokenStream {
+    quote! {
+        pub fn #getter_name(#param_list) -> bool {
+            #enum_name::#getter_name(#fn_args)
+        }
+
+        pub fn #setter_name(#param_list) {
+            #enum_name::#setter_name(#fn_args)
+        }
+
+        pub fn #remover_name(#param_list) {
+            #enum_name::#remover_name(#fn_args)
+        }
+    }
+}
+
+fn public_value_impl(
+    enum_name: &Ident,
+    value_type: &Type,
+    getter_name: &Ident,
+    setter_name: &Ident,
+    remover_name: &Ident,
+    param_list: &TokenStream,
+    fn_args: &TokenStream,
+) -> TokenStream {
     quote! {
         pub fn #getter_name(#param_list) -> Option<#value_type> {
             #enum_name::#getter_name(#fn_args)
@@ -256,8 +387,8 @@ fn public_storage_fns(enum_name: &Ident, variant: &Variant, value_type: &Type) -
             #enum_name::#setter_name(#fn_args, value)
         }
 
-        pub fn #deleter_name(#param_list) {
-            #enum_name::#deleter_name(#fn_args)
+        pub fn #remover_name(#param_list) {
+            #enum_name::#remover_name(#fn_args)
         }
     }
 }
@@ -279,7 +410,7 @@ fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
     (
         format_ident!("{}", variant.ident.to_string().to_snake_case()),
         format_ident!("set_{}", variant.ident.to_string().to_snake_case()),
-        format_ident!("delete_{}", variant.ident.to_string().to_snake_case()),
+        format_ident!("remove_{}", variant.ident.to_string().to_snake_case()),
     )
 }
 
@@ -311,6 +442,14 @@ mod tests {
                 #[persistent]
                 #[value(Option<String>)]
                 OptionalMessage { id: u32 },
+
+                #[instance]
+                #[status]
+                Initialized,
+
+                #[persistent]
+                #[status]
+                Paused,
             }
         };
 
@@ -363,7 +502,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Value attribute must contain a type parameter: #[value(Type)]")]
-    fn missing_value_type_fails() {
+    fn missing_value_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
@@ -376,7 +515,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Missing required #[value(Type)] attribute.")]
+    #[should_panic(expected = "Missing required attribute: either #[status] xor #[value(Type)]")]
     fn missing_value_attribute_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
@@ -396,5 +535,20 @@ mod tests {
         });
 
         fields_data(&fields);
+    }
+
+    #[test]
+    #[should_panic(expected = "A storage key cannot have both #[status] and #[value] attributes.")]
+    fn status_and_value_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[value(bool)]
+                #[status]
+                InvalidKey,
+            }
+        };
+
+        contractstorage(&input);
     }
 }

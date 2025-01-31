@@ -238,7 +238,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 /// Implements a storage interface for a Stellar contract storage enum.
 ///
 /// The enum variants define contract data keys, with optional named fields as contract data map keys.
-/// Each variant requires a `#[value(Type)]` attribute to specify the stored value type.
+/// Each variant requires a `#[value(Type)]` xor `#[status]` attribute to specify the stored value type.
 /// Storage type can be specified with `#[instance]`, `#[persistent]`, or `#[temporary]` attributes (defaults to instance).
 ///
 /// # Example
@@ -261,6 +261,10 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 ///     #[temporary]
 ///     #[value(u64)]
 ///     LastUpdate { account: Address },
+///
+///     #[instance]
+///     #[status]
+///     Paused,
 /// }
 ///
 /// #[contract]
