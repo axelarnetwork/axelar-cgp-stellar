@@ -115,7 +115,6 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
 ///     #[value(Address)]
 ///     Users { user: Address }, // Named variant (one or more fields)
 /// }
-/// ```
 ///
 /// /* Generated */
 /// #[contracttype]
