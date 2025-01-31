@@ -238,7 +238,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 /// Implements a storage interface for a Stellar contract storage enum.
 ///
 /// The enum variants define contract data keys, with optional named fields as contract data map keys.
-/// Each variant requires a `#[value(Type)]` attribute to specify the stored value type.
+/// Each variant requires a `#[value(Type)]` xor `#[status]` attribute to specify the stored value type.
 /// Storage type can be specified with `#[instance]`, `#[persistent]`, or `#[temporary]` attributes (defaults to instance).
 ///
 /// # Example
@@ -261,6 +261,10 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 ///     #[temporary]
 ///     #[value(u64)]
 ///     LastUpdate { account: Address },
+///
+///     #[instance]
+///     #[status]
+///     Paused,
 /// }
 ///
 /// #[contract]
@@ -273,13 +277,15 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 ///         token_id: u32,
 ///         name: String,
 ///     ) {
-///         // Generates: DataKey::set_token_name(env, token_id, &name);
-///         DataKey::set_token_name(env, token_id, &name);
+///         storage::set_token_name(env, token_id, &name);
 ///     }
 ///
-///     pub fn token_name(env: &Env, token_id: u32) -> Option<String> {
-///         // Generates: DataKey::get_token_name(env, token_id)
-///         DataKey::get_token_name(env, token_id)
+///     pub fn foo(env: &Env, token_id: u32) -> Option<String> {
+///         storage::token_name(env, token_id);
+///     }
+///
+///     pub fn bar(env: &Env, token_id: u32) -> Option<String> {
+///         storage::remove_token_name(env, token_id)
 ///     }
 /// }
 /// # }
@@ -287,5 +293,5 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    storage::contractstorage(&input).into()
+    storage::contract_storage(&input).into()
 }
