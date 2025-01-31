@@ -48,7 +48,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     let name = &input.ident;
 
     let Data::Enum(DataEnum { variants, .. }) = &input.data else {
-        panic!("contractstorage can only be used on enums.");
+        panic!("contractstorage can only be used on enums");
     };
 
     let transformed_variants: Vec<_> = variants.iter().map(transform_variant).collect();
@@ -129,7 +129,7 @@ fn transform_variant(variant: &Variant) -> TokenStream {
                 #variant_name(#(#types),*)
             }
         }
-        _ => panic!("Only unit variants or named fields are supported in storage enums."),
+        _ => panic!("only unit variants or named fields are supported in storage enums"),
     }
 }
 
@@ -141,7 +141,7 @@ fn storage_type(attrs: &[Attribute]) -> StorageType {
         _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
         _ => None})
     .exactly_one()
-    .expect("Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'.")
+    .expect("storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'")
 }
 
 /// Returns the status xor value type of a storage enum variant.
@@ -159,14 +159,14 @@ fn value(attrs: &[Attribute]) -> Value {
             if let Meta::List(list) = &attr.meta {
                 Value::Type(
                     list.parse_args::<Type>()
-                        .expect("Failed to parse value type."),
+                        .expect("failed to parse value type"),
                 )
             } else {
-                panic!("Value attribute must contain a type parameter: #[value(Type)]");
+                panic!("value attribute must contain a type parameter: #[value(Type)]");
             }
         }
-        (false, false) => panic!("Missing required attribute: either #[status] xor #[value(Type)]"),
-        _ => panic!("A storage key cannot have both #[status] and #[value] attributes."),
+        (false, false) => panic!("missing required attribute: either #[status] xor #[value(Type)]"),
+        _ => panic!("a storage key cannot have both #[status] and #[value] attributes"),
     }
 }
 
@@ -296,7 +296,7 @@ fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
             let types = fields.named.iter().map(|f| &f.ty).collect();
             (names, types)
         }
-        _ => panic!("Only unit variants or named fields are supported in storage enums."),
+        _ => panic!("only unit variants or named fields are supported in storage enums"),
     }
 }
 
@@ -387,7 +387,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "contractstorage can only be used on enums.")]
+    #[should_panic(expected = "contractstorage can only be used on enums")]
     fn non_enum_fails() {
         let input: DeriveInput = syn::parse_quote! {
             struct NotAnEnum {
@@ -399,7 +399,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
+    #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn tuple_variant_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
@@ -414,7 +414,7 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'."
+        expected = "storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'"
     )]
     fn missing_storage_type_fails() {
         let input: DeriveInput = syn::parse_quote! {
@@ -428,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Value attribute must contain a type parameter: #[value(Type)]")]
+    #[should_panic(expected = "value attribute must contain a type parameter: #[value(Type)]")]
     fn missing_value_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
@@ -442,7 +442,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Missing required attribute: either #[status] xor #[value(Type)]")]
+    #[should_panic(expected = "missing required attribute: either #[status] xor #[value(Type)]")]
     fn missing_value_attribute_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
@@ -455,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Only unit variants or named fields are supported in storage enums.")]
+    #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn fields_data_tuple_variant_fails() {
         let fields = Fields::Unnamed(syn::parse_quote! {
             (String, u32)
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "A storage key cannot have both #[status] and #[value] attributes.")]
+    #[should_panic(expected = "a storage key cannot have both #[status] and #[value] attributes")]
     fn status_and_value_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
