@@ -12,7 +12,6 @@ Stellar allows significantly larger contract code size than EVM. This allows som
 
 - Stellar ITS has no Factory contract. Functionality such as deploying token contracts, registering canonical tokens, and computing token IDs and deployment salts is handled directly by the ITS contract.
 - Flow limit is tracked and enforced by the ITS contract directly rather than by individual Token Managers.
-- Transfer functionality (mint/burn or lock/unlock of tokens) is handled directly by the ITS contract rather than Token Handler contracts.
 
 ### Authorization
 
