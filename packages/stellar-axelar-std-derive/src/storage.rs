@@ -195,60 +195,85 @@ fn public_storage_fns(
     };
 
     match &value {
-        Value::Status => {
-            let (getter_name, setter_name, remover_name) = fn_names(variant, true);
-            quote! {
-                pub fn #getter_name(#param_list) -> bool {
-                    env.storage()
-                        .#storage_method()
-                        .has(&#key)
-                }
+        Value::Status => value_status_fns(variant, &param_list, &storage_method, key),
+        Value::Type(value_type) => value_type_fns(
+            variant,
+            &param_list,
+            &storage_method,
+            key,
+            value_type,
+            &ttl_fn,
+        ),
+    }
+}
 
-                pub fn #setter_name(#param_list) {
-                    env.storage()
-                        .#storage_method()
-                        .set(&#key, &());
-                }
+fn value_status_fns(
+    variant: &Variant,
+    param_list: &TokenStream,
+    storage_method: &TokenStream,
+    key: TokenStream,
+) -> TokenStream {
+    let (getter_name, setter_name, remover_name) = fn_names(variant, true);
 
-                pub fn #remover_name(#param_list) {
-                    env.storage()
-                        .#storage_method()
-                        .remove(&#key);
-                }
-            }
+    quote! {
+        pub fn #getter_name(#param_list) -> bool {
+            env.storage()
+                .#storage_method()
+                .has(&#key)
         }
-        Value::Type(value_type) => {
-            let (getter_name, setter_name, remover_name) = fn_names(variant, false);
-            quote! {
-                pub fn #getter_name(#param_list) -> Option<#value_type> {
-                    let key = #key;
-                    let value = env.storage()
-                        .#storage_method()
-                        .get::<_, #value_type>(&key);
 
-                    if value.is_some() {
-                        #ttl_fn
-                    }
+        pub fn #setter_name(#param_list) {
+            env.storage()
+                .#storage_method()
+                .set(&#key, &());
+        }
 
-                    value
-                }
+        pub fn #remover_name(#param_list) {
+            env.storage()
+                .#storage_method()
+                .remove(&#key);
+        }
+    }
+}
 
-                pub fn #setter_name(#param_list, value: &#value_type) {
-                    let key = #key;
+fn value_type_fns(
+    variant: &Variant,
+    param_list: &TokenStream,
+    storage_method: &TokenStream,
+    key: TokenStream,
+    value_type: &Type,
+    ttl_fn: &TokenStream,
+) -> TokenStream {
+    let (getter_name, setter_name, remover_name) = fn_names(variant, false);
 
-                    env.storage()
-                        .#storage_method()
-                        .set(&key, value);
+    quote! {
+        pub fn #getter_name(#param_list) -> Option<#value_type> {
+            let key = #key;
+            let value = env.storage()
+                .#storage_method()
+                .get::<_, #value_type>(&key);
 
-                    #ttl_fn
-                }
-
-                pub fn #remover_name(#param_list) {
-                    env.storage()
-                        .#storage_method()
-                        .remove(&#key);
-                }
+            if value.is_some() {
+                #ttl_fn
             }
+
+            value
+        }
+
+        pub fn #setter_name(#param_list, value: &#value_type) {
+            let key = #key;
+
+            env.storage()
+                .#storage_method()
+                .set(&key, value);
+
+            #ttl_fn
+        }
+
+        pub fn #remover_name(#param_list) {
+            env.storage()
+                .#storage_method()
+                .remove(&#key);
         }
     }
 }
