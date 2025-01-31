@@ -277,13 +277,15 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 ///         token_id: u32,
 ///         name: String,
 ///     ) {
-///         // Generates: DataKey::set_token_name(env, token_id, &name);
-///         DataKey::set_token_name(env, token_id, &name);
+///         storage::set_token_name(env, token_id, &name);
 ///     }
 ///
-///     pub fn token_name(env: &Env, token_id: u32) -> Option<String> {
-///         // Generates: DataKey::get_token_name(env, token_id)
-///         DataKey::get_token_name(env, token_id)
+///     pub fn foo(env: &Env, token_id: u32) -> Option<String> {
+///         storage::token_name(env, token_id);
+///     }
+///
+///     pub fn bar(env: &Env, token_id: u32) -> Option<String> {
+///         storage::remove_token_name(env, token_id)
 ///     }
 /// }
 /// # }

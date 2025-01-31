@@ -207,99 +207,59 @@ fn storage_fns(
     };
 
     match &storage_attrs.value {
-        Value::Status => status_impl(
-            &key,
-            &getter_name,
-            &setter_name,
-            &remover_name,
-            &param_list,
-            &storage_method,
-        ),
-        Value::Type(value_type) => value_impl(
-            &key,
-            value_type,
-            &getter_name,
-            &setter_name,
-            &remover_name,
-            &param_list,
-            &storage_method,
-            &ttl_fn,
-        ),
-    }
-}
+        Value::Status => quote! {
+            pub fn #getter_name(#param_list) -> bool {
+                let key = #key;
+                env.storage()
+                    .#storage_method()
+                    .has(&key)
+            }
 
-fn status_impl(
-    key: &TokenStream,
-    getter_name: &Ident,
-    setter_name: &Ident,
-    remover_name: &Ident,
-    param_list: &TokenStream,
-    storage_method: &TokenStream,
-) -> TokenStream {
-    quote! {
-        pub fn #getter_name(#param_list) -> bool {
-            let key = #key;
-            env.storage()
-                .#storage_method()
-                .has(&key)
-        }
+            pub fn #setter_name(#param_list) {
+                let key = #key;
+                env.storage()
+                    .#storage_method()
+                    .set(&key, &());
+            }
 
-        pub fn #setter_name(#param_list) {
-            let key = #key;
-            env.storage()
-                .#storage_method()
-                .set(&key, &());
-        }
+            pub fn #remover_name(#param_list) {
+                let key = #key;
+                env.storage()
+                    .#storage_method()
+                    .remove(&key);
+            }
+        },
+        Value::Type(value_type) => quote! {
+            pub fn #getter_name(#param_list) -> Option<#value_type> {
+                let key = #key;
+                let value = env.storage()
+                    .#storage_method()
+                    .get::<_, #value_type>(&key);
 
-        pub fn #remover_name(#param_list) {
-            let key = #key;
-            env.storage()
-                .#storage_method()
-                .remove(&key);
-        }
-    }
-}
+                if value.is_some() {
+                    #ttl_fn
+                }
 
-fn value_impl(
-    key: &TokenStream,
-    value_type: &Type,
-    getter_name: &Ident,
-    setter_name: &Ident,
-    remover_name: &Ident,
-    param_list: &TokenStream,
-    storage_method: &TokenStream,
-    ttl_fn: &TokenStream,
-) -> TokenStream {
-    quote! {
-        pub fn #getter_name(#param_list) -> Option<#value_type> {
-            let key = #key;
-            let value = env.storage()
-                .#storage_method()
-                .get::<_, #value_type>(&key);
+                value
+            }
 
-            if value.is_some() {
+            pub fn #setter_name(#param_list, value: &#value_type) {
+                let key = #key;
+
+                env.storage()
+                    .#storage_method()
+                    .set(&key, value);
+
                 #ttl_fn
             }
 
-            value
-        }
-
-        pub fn #setter_name(#param_list, value: &#value_type) {
-            let key = #key;
-
-            env.storage()
-                .#storage_method()
-                .set(&key, value);
-
-            #ttl_fn
-        }
-
-        pub fn #remover_name(#param_list) {
-            let key = #key;
-            env.storage()
-                .#storage_method()
-                .remove(&key);
-        }
+            pub fn #remover_name(#param_list) {
+                let key = #key;
+                env.storage()
+                    .#storage_method()
+                    .remove(&key);
+            }
+        },
     }
 }
 
@@ -326,70 +286,32 @@ fn public_storage_fns(
     };
 
     match &storage_attrs.value {
-        Value::Status => public_status_impl(
-            enum_name,
-            &getter_name,
-            &setter_name,
-            &remover_name,
-            &param_list,
-            &fn_args,
-        ),
-        Value::Type(value_type) => public_value_impl(
-            enum_name,
-            value_type,
-            &getter_name,
-            &setter_name,
-            &remover_name,
-            &param_list,
-            &fn_args,
-        ),
-    }
-}
+        Value::Status => quote! {
+            pub fn #getter_name(#param_list) -> bool {
+                #enum_name::#getter_name(#fn_args)
+            }
 
-fn public_status_impl(
-    enum_name: &Ident,
-    getter_name: &Ident,
-    setter_name: &Ident,
-    remover_name: &Ident,
-    param_list: &TokenStream,
-    fn_args: &TokenStream,
-) -> TokenStream {
-    quote! {
-        pub fn #getter_name(#param_list) -> bool {
-            #enum_name::#getter_name(#fn_args)
-        }
+            pub fn #setter_name(#param_list) {
+                #enum_name::#setter_name(#fn_args)
+            }
 
-        pub fn #setter_name(#param_list) {
-            #enum_name::#setter_name(#fn_args)
-        }
+            pub fn #remover_name(#param_list) {
+                #enum_name::#remover_name(#fn_args)
+            }
+        },
+        Value::Type(value_type) => quote! {
+            pub fn #getter_name(#param_list) -> Option<#value_type> {
+                #enum_name::#getter_name(#fn_args)
+            }
 
-        pub fn #remover_name(#param_list) {
-            #enum_name::#remover_name(#fn_args)
-        }
-    }
-}
+            pub fn #setter_name(#param_list, value: &#value_type) {
+                #enum_name::#setter_name(#fn_args, value)
+            }
 
-fn public_value_impl(
-    enum_name: &Ident,
-    value_type: &Type,
-    getter_name: &Ident,
-    setter_name: &Ident,
-    remover_name: &Ident,
-    param_list: &TokenStream,
-    fn_args: &TokenStream,
-) -> TokenStream {
-    quote! {
-        pub fn #getter_name(#param_list) -> Option<#value_type> {
-            #enum_name::#getter_name(#fn_args)
-        }
-
-        pub fn #setter_name(#param_list, value: &#value_type) {
-            #enum_name::#setter_name(#fn_args, value)
-        }
-
-        pub fn #remover_name(#param_list) {
-            #enum_name::#remover_name(#fn_args)
-        }
+            pub fn #remover_name(#param_list) {
+                #enum_name::#remover_name(#fn_args)
+            }
+        },
     }
 }
 

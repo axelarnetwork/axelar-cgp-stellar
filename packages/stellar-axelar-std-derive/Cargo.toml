@@ -12,7 +12,6 @@ proc-macro = true
 [features]
 
 [dependencies]
-goldie = { workspace = true }
 heck = "0.5"
 itertools = "0.14"
 prettyplease = "0.2"
@@ -21,6 +20,7 @@ quote = { version = "1.0", default-features = false }
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 
 [dev-dependencies]
+goldie = { workspace = true }
 
 [lints]
 workspace = true
