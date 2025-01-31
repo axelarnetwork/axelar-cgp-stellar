@@ -198,24 +198,21 @@ fn public_storage_fns(
     match &value {
         Value::Status => quote! {
             pub fn #getter_name(#param_list) -> bool {
-                let key = #key;
                 env.storage()
                     .#storage_method()
-                    .has(&key)
+                    .has(&#key)
             }
 
             pub fn #setter_name(#param_list) {
-                let key = #key;
                 env.storage()
                     .#storage_method()
-                    .set(&key, &());
+                    .set(&#key, &());
             }
 
             pub fn #remover_name(#param_list) {
-                let key = #key;
                 env.storage()
                     .#storage_method()
-                    .remove(&key);
+                    .remove(&#key);
             }
         },
         Value::Type(value_type) => quote! {
@@ -243,10 +240,9 @@ fn public_storage_fns(
             }
 
             pub fn #remover_name(#param_list) {
-                let key = #key;
                 env.storage()
                     .#storage_method()
-                    .remove(&key);
+                    .remove(&#key);
             }
         },
     }

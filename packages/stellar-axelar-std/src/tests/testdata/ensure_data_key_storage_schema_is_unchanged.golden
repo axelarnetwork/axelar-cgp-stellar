@@ -12,8 +12,8 @@
     let key = DataKey :: Counter; env.storage().instance().set(& key, value);
     stellar_axelar_std :: ttl :: extend_instance_ttl(env);
 } pub fn remove_counter(env : & soroban_sdk :: Env)
-{ let key = DataKey :: Counter; env.storage().instance().remove(& key); } pub
-fn message(env : & soroban_sdk :: Env, sender : Address) -> Option < String >
+{ env.storage().instance().remove(& DataKey :: Counter); } pub fn
+message(env : & soroban_sdk :: Env, sender : Address) -> Option < String >
 {
     let key = DataKey :: Message(sender); let value =
     env.storage().persistent().get :: < _, String > (& key); if
@@ -26,11 +26,8 @@ set_message(env : & soroban_sdk :: Env, sender : Address, value : & String)
     env.storage().persistent().set(& key, value); stellar_axelar_std :: ttl ::
     extend_persistent_ttl(env, & key);
 } pub fn remove_message(env : & soroban_sdk :: Env, sender : Address)
-{
-    let key = DataKey :: Message(sender);
-    env.storage().persistent().remove(& key);
-} pub fn last_caller(env : & soroban_sdk :: Env, timestamp : u64) -> Option <
-Address >
+{ env.storage().persistent().remove(& DataKey :: Message(sender)); } pub fn
+last_caller(env : & soroban_sdk :: Env, timestamp : u64) -> Option < Address >
 {
     let key = DataKey :: LastCaller(timestamp); let value =
     env.storage().temporary().get :: < _, Address > (& key); if
@@ -42,11 +39,9 @@ Address)
     let key = DataKey :: LastCaller(timestamp);
     env.storage().temporary().set(& key, value);
 } pub fn remove_last_caller(env : & soroban_sdk :: Env, timestamp : u64)
-{
-    let key = DataKey :: LastCaller(timestamp);
-    env.storage().temporary().remove(& key);
-} pub fn flag(env : & soroban_sdk :: Env, key : String, owner : Address) ->
-Option < bool >
+{ env.storage().temporary().remove(& DataKey :: LastCaller(timestamp)); } pub
+fn flag(env : & soroban_sdk :: Env, key : String, owner : Address) -> Option <
+bool >
 {
     let key = DataKey :: Flag(key, owner); let value =
     env.storage().persistent().get :: < _, bool > (& key); if value.is_some()
@@ -60,11 +55,9 @@ bool)
     extend_persistent_ttl(env, & key);
 } pub fn
 remove_flag(env : & soroban_sdk :: Env, key : String, owner : Address)
-{
-    let key = DataKey :: Flag(key, owner);
-    env.storage().persistent().remove(& key);
-} pub fn optional_message(env : & soroban_sdk :: Env, id : u32) -> Option <
-Option < String > >
+{ env.storage().persistent().remove(& DataKey :: Flag(key, owner)); } pub fn
+optional_message(env : & soroban_sdk :: Env, id : u32) -> Option < Option <
+String > >
 {
     let key = DataKey :: OptionalMessage(id); let value =
     env.storage().persistent().get :: < _, Option < String > > (& key); if
@@ -78,7 +71,4 @@ String >)
     env.storage().persistent().set(& key, value); stellar_axelar_std :: ttl ::
     extend_persistent_ttl(env, & key);
 } pub fn remove_optional_message(env : & soroban_sdk :: Env, id : u32)
-{
-    let key = DataKey :: OptionalMessage(id);
-    env.storage().persistent().remove(& key);
-}
+{ env.storage().persistent().remove(& DataKey :: OptionalMessage(id)); }

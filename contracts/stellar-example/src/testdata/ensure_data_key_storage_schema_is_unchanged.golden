@@ -10,8 +10,8 @@ gateway(env : & soroban_sdk :: Env) -> Option < Address >
     let key = DataKey :: Gateway; env.storage().instance().set(& key, value);
     stellar_axelar_std :: ttl :: extend_instance_ttl(env);
 } pub fn remove_gateway(env : & soroban_sdk :: Env)
-{ let key = DataKey :: Gateway; env.storage().instance().remove(& key); } pub
-fn gas_service(env : & soroban_sdk :: Env) -> Option < Address >
+{ env.storage().instance().remove(& DataKey :: Gateway); } pub fn
+gas_service(env : & soroban_sdk :: Env) -> Option < Address >
 {
     let key = DataKey :: GasService; let value = env.storage().instance().get
     :: < _, Address > (& key); if value.is_some()
@@ -22,9 +22,8 @@ fn gas_service(env : & soroban_sdk :: Env) -> Option < Address >
     env.storage().instance().set(& key, value); stellar_axelar_std :: ttl ::
     extend_instance_ttl(env);
 } pub fn remove_gas_service(env : & soroban_sdk :: Env)
-{ let key = DataKey :: GasService; env.storage().instance().remove(& key); }
-pub fn interchain_token_service(env : & soroban_sdk :: Env) -> Option <
-Address >
+{ env.storage().instance().remove(& DataKey :: GasService); } pub fn
+interchain_token_service(env : & soroban_sdk :: Env) -> Option < Address >
 {
     let key = DataKey :: InterchainTokenService; let value =
     env.storage().instance().get :: < _, Address > (& key); if value.is_some()
@@ -36,12 +35,10 @@ set_interchain_token_service(env : & soroban_sdk :: Env, value : & Address)
     env.storage().instance().set(& key, value); stellar_axelar_std :: ttl ::
     extend_instance_ttl(env);
 } pub fn remove_interchain_token_service(env : & soroban_sdk :: Env)
-{
-    let key = DataKey :: InterchainTokenService;
-    env.storage().instance().remove(& key);
-} pub fn paused(env : & soroban_sdk :: Env) -> bool
-{ let key = DataKey :: Paused; env.storage().instance().has(& key) } pub fn
+{ env.storage().instance().remove(& DataKey :: InterchainTokenService); } pub
+fn paused(env : & soroban_sdk :: Env) -> bool
+{ env.storage().instance().has(& DataKey :: Paused) } pub fn
 set_paused(env : & soroban_sdk :: Env)
-{ let key = DataKey :: Paused; env.storage().instance().set(& key, & ()); }
-pub fn remove_paused(env : & soroban_sdk :: Env)
-{ let key = DataKey :: Paused; env.storage().instance().remove(& key); }
+{ env.storage().instance().set(& DataKey :: Paused, & ()); } pub fn
+remove_paused(env : & soroban_sdk :: Env)
+{ env.storage().instance().remove(& DataKey :: Paused); }
