@@ -183,15 +183,18 @@ fn value(attrs: &[Attribute]) -> Value {
 fn storage_fns(
     enum_name: &Ident,
     variant: &Variant,
-    storage_attrs: &StorageAttributes,
+    StorageAttributes {
+        storage_type,
+        value,
+    }: &StorageAttributes,
 ) -> TokenStream {
     let variant_ident = &variant.ident;
 
     let (field_names, field_types) = fields_data(&variant.fields);
     let (getter_name, setter_name, remover_name) = fn_names(variant);
 
-    let storage_method = storage_attrs.storage_type.storage_method();
-    let ttl_fn = storage_attrs.storage_type.ttl_method();
+    let storage_method = storage_type.storage_method();
+    let ttl_fn = storage_type.ttl_method();
 
     let key = if field_names.is_empty() {
         quote! { #enum_name::#variant_ident }
@@ -205,7 +208,7 @@ fn storage_fns(
         quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
     };
 
-    match &storage_attrs.value {
+    match &value {
         Value::Status => quote! {
             pub fn #getter_name(#param_list) -> bool {
                 let key = #key;
@@ -266,7 +269,7 @@ fn storage_fns(
 fn public_storage_fns(
     enum_name: &Ident,
     variant: &Variant,
-    storage_attrs: &StorageAttributes,
+    StorageAttributes { value, .. }: &StorageAttributes,
 ) -> TokenStream {
     let (getter_name, setter_name, remover_name) = fn_names(variant);
 
@@ -284,7 +287,7 @@ fn public_storage_fns(
         quote! { env, #(#field_names),* }
     };
 
-    match &storage_attrs.value {
+    match &value {
         Value::Status => quote! {
             pub fn #getter_name(#param_list) -> bool {
                 #enum_name::#getter_name(#fn_args)
