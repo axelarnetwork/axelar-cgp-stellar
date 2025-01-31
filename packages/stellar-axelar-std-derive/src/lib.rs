@@ -293,5 +293,5 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
-    storage::contractstorage(&input).into()
+    storage::contract_storage(&input).into()
 }

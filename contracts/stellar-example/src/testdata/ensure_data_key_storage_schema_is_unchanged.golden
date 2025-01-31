@@ -1,0 +1,76 @@
+#[contracttype] enum DataKey
+{ Gateway, GasService, InterchainTokenService, Paused, } impl DataKey
+{
+    pub fn gateway(env : & soroban_sdk :: Env) -> Option < Address >
+    {
+        let key = DataKey :: Gateway; let value = env.storage().instance().get
+        :: < _, Address > (& key); if value.is_some()
+        { stellar_axelar_std :: ttl :: extend_instance_ttl(env); } value
+    } pub fn set_gateway(env : & soroban_sdk :: Env, value : & Address)
+    {
+        let key = DataKey :: Gateway;
+        env.storage().instance().set(& key, value); stellar_axelar_std :: ttl
+        :: extend_instance_ttl(env);
+    } pub fn remove_gateway(env : & soroban_sdk :: Env)
+    { let key = DataKey :: Gateway; env.storage().instance().remove(& key); }
+    pub fn gas_service(env : & soroban_sdk :: Env) -> Option < Address >
+    {
+        let key = DataKey :: GasService; let value =
+        env.storage().instance().get :: < _, Address > (& key); if
+        value.is_some()
+        { stellar_axelar_std :: ttl :: extend_instance_ttl(env); } value
+    } pub fn set_gas_service(env : & soroban_sdk :: Env, value : & Address)
+    {
+        let key = DataKey :: GasService;
+        env.storage().instance().set(& key, value); stellar_axelar_std :: ttl
+        :: extend_instance_ttl(env);
+    } pub fn remove_gas_service(env : & soroban_sdk :: Env)
+    {
+        let key = DataKey :: GasService;
+        env.storage().instance().remove(& key);
+    } pub fn interchain_token_service(env : & soroban_sdk :: Env) -> Option <
+    Address >
+    {
+        let key = DataKey :: InterchainTokenService; let value =
+        env.storage().instance().get :: < _, Address > (& key); if
+        value.is_some()
+        { stellar_axelar_std :: ttl :: extend_instance_ttl(env); } value
+    } pub fn
+    set_interchain_token_service(env : & soroban_sdk :: Env, value : &
+    Address)
+    {
+        let key = DataKey :: InterchainTokenService;
+        env.storage().instance().set(& key, value); stellar_axelar_std :: ttl
+        :: extend_instance_ttl(env);
+    } pub fn remove_interchain_token_service(env : & soroban_sdk :: Env)
+    {
+        let key = DataKey :: InterchainTokenService;
+        env.storage().instance().remove(& key);
+    } pub fn paused(env : & soroban_sdk :: Env) -> bool
+    { let key = DataKey :: Paused; env.storage().instance().has(& key) } pub
+    fn set_paused(env : & soroban_sdk :: Env)
+    {
+        let key = DataKey :: Paused;
+        env.storage().instance().set(& key, & ());
+    } pub fn remove_paused(env : & soroban_sdk :: Env)
+    { let key = DataKey :: Paused; env.storage().instance().remove(& key); }
+} pub fn gateway(env : & soroban_sdk :: Env) -> Option < Address >
+{ DataKey :: gateway(env) } pub fn
+set_gateway(env : & soroban_sdk :: Env, value : & Address)
+{ DataKey :: set_gateway(env, value) } pub fn
+remove_gateway(env : & soroban_sdk :: Env) { DataKey :: remove_gateway(env) }
+pub fn gas_service(env : & soroban_sdk :: Env) -> Option < Address >
+{ DataKey :: gas_service(env) } pub fn
+set_gas_service(env : & soroban_sdk :: Env, value : & Address)
+{ DataKey :: set_gas_service(env, value) } pub fn
+remove_gas_service(env : & soroban_sdk :: Env)
+{ DataKey :: remove_gas_service(env) } pub fn
+interchain_token_service(env : & soroban_sdk :: Env) -> Option < Address >
+{ DataKey :: interchain_token_service(env) } pub fn
+set_interchain_token_service(env : & soroban_sdk :: Env, value : & Address)
+{ DataKey :: set_interchain_token_service(env, value) } pub fn
+remove_interchain_token_service(env : & soroban_sdk :: Env)
+{ DataKey :: remove_interchain_token_service(env) } pub fn
+paused(env : & soroban_sdk :: Env) -> bool { DataKey :: paused(env) } pub fn
+set_paused(env : & soroban_sdk :: Env) { DataKey :: set_paused(env) } pub fn
+remove_paused(env : & soroban_sdk :: Env) { DataKey :: remove_paused(env) }

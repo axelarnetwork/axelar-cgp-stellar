@@ -44,7 +44,7 @@ impl StorageType {
 }
 
 /// Generates the storage enum and its associated functions.
-pub fn contractstorage(input: &DeriveInput) -> TokenStream {
+pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     let name = &input.ident;
 
     let Data::Enum(DataEnum { variants, .. }) = &input.data else {
@@ -81,7 +81,7 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         })
         .collect();
 
-    let output = quote! {
+    let contract_storage = quote! {
         #[contracttype]
         enum #name {
             #(#transformed_variants,)*
@@ -94,7 +94,13 @@ pub fn contractstorage(input: &DeriveInput) -> TokenStream {
         #(#public_fns)*
     };
 
-    output
+    let contract_storage_tests = contract_storage_tests(name, &contract_storage);
+
+    quote! {
+        #contract_storage
+
+        #contract_storage_tests
+    }
 }
 
 /// Transforms a contractstorage enum variant with named fields into a storage key map (tuple variant),
@@ -338,6 +344,28 @@ fn fn_names(variant: &Variant) -> (Ident, Ident, Ident) {
     )
 }
 
+fn contract_storage_tests(enum_name: &Ident, storage_enum: &TokenStream) -> TokenStream {
+    let test_module_name = format_ident!(
+        "{}_storage_layout_tests",
+        enum_name.to_string().to_snake_case()
+    );
+
+    let test_name = format_ident!(
+        "ensure_{}_storage_schema_is_unchanged",
+        enum_name.to_string().to_snake_case()
+    );
+
+    quote! {
+        #[cfg(test)]
+        mod #test_module_name {
+            #[test]
+            fn #test_name() {
+                goldie::assert!(stringify!(#storage_enum));
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -377,7 +405,7 @@ mod tests {
             }
         };
 
-        let generated = contractstorage(&input);
+        let generated = contract_storage(&input);
         let file: syn::File = syn::parse2(generated).unwrap();
         let formatted = prettyplease::unparse(&file);
         goldie::assert!(formatted);
@@ -392,7 +420,7 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 
     #[test]
@@ -406,7 +434,7 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 
     #[test]
@@ -421,7 +449,7 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 
     #[test]
@@ -435,7 +463,7 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 
     #[test]
@@ -448,7 +476,7 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 
     #[test]
@@ -473,6 +501,6 @@ mod tests {
             }
         };
 
-        contractstorage(&input);
+        contract_storage(&input);
     }
 }
