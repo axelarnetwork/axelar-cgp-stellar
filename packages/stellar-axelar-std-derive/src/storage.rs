@@ -53,20 +53,6 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
 
     let transformed_variants: Vec<_> = variants.iter().map(transform_variant).collect();
 
-    let storage_fns: Vec<_> = variants
-        .iter()
-        .map(|variant| {
-            storage_fns(
-                name,
-                variant,
-                &StorageAttributes {
-                    storage_type: storage_type(&variant.attrs),
-                    value: value(&variant.attrs),
-                },
-            )
-        })
-        .collect();
-
     let public_fns: Vec<_> = variants
         .iter()
         .map(|variant| {
@@ -85,10 +71,6 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
         #[contracttype]
         enum #name {
             #(#transformed_variants,)*
-        }
-
-        impl #name {
-            #(#storage_fns)*
         }
 
         #(#public_fns)*
@@ -185,8 +167,8 @@ fn value(attrs: &[Attribute]) -> Value {
     }
 }
 
-/// Generates the storage getter, setter, and remover functions for a storage enum variant.
-fn storage_fns(
+/// Generates the public module-level storage functions.
+fn public_storage_fns(
     enum_name: &Ident,
     variant: &Variant,
     StorageAttributes {
@@ -207,7 +189,6 @@ fn storage_fns(
     } else {
         quote! { #enum_name::#variant_ident(#(#field_names),*) }
     };
-
     let param_list = if field_names.is_empty() {
         quote! { env: &soroban_sdk::Env }
     } else {
@@ -266,58 +247,6 @@ fn storage_fns(
                 env.storage()
                     .#storage_method()
                     .remove(&key);
-            }
-        },
-    }
-}
-
-/// Generates the public module-level storage functions.
-fn public_storage_fns(
-    enum_name: &Ident,
-    variant: &Variant,
-    StorageAttributes { value, .. }: &StorageAttributes,
-) -> TokenStream {
-    let (getter_name, setter_name, remover_name) = fn_names(variant);
-
-    let (field_names, field_types) = fields_data(&variant.fields);
-
-    let param_list = if field_names.is_empty() {
-        quote! { env: &soroban_sdk::Env }
-    } else {
-        quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
-    };
-
-    let fn_args = if field_names.is_empty() {
-        quote! { env }
-    } else {
-        quote! { env, #(#field_names),* }
-    };
-
-    match &value {
-        Value::Status => quote! {
-            pub fn #getter_name(#param_list) -> bool {
-                #enum_name::#getter_name(#fn_args)
-            }
-
-            pub fn #setter_name(#param_list) {
-                #enum_name::#setter_name(#fn_args)
-            }
-
-            pub fn #remover_name(#param_list) {
-                #enum_name::#remover_name(#fn_args)
-            }
-        },
-        Value::Type(value_type) => quote! {
-            pub fn #getter_name(#param_list) -> Option<#value_type> {
-                #enum_name::#getter_name(#fn_args)
-            }
-
-            pub fn #setter_name(#param_list, value: &#value_type) {
-                #enum_name::#setter_name(#fn_args, value)
-            }
-
-            pub fn #remover_name(#param_list) {
-                #enum_name::#remover_name(#fn_args)
             }
         },
     }
