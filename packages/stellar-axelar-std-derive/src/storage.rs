@@ -217,7 +217,7 @@ fn storage_fns(
         ),
         Value::Type(value_type) => value_impl(
             &key,
-            &value_type,
+            value_type,
             &getter_name,
             &setter_name,
             &remover_name,
@@ -327,7 +327,7 @@ fn public_storage_fns(
 
     match &storage_attrs.value {
         Value::Status => public_status_impl(
-            &enum_name,
+            enum_name,
             &getter_name,
             &setter_name,
             &remover_name,
@@ -335,8 +335,8 @@ fn public_storage_fns(
             &fn_args,
         ),
         Value::Type(value_type) => public_value_impl(
-            &enum_name,
-            &value_type,
+            enum_name,
+            value_type,
             &getter_name,
             &setter_name,
             &remover_name,
