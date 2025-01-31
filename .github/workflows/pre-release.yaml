@@ -1,5 +1,5 @@
 # takes the latest commit hash on main and uploads the artefacts to CF storage
-name: Release
+name: Pre-release
 on:
   workflow_dispatch:
 
@@ -13,31 +13,48 @@ jobs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}
 
     steps:
-      - name: Prepare JSON output to be a matrix GHA format
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get latest commit hash
+        id: get-commit-hash
+        run: echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Prepare JSON output for matrix
         id: prepare-matrix
         run: |
-          # -J for json, -d for directories, -L 1 for depth of 1
-          export NAMES=$(tree -J -d -L 1 contracts | jq -c '.[0].contents | map(.name)')
-          echo "releases=$NAMES" >> $GITHUB_OUTPUT
+          # Extract package names from the 'contracts' directory and format properly
+          RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ env.commit_hash }}" 'map({package_name: ., version: $commit, tag: .})')
+
+          # Debugging output
+          echo "Generated releases JSON: $RELEASES_JSON"
+
+          # Properly set output with correct JSON format
+          echo "releases=$(echo "$RELEASES_JSON" | jq -c)" >> "$GITHUB_OUTPUT"
 
   # Publishes a release in case the release isn't published
   build-and-upload:
-    name: Publish releases
-
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    name: Build artifacts for ${{ matrix.releases.package_name }}-${{ matrix.releases.version }}
     needs: define-matrix
 
+    # Once a release is done for a package, we iterate on each of these packages and build its corresponding artifacts and upload them
     strategy:
       matrix:
         releases: ${{ fromJson(needs.define-matrix.outputs.releases) }}
 
     uses: ./.github/workflows/reusable-build-upload.yaml
+
     permissions:
       id-token: write
       contents: read
+
     with:
       package-name: "${{ matrix.releases.package_name }}"
-      package-version: "${{ github.sha }}"
+      package-version: "${{ matrix.releases.version }}"
+      package-git-tag: "${{ matrix.releases.tag }}"
 
       # CF Bucket related variables
       cf-bucket-name: "${{ vars.CF_BUCKET_NAME }}"
@@ -46,7 +63,7 @@ jobs:
       cf-config-bucket-root-key: "${{ vars.CF_BUCKET_ROOT_KEY }}"
 
       # we just want to upload to CF, do not run a github release
-      github-release: "false"
+      github-release: false
 
     secrets:
       github-token: "${{ secrets.PAT_TOKEN }}"

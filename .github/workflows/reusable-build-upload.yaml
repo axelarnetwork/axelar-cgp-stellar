@@ -36,7 +36,7 @@ on:
       github-release:
         description: "Whether to upload the build as a github release"
         required: false
-        default: "true"
+        default: true
         type: boolean
 
     secrets:
@@ -69,9 +69,9 @@ jobs:
           toolchain: 1.81.0
           targets: wasm32-unknown-unknown
 
-      - name: Build artifacts for ${{ inputs.package-name }}-v${{ inputs.package-version }}
+      - name: Build artifacts for ${{ inputs.package-name }}
         run: |
-          echo "Building wasm for '${{ inputs.package-name }}-v${{ inputs.package-version }}'";
+          echo "Building wasm for '${{ inputs.package-name }}'";
           cargo install --locked stellar-cli --version 22.2.0 --features opt
           cargo wasm -p ${{ inputs.package-name }}
           stellar contract build
@@ -81,7 +81,7 @@ jobs:
       - name: Prepare cross-steps variables
         run: |
           export PACKAGE_NAME='${{ inputs.package-name }}'
-          export PACKAGE_VERSION='v${{ inputs.package-version }}'
+          export PACKAGE_VERSION=${{ inputs.github-release && format('v{0}', inputs.package-version) || inputs.package-version }}
 
           export BASE_ARTIFACTS_DIR="./target/wasm32-unknown-unknown/release"
           export ARTIFACT_NAME="axelar-cgp-stellar-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
@@ -182,7 +182,7 @@ jobs:
       # https://github.com/orgs/community/discussions/26263#discussioncomment-3251069
       - name: Update the GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
-        if: ${{ inputs.github-release == 'true' }}
+        if: inputs.github-release
         with:
           tag_name: ${{ inputs.package-git-tag }} # This uses the tag from the push
           files: |
