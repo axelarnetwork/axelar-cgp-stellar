@@ -6,7 +6,7 @@ extern crate std;
 mod contract;
 pub mod event;
 pub mod interface;
-mod storage_types;
+mod storage;
 
 pub use contract::{Example, ExampleClient};
 
