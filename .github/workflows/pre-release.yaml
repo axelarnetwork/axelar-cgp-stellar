@@ -26,13 +26,8 @@ jobs:
       - name: Prepare JSON output for matrix
         id: prepare-matrix
         run: |
-          # Extract package names from the 'contracts' directory and format properly
           RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ env.commit_hash }}" 'map({package_name: ., version: $commit, tag: .})')
-
-          # Debugging output
           echo "Generated releases JSON: $RELEASES_JSON"
-
-          # Properly set output with correct JSON format
           echo "releases=$(echo "$RELEASES_JSON" | jq -c)" >> "$GITHUB_OUTPUT"
 
   # Publishes a release in case the release isn't published
