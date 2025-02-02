@@ -39,7 +39,7 @@ jobs:
           cargo doc --no-deps --workspace
 
           # Create an index.html that redirects to the main crate's docs
-          echo '<meta http-equiv="refresh" content="0; url=axelar_gateway/index.html">' > target/doc/index.html
+          echo '<meta http-equiv="refresh" content="0; url=stellar_axelar_gateway/index.html">' > target/doc/index.html
 
           # Copy the generated docs to the pages directory
           mkdir -p pages
