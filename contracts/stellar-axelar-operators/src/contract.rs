@@ -67,7 +67,7 @@ impl AxelarOperatorsInterface for AxelarOperators {
         operator.require_auth();
 
         ensure!(
-            storage::operators(&env, operator.clone()).unwrap_or(false),
+            storage::operators(&env, operator).unwrap_or(false),
             ContractError::NotAnOperator
         );
 
