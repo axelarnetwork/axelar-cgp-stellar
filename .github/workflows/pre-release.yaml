@@ -1,5 +1,5 @@
-# takes the latest commit hash on main and uploads the artefacts to CF storage
-name: Pre-release
+# Workflow to fetch the latest commit hash on the main branch and upload artifacts to CF storage.
+name: Build and upload from main
 on:
   workflow_dispatch:
 
@@ -7,61 +7,59 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   define-matrix:
+    name: Define Matrix
     runs-on: blacksmith-2vcpu-ubuntu-2204
-
     outputs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq
+        run: sudo apt-get install -y jq
 
       - name: Get latest commit hash
         id: get-commit-hash
-        run: echo "commit_hash=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+        run: echo "hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Prepare JSON output for matrix
         id: prepare-matrix
         run: |
-          RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ env.commit_hash }}" 'map({package_name: ., version: $commit, tag: .})')
-          echo "Generated releases JSON: $RELEASES_JSON"
+          RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ steps.get-commit-hash.outputs.hash }}" 'map({
+            package_name: .,
+            version: $commit,
+            package_git_tag: "\(.)_\($commit)"
+          })')
           echo "releases=$(echo "$RELEASES_JSON" | jq -c)" >> "$GITHUB_OUTPUT"
 
-  # Publishes a release in case the release isn't published
-  build-and-upload:
-    name: Build artifacts for ${{ matrix.releases.package_name }}-${{ matrix.releases.version }}
+  build:
     needs: define-matrix
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      commit-hash: ${{ needs.define-matrix.outputs.commit_hash }}
 
-    # Once a release is done for a package, we iterate on each of these packages and build its corresponding artifacts and upload them
+  upload:
+    needs: [define-matrix, build]
     strategy:
       matrix:
         releases: ${{ fromJson(needs.define-matrix.outputs.releases) }}
 
-    uses: ./.github/workflows/reusable-build-upload.yaml
-
+    uses: ./.github/workflows/reusable-upload.yaml
     permissions:
       id-token: write
       contents: read
-
     with:
-      package-name: "${{ matrix.releases.package_name }}"
-      package-version: "${{ matrix.releases.version }}"
-      package-git-tag: "${{ matrix.releases.tag }}"
-
-      # CF Bucket related variables
-      cf-bucket-name: "${{ vars.CF_BUCKET_NAME }}"
-
-      # The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)
-      cf-config-bucket-root-key: "${{ vars.CF_BUCKET_ROOT_KEY }}"
-
-      # We only want to upload to CF, do not run a github release
+      package-name: ${{ matrix.releases.package_name }}
+      package-version: ${{ matrix.releases.version }}
+      package-git-tag: ${{ matrix.releases.package_git_tag }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
+      cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
       github-release: false
-
     secrets:
-      github-token: "${{ secrets.PAT_TOKEN }}"
-      cf-endpoint-url: "${{ secrets.CF_ENDPOINT_URL }}"
+      github-token: ${{ secrets.PAT_TOKEN }}
+      cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
       cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
       cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}

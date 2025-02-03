@@ -1,0 +1,68 @@
+name: "Build Contracts"
+
+on:
+  workflow_call:
+    inputs:
+      commit-hash:
+        description: "The commit hash to build from"
+        type: string
+        required: true
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded artifact containing all builds"
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+jobs:
+  build:
+    runs-on: blacksmith-8vcpu-ubuntu-2204
+    outputs:
+      artifact-name: ${{ steps.set-artifact-name.outputs.name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout specific commit
+        run: git checkout ${{ inputs.commit-hash }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.76.0
+          targets: wasm32-unknown-unknown
+
+      - name: Set artifact name
+        id: set-artifact-name
+        run: |
+          echo "name=wasm-builds-${{ inputs.commit-hash }}" >> $GITHUB_OUTPUT
+
+      - name: Build all contracts
+        run: |
+          cargo install --locked soroban-cli --version 21.1.1 --features opt
+
+          # Build all contracts
+          cargo wasm
+          ./optimize.sh
+
+          # Create directory for storing optimized WASM files
+          mkdir -p wasm-builds
+
+          # Process in the release directory
+          cd target/wasm32-unknown-unknown/release
+
+          # Remove unoptimized files and rename optimized ones
+          # This ensures we only keep the optimized versions
+          find . -type f -name "*.wasm" ! -name "*.optimized.wasm" -maxdepth 1 -delete
+          find . -name "*.optimized.wasm" -maxdepth 1 -exec sh -c 'mv "$0" "${0%.optimized.wasm}.wasm"' {} \;
+
+          # Move all optimized WASM files to the builds directory
+          mv *.wasm ../../../wasm-builds/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-artifact-name.outputs.name }}
+          path: wasm-builds
+          retention-days: 1
