@@ -12,7 +12,7 @@ use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
-    ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
+    ensure, interfaces, when_not_paused, only_owner, only_operator, Operatable, Ownable, Pausable, Upgradable,
 };
 use stellar_interchain_token::InterchainTokenClient;
 
@@ -130,9 +130,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
             .has(&DataKey::TrustedChain(chain))
     }
 
+    #[only_owner]
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
-        Self::owner(env).require_auth();
-
         let key = DataKey::TrustedChain(chain.clone());
 
         ensure!(
@@ -147,9 +146,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         Ok(())
     }
 
+    #[only_owner]
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
-        Self::owner(env).require_auth();
-
         let key = DataKey::TrustedChain(chain.clone());
 
         ensure!(
@@ -210,13 +208,12 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         flow_limit::flow_in_amount(env, token_id)
     }
 
+    #[only_operator]
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
         flow_limit: Option<i128>,
     ) -> Result<(), ContractError> {
-        Self::operator(env).require_auth();
-
         flow_limit::set_flow_limit(env, token_id, flow_limit)
     }
 

@@ -6,7 +6,7 @@ use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::OwnableInterface;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
-use stellar_axelar_std::{ensure, interfaces, Upgradable};
+use stellar_axelar_std::{ensure, only_owner, interfaces, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{MinterAddedEvent, MinterRemovedEvent};
@@ -130,9 +130,8 @@ impl InterchainTokenInterface for InterchainToken {
         Ok(())
     }
 
+    #[only_owner]
     fn add_minter(env: &Env, minter: Address) {
-        Self::owner(env).require_auth();
-
         env.storage()
             .instance()
             .set(&DataKey::Minter(minter.clone()), &());
@@ -142,9 +141,8 @@ impl InterchainTokenInterface for InterchainToken {
         MinterAddedEvent { minter }.emit(env);
     }
 
+    #[only_owner]
     fn remove_minter(env: &Env, minter: Address) {
-        Self::owner(env).require_auth();
-
         env.storage()
             .instance()
             .remove(&DataKey::Minter(minter.clone()));
