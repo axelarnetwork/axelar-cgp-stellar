@@ -7,6 +7,7 @@ mod operatable {
     use stellar_axelar_std::assert_auth;
     use stellar_axelar_std::interfaces::OperatableClient;
     use stellar_axelar_std_derive::Operatable;
+    use stellar_axelar_std::only_operator;
 
     use super::*;
 
@@ -26,6 +27,32 @@ mod operatable {
         pub fn __constructor(env: &Env, operator: Address) {
             stellar_axelar_std::interfaces::set_operator(env, &operator);
         }
+
+        #[only_operator]
+        pub fn operator_function(env: &Env) {
+        }
+    }
+
+    #[test]
+    fn operator_function_succeeds_with_correct_operator() {
+        let env = Env::default();
+        let operator = Address::generate(&env);
+        let contract_id = env.register(Contract, (operator.clone(),));
+        let client = ContractClient::new(&env, &contract_id);
+
+        assert_auth!(operator, client.operator_function());
+    }
+
+    #[test]
+    #[should_panic(expected = "InvalidAction")]
+    fn operator_function_fails_with_incorrect_operator() {
+        let env = Env::default();
+        let operator = Address::generate(&env);
+        let non_operator = Address::generate(&env);
+        let contract_id = env.register(Contract, (operator.clone(),));
+        let client = ContractClient::new(&env, &contract_id);
+
+        assert_auth!(non_operator, client.operator_function());
     }
 
     #[test]
@@ -46,6 +73,7 @@ mod ownable {
     use stellar_axelar_std::assert_auth;
     use stellar_axelar_std::interfaces::OwnableClient;
     use stellar_axelar_std_derive::Ownable;
+    use stellar_axelar_std::only_owner;
 
     use super::*;
 
@@ -65,6 +93,32 @@ mod ownable {
         pub fn __constructor(env: &Env, owner: Address) {
             stellar_axelar_std::interfaces::set_owner(env, &owner);
         }
+
+        #[only_owner]
+        pub fn owner_function(env: &Env) {
+        }
+    }
+
+    #[test]
+    fn owner_function_succeeds_with_correct_owner() {
+        let env = Env::default();
+        let owner = Address::generate(&env);
+        let contract_id = env.register(Contract, (owner.clone(),));
+        let client = ContractClient::new(&env, &contract_id);
+
+        assert_auth!(owner, client.owner_function());
+    }
+
+    #[test]
+    #[should_panic(expected = "InvalidAction")]
+    fn owner_function_fails_with_incorrect_owner() {
+        let env = Env::default();
+        let owner = Address::generate(&env);
+        let non_owner = Address::generate(&env);
+        let contract_id = env.register(Contract, (owner.clone(),));
+        let client = ContractClient::new(&env, &contract_id);
+
+        assert_auth!(non_owner, client.owner_function());
     }
 
     #[test]
@@ -171,3 +225,6 @@ mod upgradable {
         assert_auth!(owner, client.migrate(&()));
     }
 }
+
+// Modify this file, add tests for only_owner and only_operator
+// add them in ownable and operatable

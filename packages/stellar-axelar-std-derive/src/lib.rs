@@ -12,6 +12,7 @@ mod upgradable;
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
 use upgradable::MigrationArgs;
+use quote::quote;
 
 /// Implements the Operatable interface for a Soroban contract.
 ///
@@ -232,4 +233,64 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     its_executable::its_executable(name).into()
+}
+
+#[proc_macro_attribute]
+pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    let fn_vis = &input.vis;
+    let fn_sig = &input.sig;
+    let fn_block = &input.block;
+    let fn_inputs = &fn_sig.inputs;
+
+    // Check that env is the first parameter
+    let Some(syn::FnArg::Typed(pat_type)) = fn_inputs.first() else {
+        panic!("First parameter must be a typed parameter")
+    };
+    let syn::Pat::Ident(pat_ident) = &*pat_type.pat else {
+        panic!("First parameter must be a simple identifier")
+    };
+    assert!(
+        pat_ident.ident == "env",
+        "First parameter must be named 'env'"
+    );
+
+    let expanded = quote! {
+        #fn_vis #fn_sig {
+            Self::owner(&env).require_auth();
+            #fn_block
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_attribute]
+pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    let fn_vis = &input.vis;
+    let fn_sig = &input.sig;
+    let fn_block = &input.block;
+    let fn_inputs = &fn_sig.inputs;
+
+    // Check that env is the first parameter
+    let Some(syn::FnArg::Typed(pat_type)) = fn_inputs.first() else {
+        panic!("First parameter must be a typed parameter")
+    };
+    let syn::Pat::Ident(pat_ident) = &*pat_type.pat else {
+        panic!("First parameter must be a simple identifier")
+    };
+    assert!(
+        pat_ident.ident == "env",
+        "First parameter must be named 'env'"
+    );
+
+    let expanded = quote! {
+        #fn_vis #fn_sig {
+            Self::operator(&env).require_auth();
+            #fn_block
+        }
+    };
+
+    TokenStream::from(expanded)
 }
