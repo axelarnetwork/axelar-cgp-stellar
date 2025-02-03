@@ -15,12 +15,12 @@ proc-macro = true
 heck = "0.5"
 itertools = "0.14"
 proc-macro2 = { workspace = true }
-quote = { version = "1.0", default-features = false }
-syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = { workspace = true }
+syn = { workspace = true }
 
 [dev-dependencies]
 goldie = { workspace = true }
-prettyplease = "0.2"
+prettyplease = { workspace = true }
 
 [lints]
 workspace = true

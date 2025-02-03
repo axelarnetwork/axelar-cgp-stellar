@@ -1,6 +1,3 @@
-/**
-* Storage Enum
-*/
 #[contracttype]
 enum DataKey {
     Counter,
@@ -11,10 +8,7 @@ enum DataKey {
     Initialized,
     Paused,
 }
-/**
-* Public Functions
-*/
-/// Value Type Getter
+
 pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
     let key = DataKey::Counter;
     let value = env.storage().instance().get::<_, u32>(&key);
@@ -23,17 +17,17 @@ pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
     }
     value
 }
-/// Value Type Setter
+
 pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
     let key = DataKey::Counter;
     env.storage().instance().set(&key, value);
     stellar_axelar_std::ttl::extend_instance_ttl(env);
 }
-/// Value Type Remover
+
 pub fn remove_counter(env: &soroban_sdk::Env) {
     env.storage().instance().remove(&DataKey::Counter);
 }
-/// Value Type Getter
+
 pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
     let key = DataKey::Message(sender);
     let value = env.storage().persistent().get::<_, String>(&key);
@@ -42,33 +36,33 @@ pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
     }
     value
 }
-/// Value Type Setter
+
 pub fn set_message(env: &soroban_sdk::Env, sender: Address, value: &String) {
     let key = DataKey::Message(sender);
     env.storage().persistent().set(&key, value);
     stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
 }
-/// Value Type Remover
+
 pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
     env.storage().persistent().remove(&DataKey::Message(sender));
 }
-/// Value Type Getter
+
 pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
     let key = DataKey::LastCaller(timestamp);
     let value = env.storage().temporary().get::<_, Address>(&key);
     if value.is_some() {}
     value
 }
-/// Value Type Setter
+
 pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) {
     let key = DataKey::LastCaller(timestamp);
     env.storage().temporary().set(&key, value);
 }
-/// Value Type Remover
+
 pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
     env.storage().temporary().remove(&DataKey::LastCaller(timestamp));
 }
-/// Value Type Getter
+
 pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool> {
     let key = DataKey::Flag(key, owner);
     let value = env.storage().persistent().get::<_, bool>(&key);
@@ -77,17 +71,17 @@ pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool>
     }
     value
 }
-/// Value Type Setter
+
 pub fn set_flag(env: &soroban_sdk::Env, key: String, owner: Address, value: &bool) {
     let key = DataKey::Flag(key, owner);
     env.storage().persistent().set(&key, value);
     stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
 }
-/// Value Type Remover
+
 pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
     env.storage().persistent().remove(&DataKey::Flag(key, owner));
 }
-/// Value Type Getter
+
 pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String>> {
     let key = DataKey::OptionalMessage(id);
     let value = env.storage().persistent().get::<_, Option<String>>(&key);
@@ -96,54 +90,73 @@ pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String
     }
     value
 }
-/// Value Type Setter
+
 pub fn set_optional_message(env: &soroban_sdk::Env, id: u32, value: &Option<String>) {
     let key = DataKey::OptionalMessage(id);
     env.storage().persistent().set(&key, value);
     stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
 }
-/// Value Type Remover
+
 pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
     env.storage().persistent().remove(&DataKey::OptionalMessage(id));
 }
-/// Status Getter
+
 pub fn is_initialized(env: &soroban_sdk::Env) -> bool {
-    env.storage().instance().has(&DataKey::Initialized)
+    let value = env.storage().instance().has(&DataKey::Initialized);
+    if value {
+        stellar_axelar_std::ttl::extend_instance_ttl(env);
+    }
+    value
 }
-/// Status Setter
+
 pub fn set_initialized_status(env: &soroban_sdk::Env) {
     env.storage().instance().set(&DataKey::Initialized, &());
 }
-/// Status Remover
+
 pub fn remove_initialized_status(env: &soroban_sdk::Env) {
     env.storage().instance().remove(&DataKey::Initialized);
 }
-/// Status Getter
+
 pub fn is_paused(env: &soroban_sdk::Env) -> bool {
-    env.storage().persistent().has(&DataKey::Paused)
+    let value = env.storage().persistent().has(&DataKey::Paused);
+    if value {
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    }
+    value
 }
-/// Status Setter
+
 pub fn set_paused_status(env: &soroban_sdk::Env) {
     env.storage().persistent().set(&DataKey::Paused, &());
 }
-/// Status Remover
+
 pub fn remove_paused_status(env: &soroban_sdk::Env) {
     env.storage().persistent().remove(&DataKey::Paused);
 }
-/**
-* Contract Storage Tests
-*/
+
 #[cfg(test)]
 mod data_key_storage_layout_tests {
+    use super::*;
+    use prettyplease;
+    use quote::quote;
+    use syn::DeriveInput;
     #[test]
     fn ensure_data_key_storage_schema_is_unchanged() {
-        goldie::assert!(
-            stringify!(enum DataKey { #[instance] #[value(u32)] Counter, #[persistent]
+        let input = quote! {
+            enum DataKey { #[instance] #[value(u32)] Counter, #[persistent]
             #[value(String)] Message { sender : Address }, #[temporary] #[value(Address)]
             LastCaller { timestamp : u64 }, #[persistent] #[value(bool)] Flag { key :
             String, owner : Address }, #[persistent] #[value(Option < String >)]
             OptionalMessage { id : u32 }, #[instance] #[status] Initialized,
-            #[persistent] #[status] Paused, })
-        );
+            #[persistent] #[status] Paused, }
+        };
+        let file: syn::File = syn::parse2(input).unwrap();
+        let formatted = prettyplease::unparse(&file)
+            .replace("
+pub fn ", "\n
+pub fn ")
+            .replace("
+#[cfg(test)]", "\n
+#[cfg(test)]");
+        goldie::assert!(formatted);
     }
 }

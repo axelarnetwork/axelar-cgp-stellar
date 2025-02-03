@@ -9,6 +9,24 @@ enum Value {
     Type(Type),
 }
 
+impl Value {
+    fn fn_names(&self, variant_ident: &Ident) -> (Ident, Ident, Ident) {
+        let ident = variant_ident.to_string().to_snake_case();
+        match self {
+            Value::Status => (
+                format_ident!("is_{}", ident),
+                format_ident!("set_{}_status", ident),
+                format_ident!("remove_{}_status", ident),
+            ),
+            Value::Type(_) => (
+                format_ident!("{}", ident),
+                format_ident!("set_{}", ident),
+                format_ident!("remove_{}", ident),
+            ),
+        }
+    }
+}
+
 struct StorageAttributes {
     storage_type: StorageType,
     value: Value,
@@ -68,13 +86,11 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
         .collect();
 
     let contract_storage = quote! {
-        #[doc = "\n* Storage Enum\n"]
         #[contracttype]
         enum #name {
             #(#transformed_variants,)*
         }
 
-        #[doc = "\n* Public Functions\n"]
         #(#public_fns)*
     };
 
@@ -83,7 +99,6 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     quote! {
         #contract_storage
 
-        #[doc = "\n* Contract Storage Tests\n"]
         #contract_storage_tests
     }
 }
@@ -198,42 +213,50 @@ fn public_storage_fns(
     };
 
     match &value {
-        Value::Status => value_status_fns(variant, &param_list, &storage_method, key),
+        Value::Status => value_status_fns(
+            &param_list,
+            &storage_method,
+            key,
+            &ttl_fn,
+            value.fn_names(variant_ident),
+        ),
         Value::Type(value_type) => value_type_fns(
-            variant,
             &param_list,
             &storage_method,
             key,
             value_type,
             &ttl_fn,
+            value.fn_names(variant_ident),
         ),
     }
 }
 
 fn value_status_fns(
-    variant: &Variant,
     param_list: &TokenStream,
     storage_method: &TokenStream,
     key: TokenStream,
+    ttl_fn: &TokenStream,
+    (getter_name, setter_name, remover_name): (Ident, Ident, Ident),
 ) -> TokenStream {
-    let (getter_name, setter_name, remover_name) = fn_names(variant, true);
-
     quote! {
-        #[doc = " Status Getter"]
         pub fn #getter_name(#param_list) -> bool {
-            env.storage()
+            let value = env.storage()
                 .#storage_method()
-                .has(&#key)
+                .has(&#key);
+
+            if value {
+                #ttl_fn
+            }
+
+            value
         }
 
-        #[doc = " Status Setter"]
         pub fn #setter_name(#param_list) {
             env.storage()
                 .#storage_method()
                 .set(&#key, &());
         }
 
-        #[doc = " Status Remover"]
         pub fn #remover_name(#param_list) {
             env.storage()
                 .#storage_method()
@@ -243,17 +266,14 @@ fn value_status_fns(
 }
 
 fn value_type_fns(
-    variant: &Variant,
     param_list: &TokenStream,
     storage_method: &TokenStream,
     key: TokenStream,
     value_type: &Type,
     ttl_fn: &TokenStream,
+    (getter_name, setter_name, remover_name): (Ident, Ident, Ident),
 ) -> TokenStream {
-    let (getter_name, setter_name, remover_name) = fn_names(variant, false);
-
     quote! {
-        #[doc = " Value Type Getter"]
         pub fn #getter_name(#param_list) -> Option<#value_type> {
             let key = #key;
             let value = env.storage()
@@ -267,7 +287,6 @@ fn value_type_fns(
             value
         }
 
-        #[doc = " Value Type Setter"]
         pub fn #setter_name(#param_list, value: &#value_type) {
             let key = #key;
 
@@ -278,7 +297,6 @@ fn value_type_fns(
             #ttl_fn
         }
 
-        #[doc = " Value Type Remover"]
         pub fn #remover_name(#param_list) {
             env.storage()
                 .#storage_method()
@@ -300,25 +318,6 @@ fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
     }
 }
 
-fn fn_names(variant: &Variant, status: bool) -> (Ident, Ident, Ident) {
-    if status {
-        (
-            format_ident!("is_{}", variant.ident.to_string().to_snake_case()),
-            format_ident!("set_{}_status", variant.ident.to_string().to_snake_case()),
-            format_ident!(
-                "remove_{}_status",
-                variant.ident.to_string().to_snake_case()
-            ),
-        )
-    } else {
-        (
-            format_ident!("{}", variant.ident.to_string().to_snake_case()),
-            format_ident!("set_{}", variant.ident.to_string().to_snake_case()),
-            format_ident!("remove_{}", variant.ident.to_string().to_snake_case()),
-        )
-    }
-}
-
 fn contract_storage_tests(enum_name: &Ident, input: &DeriveInput) -> TokenStream {
     let test_module_name = format_ident!(
         "{}_storage_layout_tests",
@@ -333,9 +332,21 @@ fn contract_storage_tests(enum_name: &Ident, input: &DeriveInput) -> TokenStream
     quote! {
         #[cfg(test)]
         mod #test_module_name {
+            use super::*;
+            use prettyplease;
+            use quote::quote;
+            use syn::DeriveInput;
+
             #[test]
             fn #test_name() {
-                goldie::assert!(stringify!(#input));
+                let input = quote! {
+                    #input
+                };
+                let file: syn::File = syn::parse2(input).unwrap();
+                let formatted = prettyplease::unparse(&file)
+                    .replace("pub fn ", "\npub fn ")
+                    .replace("#[cfg(test)]", "\n#[cfg(test)]");
+                goldie::assert!(formatted);
             }
         }
     }
@@ -382,7 +393,9 @@ mod tests {
 
         let generated = contract_storage(&input);
         let file: syn::File = syn::parse2(generated).unwrap();
-        let formatted = prettyplease::unparse(&file);
+        let formatted = prettyplease::unparse(&file)
+            .replace("pub fn ", "\npub fn ")
+            .replace("#[cfg(test)]", "\n#[cfg(test)]");
         goldie::assert!(formatted);
     }
 

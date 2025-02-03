@@ -19,8 +19,11 @@ stellar-axelar-std-derive = { workspace = true, optional = true }
 goldie = { workspace = true }
 hex = { workspace = true }
 paste = { workspace = true }
+prettyplease = { workspace = true }
+quote = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 stellar-axelar-std-derive = { workspace = true }
+syn = { workspace = true }
 
 [features]
 testutils = ["soroban-sdk/testutils", "dep:hex"]

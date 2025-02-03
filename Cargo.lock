@@ -2016,9 +2016,12 @@ dependencies = [
  "goldie",
  "hex",
  "paste",
+ "prettyplease",
+ "quote",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-std-derive",
+ "syn 2.0.87",
 ]
 
 [[package]]
@@ -2039,12 +2042,15 @@ name = "stellar-example"
 version = "1.0.0"
 dependencies = [
  "goldie",
+ "prettyplease",
+ "quote",
  "soroban-sdk",
  "soroban-token-sdk",
  "stellar-axelar-gas-service",
  "stellar-axelar-gateway",
  "stellar-axelar-std",
  "stellar-interchain-token-service",
+ "syn 2.0.87",
 ]
 
 [[package]]
