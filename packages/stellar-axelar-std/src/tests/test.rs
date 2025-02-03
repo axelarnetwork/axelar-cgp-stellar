@@ -47,7 +47,7 @@ mod operatable {
         let env = Env::default();
         let operator = Address::generate(&env);
         let non_operator = Address::generate(&env);
-        let contract_id = env.register(Contract, (operator.clone(),));
+        let contract_id = env.register(Contract, (operator,));
         let client = ContractClient::new(&env, &contract_id);
 
         assert_auth!(non_operator, client.operator_function());
@@ -111,7 +111,7 @@ mod ownable {
         let env = Env::default();
         let owner = Address::generate(&env);
         let non_owner = Address::generate(&env);
-        let contract_id = env.register(Contract, (owner.clone(),));
+        let contract_id = env.register(Contract, (owner,));
         let client = ContractClient::new(&env, &contract_id);
 
         assert_auth!(non_owner, client.owner_function());
