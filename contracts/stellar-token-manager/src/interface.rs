@@ -17,7 +17,7 @@ pub trait TokenManagerInterface: OwnableInterface + UpgradableInterface {
     /// - `Ok(Val)` - The result of the function execution.
     ///
     /// # Authorization
-    ///  - [`Self::owner`] must have authorized.
+    ///  - [`owner`] must have authorized.
     fn execute(
         env: &Env,
         contract: Address,
