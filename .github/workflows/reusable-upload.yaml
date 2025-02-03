@@ -72,7 +72,7 @@ jobs:
           export PACKAGE_VERSION=${{ inputs.github-release && format('v{0}', inputs.package-version) || inputs.package-version }}
 
           export BASE_ARTIFACTS_DIR="./wasm-builds"
-          export ARTIFACT_NAME="axelar-cgp-soroban-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
+          export ARTIFACT_NAME="axelar-cgp-stellar-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
           export BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}" # Regardless of the dir type, relative or absolute
 
           export ARCHIVES_OUTPUT_DIR="${{ github.workspace }}/build/archives"
@@ -91,10 +91,10 @@ jobs:
           # ex: ./wasm-builds
           echo "BASE_ARTIFACTS_DIR=${BASE_ARTIFACTS_DIR}" >> $GITHUB_ENV
 
-          # ex: axelar-cgp-soroban-wasm-axelar-gas-service-v0.1.0
+          # ex: axelar-cgp-stellar-wasm-stellar-axelar-gas-service-v0.1.0
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
 
-          # ex: ./axelar-cgp-soroban-wasm-axelar-gas-service-v0.1.0
+          # ex: ./axelar-cgp-stellar-wasm-stellar-axelar-gas-service-v0.1.0
           echo "BASE_ARTIFACTS_VERSIONED_DIR=${BASE_ARTIFACTS_VERSIONED_DIR}" >> $GITHUB_ENV
 
           echo "ZIP_ARCHIVE_FILE=${ZIP_ARCHIVE_FILE}" >> $GITHUB_ENV
