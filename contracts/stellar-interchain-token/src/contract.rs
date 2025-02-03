@@ -6,7 +6,7 @@ use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::OwnableInterface;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
-use stellar_axelar_std::{ensure, only_owner, interfaces, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, only_owner, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{MinterAddedEvent, MinterRemovedEvent};

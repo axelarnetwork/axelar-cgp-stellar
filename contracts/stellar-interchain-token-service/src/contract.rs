@@ -12,7 +12,8 @@ use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
-    ensure, interfaces, when_not_paused, only_owner, only_operator, Operatable, Ownable, Pausable, Upgradable,
+    ensure, interfaces, only_operator, only_owner, when_not_paused, Operatable, Ownable, Pausable,
+    Upgradable,
 };
 use stellar_interchain_token::InterchainTokenClient;
 

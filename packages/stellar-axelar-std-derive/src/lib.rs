@@ -10,9 +10,9 @@ mod pausable;
 mod upgradable;
 
 use proc_macro::TokenStream;
+use quote::quote;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
 use upgradable::MigrationArgs;
-use quote::quote;
 
 /// Implements the Operatable interface for a Soroban contract.
 ///

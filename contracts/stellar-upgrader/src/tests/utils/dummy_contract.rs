@@ -1,9 +1,8 @@
 //! Dummy contract to test the [crate::Upgrader]
 
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, BytesN, Env};
-use stellar_axelar_std::interfaces;
-use stellar_axelar_std::only_owner;
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
+use stellar_axelar_std::{interfaces, only_owner};
 
 #[contract]
 pub struct DummyContract;

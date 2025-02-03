@@ -4,10 +4,9 @@ use soroban_sdk::{contract, contracterror, contractimpl, Address, Env};
 use crate as stellar_axelar_std;
 
 mod operatable {
-    use stellar_axelar_std::assert_auth;
     use stellar_axelar_std::interfaces::OperatableClient;
+    use stellar_axelar_std::{assert_auth, only_operator};
     use stellar_axelar_std_derive::Operatable;
-    use stellar_axelar_std::only_operator;
 
     use super::*;
 
@@ -29,8 +28,7 @@ mod operatable {
         }
 
         #[only_operator]
-        pub fn operator_function(env: &Env) {
-        }
+        pub fn operator_function(env: &Env) {}
     }
 
     #[test]
@@ -70,10 +68,9 @@ mod operatable {
 }
 
 mod ownable {
-    use stellar_axelar_std::assert_auth;
     use stellar_axelar_std::interfaces::OwnableClient;
+    use stellar_axelar_std::{assert_auth, only_owner};
     use stellar_axelar_std_derive::Ownable;
-    use stellar_axelar_std::only_owner;
 
     use super::*;
 
@@ -95,8 +92,7 @@ mod ownable {
         }
 
         #[only_owner]
-        pub fn owner_function(env: &Env) {
-        }
+        pub fn owner_function(env: &Env) {}
     }
 
     #[test]
