@@ -1,11 +1,3 @@
-use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
-use stellar_axelar_std::events::Event;
-use stellar_axelar_std::ttl::extend_instance_ttl;
-use stellar_axelar_std::{
-    ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
-};
-
 use crate::auth;
 use crate::error::ContractError;
 use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
@@ -13,6 +5,14 @@ use crate::interface::AxelarGatewayInterface;
 use crate::messaging_interface::AxelarGatewayMessagingInterface;
 use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
+use stellar_axelar_std::events::Event;
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
+use stellar_axelar_std::ttl::extend_instance_ttl;
+use stellar_axelar_std::{
+    ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
+};
 
 #[contract]
 #[derive(Operatable, Ownable, Pausable, Upgradable)]
@@ -234,6 +234,12 @@ impl AxelarGatewayInterface for AxelarGateway {
     }
 }
 
+impl CustomMigratableInterface for AxelarGateway {
+    type MigrationData = ();
+
+    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
+}
+
 impl AxelarGateway {
     /// Get the message approval value by `source_chain` and `message_id`, defaulting to `MessageNotApproved`
     fn message_approval(
@@ -260,7 +266,4 @@ impl AxelarGateway {
     fn message_approval_hash(env: &Env, message: Message) -> MessageApprovalValue {
         MessageApprovalValue::Approved(env.crypto().keccak256(&message.to_xdr(env)).into())
     }
-
-    // Modify this function to add migration logic
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
 }

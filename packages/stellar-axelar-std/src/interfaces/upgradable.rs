@@ -16,14 +16,20 @@ pub trait UpgradableInterface: OwnableInterface {
     fn upgrade(env: &Env, new_wasm_hash: BytesN<32>);
 }
 
-pub trait MigratableInterface: UpgradableInterface {
-    /// Data needed during the migration. Each contract can define its own data type.
-    type MigrationData: FromVal<Env, Val>;
+pub trait MigratableInterface: UpgradableInterface + CustomMigratableInterface {
     /// Error type returned if the migration fails.
     type Error: Into<soroban_sdk::Error>;
 
     /// Migrates contract state after upgrading the contract code.
     fn migrate(env: &Env, migration_data: Self::MigrationData) -> Result<(), Self::Error>;
+}
+
+pub trait CustomMigratableInterface: UpgradableInterface {
+    /// Data needed during the migration. Each contract can define its own data type.
+    type MigrationData: FromVal<Env, Val>;
+
+    /// Migrates contract state after upgrading the contract code.
+    fn __migrate(env: &Env, migration_data: Self::MigrationData);
 }
 
 /// This function checks that the caller can authenticate as the owner of the contract,
@@ -41,15 +47,15 @@ pub fn upgrade<T: OwnableInterface>(env: &Env, new_wasm_hash: BytesN<32>) {
 /// then runs the custom_migration and finalizes the migration.
 /// An event is emitted when the migration, and with it the overall upgrade, is complete.
 /// Migration can only be run once, after the [`upgrade`] function has been called.
-pub fn migrate<T: UpgradableInterface>(
+pub fn migrate<T: CustomMigratableInterface>(
     env: &Env,
-    custom_migration: impl FnOnce(),
+    migration_data: T::MigrationData,
 ) -> Result<(), MigrationError> {
     T::owner(env).require_auth();
 
     ensure_is_migrating(env)?;
 
-    custom_migration();
+    T::__migrate(env, migration_data);
     complete_migration(env);
 
     UpgradedEvent {

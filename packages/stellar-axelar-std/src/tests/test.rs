@@ -116,12 +116,12 @@ mod pausable {
 }
 
 mod upgradable {
-    use stellar_axelar_std::assert_auth;
-    use stellar_axelar_std_derive::{Ownable, Upgradable};
-
     use super::*;
+    use crate::interfaces::CustomMigratableInterface;
     use crate::std::string::ToString;
     use crate::tests::testdata;
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -141,8 +141,10 @@ mod upgradable {
         }
     }
 
-    impl Contract {
-        const fn run_migration(_env: &Env, _migration_data: ()) {}
+    impl CustomMigratableInterface for Contract {
+        type MigrationData = ();
+
+        fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
     }
 
     const UPGRADED_WASM: &[u8] = include_bytes!("testdata/contract.wasm");
