@@ -30,7 +30,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.76.0
+          toolchain: 1.81.0
           targets: wasm32-unknown-unknown
 
       - name: Set artifact name
@@ -41,7 +41,7 @@ jobs:
       - name: Build all contracts
         run: |
           # 21.1.1 is the latest rust 1.76.0 compatible version, the version after is 21.2.0 which is compatible with 1.79.0 (different than the workspace's version)
-          cargo install --locked soroban-cli --version 21.1.1 --features opt
+          cargo install --locked stellar-cli --version 22.2.0 --features opt
 
           # Build all contracts
           cargo wasm
