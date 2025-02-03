@@ -42,8 +42,8 @@ jobs:
           echo '<meta http-equiv="refresh" content="0; url=stellar_axelar_gateway/index.html">' > target/doc/index.html
 
           # Copy the generated docs to the pages directory
-          mkdir -p pages
-          cp -r target/doc/* pages/
+          mkdir -p docs
+          cp -r target/doc/* docs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -51,7 +51,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: pages
+          path: docs
 
   deploy:
     needs: build
