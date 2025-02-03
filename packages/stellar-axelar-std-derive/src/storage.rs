@@ -13,12 +13,12 @@ impl Value {
     fn fn_names(&self, variant_ident: &Ident) -> (Ident, Ident, Ident) {
         let ident = variant_ident.to_string().to_snake_case();
         match self {
-            Value::Status => (
+            Self::Status => (
                 format_ident!("is_{}", ident),
                 format_ident!("set_{}_status", ident),
                 format_ident!("remove_{}_status", ident),
             ),
-            Value::Type(_) => (
+            Self::Type(_) => (
                 format_ident!("{}", ident),
                 format_ident!("set_{}", ident),
                 format_ident!("remove_{}", ident),
