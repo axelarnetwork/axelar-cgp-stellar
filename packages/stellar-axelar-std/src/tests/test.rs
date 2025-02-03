@@ -116,12 +116,13 @@ mod pausable {
 }
 
 mod upgradable {
+    use stellar_axelar_std::assert_auth;
+    use stellar_axelar_std_derive::{Ownable, Upgradable};
+
     use super::*;
     use crate::interfaces::CustomMigratableInterface;
     use crate::std::string::ToString;
     use crate::tests::testdata;
-    use stellar_axelar_std::assert_auth;
-    use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     #[contracterror]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

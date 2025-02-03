@@ -1,10 +1,3 @@
-use crate::auth;
-use crate::error::ContractError;
-use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
-use crate::interface::AxelarGatewayInterface;
-use crate::messaging_interface::AxelarGatewayMessagingInterface;
-use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
-use crate::types::{CommandType, Message, Proof, WeightedSigners};
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::events::Event;
@@ -13,6 +6,14 @@ use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{
     ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
 };
+
+use crate::auth;
+use crate::error::ContractError;
+use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
+use crate::interface::AxelarGatewayInterface;
+use crate::messaging_interface::AxelarGatewayMessagingInterface;
+use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
+use crate::types::{CommandType, Message, Proof, WeightedSigners};
 
 #[contract]
 #[derive(Operatable, Ownable, Pausable, Upgradable)]

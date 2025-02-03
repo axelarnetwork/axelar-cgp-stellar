@@ -1,12 +1,13 @@
-use crate::error::ContractError;
-use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
-use crate::interface::AxelarGasServiceInterface;
 use soroban_sdk::{contract, contractimpl, token, Address, Bytes, Env, String};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+
+use crate::error::ContractError;
+use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
+use crate::interface::AxelarGasServiceInterface;
 
 #[contract]
 #[derive(Operatable, Ownable, Upgradable)]
