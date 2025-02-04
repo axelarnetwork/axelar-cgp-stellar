@@ -6,11 +6,11 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  define-matrix:
-    name: Define Matrix
+  stellar-contract-names:
+    name: Get all Stellar contracts
     runs-on: blacksmith-2vcpu-ubuntu-2204
     outputs:
-      releases: ${{ steps.prepare-matrix.outputs.releases }}
+      releases: ${{ steps.prepare-release.outputs.releases }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
 
     steps:
@@ -24,8 +24,8 @@ jobs:
         id: get-commit-hash
         run: echo "hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare JSON output for matrix
-        id: prepare-matrix
+      - name: Prepare JSON output for release
+        id: prepare-release
         run: |
           RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ steps.get-commit-hash.outputs.hash }}" 'map({
             package_name: .,
@@ -35,16 +35,16 @@ jobs:
           echo "releases=$(echo "$RELEASES_JSON" | jq -c)" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: define-matrix
+    needs: stellar-contract-names
     uses: ./.github/workflows/reusable-build.yaml
     with:
-      commit-hash: ${{ needs.define-matrix.outputs.commit_hash }}
+      commit-hash: ${{ needs.stellar-contract-names.outputs.commit_hash }}
 
   upload:
-    needs: [define-matrix, build]
+    needs: [stellar-contract-names, build]
     strategy:
       matrix:
-        releases: ${{ fromJson(needs.define-matrix.outputs.releases) }}
+        releases: ${{ fromJson(needs.stellar-contract-names.outputs.releases) }}
 
     uses: ./.github/workflows/reusable-upload.yaml
     permissions:
@@ -55,6 +55,7 @@ jobs:
       package-version: ${{ matrix.releases.version }}
       package-git-tag: ${{ matrix.releases.package_git_tag }}
       artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
       cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
       cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
       github-release: false

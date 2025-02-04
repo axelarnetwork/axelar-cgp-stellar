@@ -11,18 +11,20 @@ on:
       artifact-name:
         description: "Name of the uploaded artifact containing all builds"
         value: ${{ jobs.build.outputs.artifact-name }}
+      artifact-path:
+        description: "Path of the uploaded artifact containing all builds"
+        value: ${{ jobs.build.outputs.artifact-path }}
 
 jobs:
   build:
     runs-on: blacksmith-8vcpu-ubuntu-2204
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
+      artifact-path: ${{ steps.set-artifact-name.outputs.path }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Checkout specific commit
         run: git checkout ${{ inputs.commit-hash }}
@@ -37,18 +39,16 @@ jobs:
         id: set-artifact-name
         run: |
           echo "name=wasm-builds-${{ inputs.commit-hash }}" >> $GITHUB_OUTPUT
+          echo "path=target/wasm32-unknown-unknown/release" >> $GITHUB_OUTPUT
 
       - name: Build all contracts
         run: |
-          # 21.1.1 is the latest rust 1.76.0 compatible version, the version after is 21.2.0 which is compatible with 1.79.0 (different than the workspace's version)
-          cargo install --locked stellar-cli --version 22.2.0 --features opt
+          # Install Stellar CLI compatible with the soroban-sdk version in Cargo.toml
+          cargo install --locked stellar-cli --version ^22 --features opt
 
           # Build all contracts
-          cargo wasm
+          stellar contract build
           ./optimize.sh
-
-          # Create directory for storing optimized WASM files
-          mkdir -p wasm-builds
 
           # Process in the release directory
           cd target/wasm32-unknown-unknown/release
@@ -57,13 +57,11 @@ jobs:
           # This ensures we only keep the optimized versions
           find . -type f -name "*.wasm" ! -name "*.optimized.wasm" -maxdepth 1 -delete
           find . -name "*.optimized.wasm" -maxdepth 1 -exec sh -c 'mv "$0" "${0%.optimized.wasm}.wasm"' {} \;
-
-          # Move all optimized WASM files to the builds directory
-          mv *.wasm ../../../wasm-builds/
+          find . -type f ! -name "*.wasm" -delete
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set-artifact-name.outputs.name }}
-          path: wasm-builds
+          path: target/wasm32-unknown-unknown/release
           retention-days: 1

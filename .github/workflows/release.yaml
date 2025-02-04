@@ -33,7 +33,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Install Rust toolchain
@@ -81,6 +80,7 @@ jobs:
       package-version: ${{ matrix.releases.version }}
       package-git-tag: ${{ matrix.releases.tag }}
       artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
       cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
       cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
       github-release: true
