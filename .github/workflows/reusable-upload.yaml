@@ -80,7 +80,7 @@ jobs:
           # Ensures that this dir is created
           mkdir -p ${ARCHIVES_OUTPUT_DIR}
 
-          # ex: axelar-gas-service
+          # ex: stellar-axelar-gas-service
           echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
 
           # ex: v0.1.0
