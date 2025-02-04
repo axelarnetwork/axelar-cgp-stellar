@@ -323,9 +323,8 @@ fn contract_storage_tests(enum_name: &Ident, enum_input: &DeriveInput) -> TokenS
 mod tests {
     use syn::{DeriveInput, Fields};
 
-    use crate::storage::contract_storage;
-
     use super::fields_data;
+    use crate::storage::contract_storage;
 
     #[test]
     fn storage_schema_generation_succeeds() {
