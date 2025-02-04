@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-upgrader-v1.0.0...stellar-upgrader-v1.0.1)
+
+### ⚙️ Miscellaneous Tasks
+
+- Updated the following local packages: stellar-axelar-std - ([0000000](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/0000000))
+
 ## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-upgrader-v0.2.4...stellar-upgrader-v1.0.0)
 
 ### ⚙️ Miscellaneous Tasks

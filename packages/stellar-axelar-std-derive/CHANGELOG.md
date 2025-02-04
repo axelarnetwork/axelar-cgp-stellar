@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-derive-v1.0.0...stellar-axelar-std-derive-v1.1.0)
+
+### ⛰️ Features
+
+- *(axelar-std-derive)* Add status support to contractstorage macro ([#234](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/234)) - ([4ffb0cb](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/4ffb0cbef155ce4185a4c41ab45258c10527f598))
+- *(axelar-std-derive)* Add contractstorage attribute macro ([#216](https://github.com/axelarnetwork/axelar-cgp-stellar/pull/216)) - ([94632d8](https://github.com/axelarnetwork/axelar-cgp-stellar/commit/94632d86cc36315c19750777aa0bf5724d104d7f))
+
+### Contributors
+
+* @nbayindirli
+
 ## [1.0.0](https://github.com/axelarnetwork/axelar-cgp-stellar/compare/stellar-axelar-std-derive-v0.3.0...stellar-axelar-std-derive-v1.0.0)
 
 ### ⚙️ Miscellaneous Tasks
