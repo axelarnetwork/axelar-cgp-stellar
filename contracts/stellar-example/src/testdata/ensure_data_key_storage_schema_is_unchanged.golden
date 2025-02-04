@@ -1,15 +1,19 @@
 #[derive(Clone, Debug)]
 enum DataKey {
-    #[instance]
+    
+	#[instance]
     #[value(Address)]
     Gateway,
-    #[instance]
+    
+	#[instance]
     #[value(Address)]
     GasService,
-    #[instance]
+    
+	#[instance]
     #[value(Address)]
     InterchainTokenService,
-    #[instance]
+    
+	#[instance]
     #[status]
     Paused,
 }
