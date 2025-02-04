@@ -1,37 +1,43 @@
-name: "Publish specific rust package"
+name: "Upload Contract wasm to Cloudflare R2"
 
 on:
   workflow_call:
     inputs:
-      # Package related variables
       package-name:
         description: "The package name to use (ex: gz-srv)"
         type: string
         required: true
         default: ""
-
       package-version:
         description: "The package version to use (ex: 0.1.2)"
         type: string
         required: true
         default: ""
-
       package-git-tag:
         description: "the release tag name (ex: gz-srv-v0.1.2)"
         type: string
         required: true
         default: ""
-
-      # CF Bucket related variables
+      artifact-name:
+        description: "Name of the artifact containing the builds"
+        type: string
+        required: true
+      artifact-path:
+        description: "Path of the artifact containing the builds"
+        type: string
+        required: true
       cf-bucket-name:
         description: "The CF bucket name to use"
         required: true
         type: string
-
       cf-config-bucket-root-key:
         description: "The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)"
         required: true
         type: string
+      github-release:
+        description: "Whether to upload as a github release"
+        type: boolean
+        default: true
 
     secrets:
       github-token:
@@ -48,36 +54,22 @@ on:
         required: true
 
 jobs:
-  build-and-upload:
-    runs-on: blacksmith-8vcpu-ubuntu-2204
+  upload:
+    name: Upload ${{ inputs.package-git-tag }}
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.github-token }}
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }}
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.81.0
-          targets: wasm32-unknown-unknown
-
-      - name: Build artifacts for ${{ inputs.package-name }}-v${{ inputs.package-version }}
-        run: |
-          echo "Building wasm for '${{ inputs.package-name }}-v${{ inputs.package-version }}'";
-          cargo install --locked stellar-cli --version 22.2.0 --features opt
-          cargo wasm -p ${{ inputs.package-name }}
-          stellar contract build
-          ./optimize.sh
-
-        # Prepare the variables that will be used across the different next steps
       - name: Prepare cross-steps variables
         run: |
           export PACKAGE_NAME='${{ inputs.package-name }}'
-          export PACKAGE_VERSION='v${{ inputs.package-version }}'
+          export PACKAGE_VERSION=${{ inputs.github-release && format('v{0}', inputs.package-version) || inputs.package-version }}
 
-          export BASE_ARTIFACTS_DIR="./target/wasm32-unknown-unknown/release"
+          export BASE_ARTIFACTS_DIR='${{ inputs.artifact-path }}'
           export ARTIFACT_NAME="axelar-cgp-stellar-wasm-${PACKAGE_NAME}-${PACKAGE_VERSION}"
           export BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}" # Regardless of the dir type, relative or absolute
 
@@ -114,12 +106,6 @@ jobs:
 
           # This cd to keep the dir structure of the artifacts archive
           cd ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
-
-          # Remove "unoptimized" built wasm files
-          find "." -type f -name "*.wasm" ! -name "*.optimized.wasm" -maxdepth 1 -delete
-
-          # Rename the optimized ones and remove the ".optimized" suffix
-          find . -name "*.optimized.wasm" -maxdepth 1 -exec sh -c 'mv "$0" "${0%.optimized.wasm}.wasm"' {} \;
 
           # Archive the wasm
           find "." -type f -name "*.wasm" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
@@ -176,6 +162,7 @@ jobs:
       # https://github.com/orgs/community/discussions/26263#discussioncomment-3251069
       - name: Update the GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        if: inputs.github-release
         with:
           tag_name: ${{ inputs.package-git-tag }} # This uses the tag from the push
           files: |
