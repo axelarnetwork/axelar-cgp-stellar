@@ -6,7 +6,7 @@ on:
   pull_request:
     branches:
       - main
-      - 'releases/**'
+      - "releases/**"
     types: [closed]
 
   workflow_dispatch:
@@ -14,7 +14,6 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-
   # Publishes a release in case the release isn't published
   publish-release:
     name: Publish releases
@@ -24,20 +23,24 @@ jobs:
       ((github.event.pull_request.merged == true) &&
       contains(github.event.pull_request.labels.*.name, 'release'))
 
-    runs-on: blacksmith-8vcpu-ubuntu-2204
+    runs-on: blacksmith-2vcpu-ubuntu-2204
 
     outputs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       # Creates git tags and publishes the crates of the new releases
       - name: Publish release
@@ -56,35 +59,33 @@ jobs:
         run: |
           echo "releases=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
 
-  # Creates other artifacts needed (`wasm` files)
-  build-and-upload:
-    name: Build artifacts for ${{ matrix.releases.package_name }}-v${{ matrix.releases.version }}
+  build:
     needs: publish-release
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      commit-hash: ${{ needs.publish-release.outputs.commit_hash }}
 
-    # Once a release is done for a package, we iterate on each of these packages and build its corresponding artifacts and upload them
+  upload:
+    needs: [publish-release, build]
     strategy:
       matrix:
         releases: ${{ fromJson(needs.publish-release.outputs.releases) }}
 
-    uses: ./.github/workflows/reusable-build-upload.yaml
-
+    uses: ./.github/workflows/reusable-upload.yaml
     permissions:
       id-token: write
       contents: read
-
     with:
-      package-name: "${{ matrix.releases.package_name }}"
-      package-version: "${{ matrix.releases.version }}"
-      package-git-tag: "${{ matrix.releases.tag }}"
-
-      # CF Bucket related variables
-      cf-bucket-name: "${{ vars.CF_BUCKET_NAME }}"
-
-      # The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)
-      cf-config-bucket-root-key: "${{ vars.CF_BUCKET_ROOT_KEY }}"
-
+      package-name: ${{ matrix.releases.package_name }}
+      package-version: ${{ matrix.releases.version }}
+      package-git-tag: ${{ matrix.releases.tag }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
+      cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
+      cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
+      github-release: true
     secrets:
-      github-token: "${{ secrets.PAT_TOKEN }}"
-      cf-endpoint-url: "${{ secrets.CF_ENDPOINT_URL }}"
+      github-token: ${{ secrets.PAT_TOKEN }}
+      cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
       cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
       cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}
