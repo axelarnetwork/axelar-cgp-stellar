@@ -18,6 +18,12 @@ pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
     value
 }
 
+pub fn counter_required(env: &soroban_sdk::Env) -> u32 {
+    let value = env.storage().instance().get::<_, u32>(&DataKey::Counter).unwrap();
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
+    value
+}
+
 pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
     env.storage().instance().set(&DataKey::Counter, value);
     stellar_axelar_std::ttl::extend_instance_ttl(env);
@@ -38,6 +44,19 @@ pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
             &DataKey::Message(sender.clone()),
         );
     }
+    value
+}
+
+pub fn message_required(env: &soroban_sdk::Env, sender: Address) -> String {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, String>(&DataKey::Message(sender.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Message(sender.clone()),
+    );
     value
 }
 
@@ -62,6 +81,15 @@ pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
     value
 }
 
+pub fn last_caller_required(env: &soroban_sdk::Env, timestamp: u64) -> Address {
+    let value = env
+        .storage()
+        .temporary()
+        .get::<_, Address>(&DataKey::LastCaller(timestamp.clone()))
+        .unwrap();
+    value
+}
+
 pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) {
     env.storage().temporary().set(&DataKey::LastCaller(timestamp.clone()), value);
 }
@@ -81,6 +109,19 @@ pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool>
             &DataKey::Flag(key.clone(), owner.clone()),
         );
     }
+    value
+}
+
+pub fn flag_required(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, bool>(&DataKey::Flag(key.clone(), owner.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Flag(key.clone(), owner.clone()),
+    );
     value
 }
 
@@ -107,6 +148,19 @@ pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String
             &DataKey::OptionalMessage(id.clone()),
         );
     }
+    value
+}
+
+pub fn optional_message_required(env: &soroban_sdk::Env, id: u32) -> Option<String> {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, Option<String>>(&DataKey::OptionalMessage(id.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::OptionalMessage(id.clone()),
+    );
     value
 }
 

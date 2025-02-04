@@ -42,7 +42,8 @@ impl Value {
 
     /// Returns the getter, setter, and remover functions for a storage enum variant.
     fn fns(&self, enum_name: &Ident, storage_type: &StorageType, variant: &Variant) -> TokenStream {
-        let (getter_name, setter_name, remover_name) = self.fn_names(&variant.ident);
+        let (getter_name, setter_name, remover_name, required_getter_name) =
+            self.fn_names(&variant.ident);
         let param_list = Self::param_list(variant);
         let key = Self::key(enum_name, variant);
 
@@ -88,6 +89,17 @@ impl Value {
                     value
                 }
 
+                pub fn #required_getter_name(#param_list) -> #value_type {
+                    let value = env.storage()
+                        .#storage_method()
+                        .get::<_, #value_type>(&#key)
+                        .unwrap();
+
+                    #ttl_fn
+
+                    value
+                }
+
                 pub fn #setter_name(#param_list, value: &#value_type) {
                     env.storage()
                         .#storage_method()
@@ -106,18 +118,20 @@ impl Value {
     }
 
     /// Returns the getter, setter, and remover names for a storage enum variant.
-    fn fn_names(&self, variant_ident: &Ident) -> (Ident, Ident, Ident) {
+    fn fn_names(&self, variant_ident: &Ident) -> (Ident, Ident, Ident, Option<Ident>) {
         let ident = variant_ident.to_string().to_snake_case();
         match self {
             Self::Status => (
                 format_ident!("is_{}", ident),
                 format_ident!("set_{}_status", ident),
                 format_ident!("remove_{}_status", ident),
+                None,
             ),
             Self::Type(_) => (
                 format_ident!("{}", ident),
                 format_ident!("set_{}", ident),
                 format_ident!("remove_{}", ident),
+                Some(format_ident!("{}_required", ident)),
             ),
         }
     }

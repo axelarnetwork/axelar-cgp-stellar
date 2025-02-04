@@ -77,6 +77,14 @@ impl Contract {
     pub fn optional_message(env: &Env, id: u32) -> Option<Option<String>> {
         storage::optional_message(env, id)
     }
+
+    pub fn message_required(env: &Env, sender: Address) -> String {
+        storage::message_required(env, sender)
+    }
+
+    pub fn flag_required(env: &Env, key: String, owner: Address) -> bool {
+        storage::flag_required(env, key, owner)
+    }
 }
 
 #[test]
@@ -231,4 +239,28 @@ fn optional_value_storage_succeeds() {
 
     client.set_optional_message(&id, &None);
     assert_eq!(client.optional_message(&id), None);
+}
+
+#[test]
+#[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+fn required_getter_fails_when_not_set() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    client.message_required(&sender);
+}
+
+#[test]
+fn required_getter_succeeds_when_set() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    let message = String::from_str(&env, "Required message");
+
+    client.set_message(&sender, &message);
+    assert_eq!(client.message_required(&sender), message);
 }
