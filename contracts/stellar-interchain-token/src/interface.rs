@@ -1,11 +1,12 @@
 use soroban_sdk::token::{self, StellarAssetInterface};
 use soroban_sdk::{contractclient, Address, BytesN, Env};
+use stellar_axelar_std::interfaces::OwnableInterface;
 
 use crate::error::ContractError;
 
 #[allow(dead_code)]
 #[contractclient(name = "InterchainTokenClient")]
-pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
+pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface + OwnableInterface {
     /// Returns the Interchain Token ID
     fn token_id(env: &Env) -> BytesN<32>;
 
@@ -38,7 +39,7 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// * `minter` - The address to be added as a minter.
     ///
     /// # Authorization
-    /// - [`Self::owner`] must authorize.
+    /// - [`OwnableInterface::owner`] must authorize.
     fn add_minter(env: &Env, minter: Address);
 
     /// Removes a new minter from the Interchain Token contract.
@@ -47,6 +48,6 @@ pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface {
     /// * `minter` - The address to be added as a minter.
     ///
     /// # Authorization
-    /// - [`Self::owner`] must authorize.
+    /// - [`OwnableInterface::owner`] must authorize.
     fn remove_minter(env: &Env, minter: Address);
 }

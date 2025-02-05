@@ -44,12 +44,12 @@ pub trait InterchainTokenServiceInterface:
 
     /// Sets the specified chain as trusted for cross-chain messaging.
     /// # Authorization
-    /// - [`Self::owner`] must authorize.
+    /// - [`OwnableInterface::owner`] must authorize.
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Removes the specified chain from trusted chains.
     /// # Authorization
-    /// - [`Self::owner`] must authorize.
+    /// - [`OwnableInterface::owner`] must authorize.
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
 
     /// Computes the unique identifier for an interchain token.
@@ -128,7 +128,7 @@ pub trait InterchainTokenServiceInterface:
     /// - [`ContractError::InvalidFlowLimit`]: If the provided flow limit is not positive.
     ///
     /// # Authorization
-    /// - [`Self::operator`] must authorize.
+    /// - [`OperatableInterface::operator`] must authorize.
     fn set_flow_limit(
         env: &Env,
         token_id: BytesN<32>,
