@@ -128,6 +128,26 @@ enum StorageType {
     Temporary,
 }
 
+impl TryFrom<&[Attribute]> for StorageType {
+    type Error = String;
+
+    fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
+        attrs
+            .iter()
+            .flat_map(|attr| match attr {
+                _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
+                _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
+                _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
+                _ => None,
+            })
+            .exactly_one()
+            .map_err(|_| {
+                "storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'"
+                    .to_string()
+            })
+    }
+}
+
 impl StorageType {
     pub fn status_fns(
         &self,
@@ -342,9 +362,10 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     let fns: Vec<_> = variants
         .iter()
         .map(|variant| {
-            Value::try_from(variant.attrs.as_slice())
-                .unwrap_or_else(|e| panic!("{}", e))
-                .fns(name, &storage_type(&variant.attrs), variant)
+            let storage_type = StorageType::try_from(variant.attrs.as_slice()).unwrap();
+            let value = Value::try_from(variant.attrs.as_slice()).unwrap();
+
+            value.fns(name, &storage_type, variant)
         })
         .collect();
 
@@ -409,17 +430,6 @@ fn transform_variant(variant: &Variant) -> TokenStream {
         }
         _ => panic!("only unit variants or named fields are supported in storage enums"),
     }
-}
-
-/// Returns the storage type of a storage enum variant.
-fn storage_type(attrs: &[Attribute]) -> StorageType {
-    attrs.iter().flat_map(|attr| match attr {
-        _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
-        _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
-        _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
-        _ => None})
-    .exactly_one()
-    .expect("storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'")
 }
 
 /// Returns the field names and types of a storage enum variant.
