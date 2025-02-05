@@ -100,7 +100,7 @@ impl Value {
                     &try_getter_name,
                     &param_list,
                     &storage_key,
-                    &value_type,
+                    value_type,
                 );
 
                 quote! { #value_fns }
@@ -142,9 +142,9 @@ impl TryFrom<&[Attribute]> for StorageType {
         attrs
             .iter()
             .flat_map(|attr| match attr {
-                _ if attr.path().is_ident("instance") => Some(StorageType::Instance),
-                _ if attr.path().is_ident("persistent") => Some(StorageType::Persistent),
-                _ if attr.path().is_ident("temporary") => Some(StorageType::Temporary),
+                _ if attr.path().is_ident("instance") => Some(Self::Instance),
+                _ if attr.path().is_ident("persistent") => Some(Self::Persistent),
+                _ if attr.path().is_ident("temporary") => Some(Self::Temporary),
                 _ => None,
             })
             .exactly_one()
