@@ -20,21 +20,38 @@ impl TryFrom<&[Attribute]> for Value {
             .iter()
             .filter(|attr| attr.path().is_ident("status") || attr.path().is_ident("value"))
             .exactly_one()
-            .map_err(|_| {
-                "exactly one of #[status] and #[value(Type)] must be provided".to_string()
-            })?;
+            .map_err(|_| "exactly one of #[status] and #[value(Type)] must be provided")?;
 
         if attr.path().is_ident("status") {
             Ok(Self::Status)
-        } else /* "value" */ {
+        } else {
             if let Meta::List(list) = &attr.meta {
                 Ok(Self::Type(
                     list.parse_args::<Type>()
-                        .map_err(|_| "failed to parse value type".to_string())?,
+                        .map_err(|_| "failed to parse value type")?,
                 ))
             } else {
-                Err("value attribute must contain a type parameter: #[value(Type)]".to_string())
+                Err("value attribute must contain a type parameter: #[value(Type)]".into())
             }
+        }
+    }
+}
+
+trait FieldsExt {
+    fn fields_data(&self) -> (Vec<&Option<Ident>>, Vec<&Type>);
+}
+
+impl FieldsExt for Fields {
+    /// Returns the field names and types of a storage enum variant.
+    fn fields_data(&self) -> (Vec<&Option<Ident>>, Vec<&Type>) {
+        match self {
+            Fields::Unit => (vec![], vec![]),
+            Fields::Named(fields) => {
+                let names = fields.named.iter().map(|f| &f.ident).collect();
+                let types = fields.named.iter().map(|f| &f.ty).collect();
+                (names, types)
+            }
+            _ => panic!("only unit variants or named fields are supported in storage enums"),
         }
     }
 }
@@ -47,7 +64,7 @@ trait VariantExt {
 impl VariantExt for Variant {
     /// Returns the parameter list for a storage enum variant.
     fn storage_params(&self) -> TokenStream {
-        let (field_names, field_types) = fields_data(&self.fields);
+        let (field_names, field_types) = self.fields.fields_data();
 
         if field_names.is_empty() {
             quote! { env: &soroban_sdk::Env }
@@ -58,7 +75,7 @@ impl VariantExt for Variant {
 
     /// Returns the key for a storage enum variant.
     fn storage_key(&self, enum_name: &Ident) -> TokenStream {
-        let (field_names, _) = fields_data(&self.fields);
+        let (field_names, _) = self.fields.fields_data();
         let variant_ident = &self.ident;
 
         if field_names.is_empty() {
@@ -72,7 +89,12 @@ impl VariantExt for Variant {
 
 impl Value {
     /// Returns the getter, setter, and remover functions for a storage enum variant.
-    fn fns(&self, enum_name: &Ident, storage_type: &StorageType, variant: &Variant) -> TokenStream {
+    fn storage_fns(
+        &self,
+        enum_name: &Ident,
+        storage_type: &StorageType,
+        variant: &Variant,
+    ) -> TokenStream {
         let (getter_name, setter_name, remover_name, try_getter_name) =
             self.fn_names(&variant.ident);
         let param_list = variant.storage_params();
@@ -160,17 +182,17 @@ impl StorageType {
         setter_name: &Ident,
         remover_name: &Ident,
         param_list: &TokenStream,
-        key: &TokenStream,
+        storage_key: &TokenStream,
     ) -> TokenStream {
         match self {
             Self::Persistent => quote! {
                 pub fn #getter_name(#param_list) -> bool {
                     let value = env.storage()
                         .persistent()
-                        .has(&#key);
+                        .has(&#storage_key);
 
                     if value {
-                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key)
+                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &#storage_key)
                     }
 
                     value
@@ -179,20 +201,20 @@ impl StorageType {
                 pub fn #setter_name(#param_list) {
                     env.storage()
                         .persistent()
-                        .set(&#key, &());
+                        .set(&#storage_key, &());
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .persistent()
-                        .remove(&#key);
+                        .remove(&#storage_key);
                 }
             },
             Self::Instance => quote! {
                 pub fn #getter_name(#param_list) -> bool {
                     let value = env.storage()
                         .instance()
-                        .has(&#key);
+                        .has(&#storage_key);
 
                     if value {
                         stellar_axelar_std::ttl::extend_instance_ttl(env)
@@ -204,32 +226,32 @@ impl StorageType {
                 pub fn #setter_name(#param_list) {
                     env.storage()
                         .instance()
-                        .set(&#key, &());
+                        .set(&#storage_key, &());
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .instance()
-                        .remove(&#key);
+                        .remove(&#storage_key);
                 }
             },
             Self::Temporary => quote! {
                 pub fn #getter_name(#param_list) -> bool {
                     env.storage()
                         .temporary()
-                        .has(&#key)
+                        .has(&#storage_key)
                 }
 
                 pub fn #setter_name(#param_list) {
                     env.storage()
                         .temporary()
-                        .set(&#key, &());
+                        .set(&#storage_key, &());
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .temporary()
-                        .remove(&#key);
+                        .remove(&#storage_key);
                 }
             },
         }
@@ -242,13 +264,13 @@ impl StorageType {
         remover_name: &Ident,
         try_getter_name: &Ident,
         param_list: &TokenStream,
-        key: &TokenStream,
+        storage_key: &TokenStream,
         value_type: &Type,
     ) -> TokenStream {
         match self {
             Self::Persistent => quote! {
                 pub fn #getter_name(#param_list) -> #value_type {
-                    let key = #key;
+                    let key = #storage_key;
                     let value = env.storage()
                         .persistent()
                         .get::<_, #value_type>(&key)
@@ -260,7 +282,7 @@ impl StorageType {
                 }
 
                 pub fn #try_getter_name(#param_list) -> Option<#value_type> {
-                    let key = #key;
+                    let key = #storage_key;
                     let value = env.storage()
                         .persistent()
                         .get::<_, #value_type>(&key);
@@ -273,7 +295,7 @@ impl StorageType {
                 }
 
                 pub fn #setter_name(#param_list, value: &#value_type) {
-                    let key = #key;
+                    let key = #storage_key;
                     env.storage()
                         .persistent()
                         .set(&key, value);
@@ -284,14 +306,14 @@ impl StorageType {
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .persistent()
-                        .remove(&#key)
+                        .remove(&#storage_key)
                 }
             },
             Self::Instance => quote! {
                 pub fn #getter_name(#param_list) -> #value_type {
                     let value = env.storage()
                         .instance()
-                        .get::<_, #value_type>(&#key)
+                        .get::<_, #value_type>(&#storage_key)
                         .unwrap();
 
                     stellar_axelar_std::ttl::extend_instance_ttl(env);
@@ -302,7 +324,7 @@ impl StorageType {
                 pub fn #try_getter_name(#param_list) -> Option<#value_type> {
                     let value = env.storage()
                         .instance()
-                        .get::<_, #value_type>(&#key);
+                        .get::<_, #value_type>(&#storage_key);
 
                     if value.is_some() {
                         stellar_axelar_std::ttl::extend_instance_ttl(env);
@@ -314,7 +336,7 @@ impl StorageType {
                 pub fn #setter_name(#param_list, value: &#value_type) {
                     env.storage()
                         .instance()
-                        .set(&#key, value);
+                        .set(&#storage_key, value);
 
                     stellar_axelar_std::ttl::extend_instance_ttl(env);
                 }
@@ -322,33 +344,33 @@ impl StorageType {
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .instance()
-                        .remove(&#key);
+                        .remove(&#storage_key);
                 }
             },
             Self::Temporary => quote! {
                 pub fn #getter_name(#param_list) -> #value_type {
                     env.storage()
                         .temporary()
-                        .get::<_, #value_type>(&#key)
+                        .get::<_, #value_type>(&#storage_key)
                         .unwrap()
                 }
 
                 pub fn #try_getter_name(#param_list) -> Option<#value_type> {
                     env.storage()
                         .temporary()
-                        .get::<_, #value_type>(&#key)
+                        .get::<_, #value_type>(&#storage_key)
                 }
 
                 pub fn #setter_name(#param_list, value: &#value_type) {
                     env.storage()
                         .temporary()
-                        .set(&#key, value);
+                        .set(&#storage_key, value);
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .temporary()
-                        .remove(&#key);
+                        .remove(&#storage_key);
                 }
             },
         }
@@ -371,7 +393,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
             let storage_type = StorageType::try_from(variant.attrs.as_slice()).unwrap();
             let value = Value::try_from(variant.attrs.as_slice()).unwrap();
 
-            value.fns(name, &storage_type, variant)
+            value.storage_fns(name, &storage_type, variant)
         })
         .collect();
 
@@ -438,19 +460,6 @@ fn transform_variant(variant: &Variant) -> TokenStream {
     }
 }
 
-/// Returns the field names and types of a storage enum variant.
-fn fields_data(fields: &Fields) -> (Vec<&Option<Ident>>, Vec<&Type>) {
-    match fields {
-        Fields::Unit => (vec![], vec![]),
-        Fields::Named(fields) => {
-            let names = fields.named.iter().map(|f| &f.ident).collect();
-            let types = fields.named.iter().map(|f| &f.ty).collect();
-            (names, types)
-        }
-        _ => panic!("only unit variants or named fields are supported in storage enums"),
-    }
-}
-
 /// Generates the storage schema tests for a storage enum.
 fn contract_storage_tests(enum_name: &Ident, enum_input: &DeriveInput) -> TokenStream {
     let test_module_name = format_ident!(
@@ -487,7 +496,6 @@ fn contract_storage_tests(enum_name: &Ident, enum_input: &DeriveInput) -> TokenS
 mod tests {
     use syn::{DeriveInput, Fields};
 
-    use super::fields_data;
     use crate::storage::contract_storage;
 
     #[test]
@@ -589,11 +597,12 @@ mod tests {
     #[test]
     #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn fields_data_tuple_variant_fails() {
+        use super::FieldsExt;
         let fields = Fields::Unnamed(syn::parse_quote! {
             (String, u32)
         });
 
-        fields_data(&fields);
+        fields.fields_data();
     }
 
     #[test]
