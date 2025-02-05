@@ -39,13 +39,46 @@ impl TryFrom<&[Attribute]> for Value {
     }
 }
 
+trait VariantExt {
+    fn storage_params(&self) -> TokenStream;
+    fn storage_key(&self, enum_name: &Ident) -> TokenStream;
+}
+
+impl VariantExt for Variant {
+    /// Returns the parameter list for a storage enum variant.
+    fn storage_params(&self) -> TokenStream {
+        let (field_names, field_types) = fields_data(&self.fields);
+
+        if field_names.is_empty() {
+            quote! { env: &soroban_sdk::Env }
+        } else {
+            quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
+        }
+    }
+
+    /// Returns the key for a storage enum variant.
+    fn storage_key(&self, enum_name: &Ident) -> TokenStream {
+        let (field_names, _) = fields_data(&self.fields);
+        let variant_ident = &self.ident;
+
+        if field_names.is_empty() {
+            quote! { #enum_name::#variant_ident }
+        } else {
+            let field_names = field_names.iter().map(|name| {
+                quote! { #name.clone() }
+            });
+            quote! { #enum_name::#variant_ident(#(#field_names),*) }
+        }
+    }
+}
+
 impl Value {
     /// Returns the getter, setter, and remover functions for a storage enum variant.
     fn fns(&self, enum_name: &Ident, storage_type: &StorageType, variant: &Variant) -> TokenStream {
         let (getter_name, setter_name, remover_name, try_getter_name) =
             self.fn_names(&variant.ident);
-        let param_list = Self::param_list(variant);
-        let storage_key = Self::storage_key(enum_name, variant);
+        let param_list = variant.storage_params();
+        let storage_key = variant.storage_key(enum_name);
 
         match self {
             Self::Status => {
@@ -91,32 +124,6 @@ impl Value {
                 format_ident!("remove_{}", ident),
                 format_ident!("try_{}", ident),
             ),
-        }
-    }
-
-    /// Returns the parameter list for a storage enum variant.
-    fn param_list(variant: &Variant) -> TokenStream {
-        let (field_names, field_types) = fields_data(&variant.fields);
-
-        if field_names.is_empty() {
-            quote! { env: &soroban_sdk::Env }
-        } else {
-            quote! { env: &soroban_sdk::Env, #(#field_names: #field_types),* }
-        }
-    }
-
-    /// Returns the key for a storage enum variant.
-    fn storage_key(enum_name: &Ident, variant: &Variant) -> TokenStream {
-        let (field_names, _) = fields_data(&variant.fields);
-        let variant_ident = &variant.ident;
-
-        if field_names.is_empty() {
-            quote! { #enum_name::#variant_ident }
-        } else {
-            let field_names = field_names.iter().map(|name| {
-                quote! { #name.clone() }
-            });
-            quote! { #enum_name::#variant_ident(#(#field_names),*) }
         }
     }
 }
