@@ -24,19 +24,17 @@ impl TryFrom<&[Attribute]> for Value {
                 "exactly one of #[status] and #[value(Type)] must be provided".to_string()
             })?;
 
-        if let Meta::List(list) = &attr.meta {
-            if attr.path().is_ident("value") {
+        if attr.path().is_ident("status") {
+            Ok(Self::Status)
+        } else /* "value" */ {
+            if let Meta::List(list) = &attr.meta {
                 Ok(Self::Type(
                     list.parse_args::<Type>()
                         .map_err(|_| "failed to parse value type".to_string())?,
                 ))
             } else {
-                Err("status attribute cannot have parameters".to_string())
+                Err("value attribute must contain a type parameter: #[value(Type)]".to_string())
             }
-        } else if attr.path().is_ident("status") {
-            Ok(Self::Status)
-        } else {
-            Err("value attribute must contain a type parameter: #[value(Type)]".to_string())
         }
     }
 }
@@ -620,20 +618,6 @@ mod tests {
             enum InvalidEnum {
                 #[instance]
                 #[value(!@$Type)]
-                InvalidKey,
-            }
-        };
-
-        contract_storage(&input);
-    }
-
-    #[test]
-    #[should_panic(expected = "status attribute cannot have parameters")]
-    fn status_with_params_fails() {
-        let input: DeriveInput = syn::parse_quote! {
-            enum InvalidEnum {
-                #[instance]
-                #[status(bool)]
                 InvalidKey,
             }
         };
