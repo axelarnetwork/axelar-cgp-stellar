@@ -9,7 +9,13 @@ enum DataKey {
     Paused,
 }
 
-pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
+pub fn counter(env: &soroban_sdk::Env) -> u32 {
+    let value = env.storage().instance().get::<_, u32>(&DataKey::Counter).unwrap();
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
+    value
+}
+
+pub fn try_counter(env: &soroban_sdk::Env) -> Option<u32> {
     let value = env.storage().instance().get::<_, u32>(&DataKey::Counter);
     if value.is_some() {
         stellar_axelar_std::ttl::extend_instance_ttl(env)
@@ -17,15 +23,8 @@ pub fn counter(env: &soroban_sdk::Env) -> Option<u32> {
     value
 }
 
-pub fn counter_required(env: &soroban_sdk::Env) -> u32 {
-    let value = env.storage().instance().get::<_, u32>(&DataKey::Counter).unwrap();
-    stellar_axelar_std::ttl::extend_instance_ttl(env);
-    value
-}
-
 pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
-    let key = DataKey::Counter;
-    env.storage().instance().set(&key, value);
+    env.storage().instance().set(&DataKey::Counter, value);
     stellar_axelar_std::ttl::extend_instance_ttl(env)
 }
 
@@ -33,26 +32,39 @@ pub fn remove_counter(env: &soroban_sdk::Env) {
     env.storage().instance().remove(&DataKey::Counter)
 }
 
-pub fn message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
-    let key = DataKey::Message(sender.clone());
-    let value = env.storage().persistent().get::<_, String>(&key);
+pub fn message(env: &soroban_sdk::Env, sender: Address) -> String {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, String>(&DataKey::Message(sender.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Message(sender.clone()),
+    );
+    value
+}
+
+pub fn try_message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, String>(&DataKey::Message(sender.clone()));
     if value.is_some() {
-        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+        stellar_axelar_std::ttl::extend_persistent_ttl(
+            env,
+            &DataKey::Message(sender.clone()),
+        )
     }
     value
 }
 
-pub fn message_required(env: &soroban_sdk::Env, sender: Address) -> String {
-    let key = DataKey::Message(sender.clone());
-    let value = env.storage().persistent().get::<_, String>(&key).unwrap();
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
-    value
-}
-
 pub fn set_message(env: &soroban_sdk::Env, sender: Address, value: &String) {
-    let key = DataKey::Message(sender.clone());
-    let value = env.storage().persistent().set(&key, value);
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    let value = env.storage().persistent().set(&DataKey::Message(sender.clone()), value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Message(sender.clone()),
+    );
     value
 }
 
@@ -60,15 +72,15 @@ pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
     env.storage().persistent().remove(&DataKey::Message(sender.clone()))
 }
 
-pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
-    env.storage().temporary().get::<_, Address>(&DataKey::LastCaller(timestamp.clone()))
-}
-
-pub fn last_caller_required(env: &soroban_sdk::Env, timestamp: u64) -> Address {
+pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Address {
     env.storage()
         .temporary()
         .get::<_, Address>(&DataKey::LastCaller(timestamp.clone()))
         .unwrap()
+}
+
+pub fn try_last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
+    env.storage().temporary().get::<_, Address>(&DataKey::LastCaller(timestamp.clone()))
 }
 
 pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) {
@@ -79,26 +91,42 @@ pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
     env.storage().temporary().remove(&DataKey::LastCaller(timestamp.clone()));
 }
 
-pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool> {
-    let key = DataKey::Flag(key.clone(), owner.clone());
-    let value = env.storage().persistent().get::<_, bool>(&key);
+pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, bool>(&DataKey::Flag(key.clone(), owner.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Flag(key.clone(), owner.clone()),
+    );
+    value
+}
+
+pub fn try_flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool> {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, bool>(&DataKey::Flag(key.clone(), owner.clone()));
     if value.is_some() {
-        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+        stellar_axelar_std::ttl::extend_persistent_ttl(
+            env,
+            &DataKey::Flag(key.clone(), owner.clone()),
+        )
     }
     value
 }
 
-pub fn flag_required(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
-    let key = DataKey::Flag(key.clone(), owner.clone());
-    let value = env.storage().persistent().get::<_, bool>(&key).unwrap();
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
-    value
-}
-
 pub fn set_flag(env: &soroban_sdk::Env, key: String, owner: Address, value: &bool) {
-    let key = DataKey::Flag(key.clone(), owner.clone());
-    let value = env.storage().persistent().set(&key, value);
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    let value = env
+        .storage()
+        .persistent()
+        .set(&DataKey::Flag(key.clone(), owner.clone()), value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::Flag(key.clone(), owner.clone()),
+    );
     value
 }
 
@@ -106,26 +134,42 @@ pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
     env.storage().persistent().remove(&DataKey::Flag(key.clone(), owner.clone()))
 }
 
-pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String>> {
-    let key = DataKey::OptionalMessage(id.clone());
-    let value = env.storage().persistent().get::<_, Option<String>>(&key);
+pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<String> {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, Option<String>>(&DataKey::OptionalMessage(id.clone()))
+        .unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::OptionalMessage(id.clone()),
+    );
+    value
+}
+
+pub fn try_optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String>> {
+    let value = env
+        .storage()
+        .persistent()
+        .get::<_, Option<String>>(&DataKey::OptionalMessage(id.clone()));
     if value.is_some() {
-        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+        stellar_axelar_std::ttl::extend_persistent_ttl(
+            env,
+            &DataKey::OptionalMessage(id.clone()),
+        )
     }
     value
 }
 
-pub fn optional_message_required(env: &soroban_sdk::Env, id: u32) -> Option<String> {
-    let key = DataKey::OptionalMessage(id.clone());
-    let value = env.storage().persistent().get::<_, Option<String>>(&key).unwrap();
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
-    value
-}
-
 pub fn set_optional_message(env: &soroban_sdk::Env, id: u32, value: &Option<String>) {
-    let key = DataKey::OptionalMessage(id.clone());
-    let value = env.storage().persistent().set(&key, value);
-    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    let value = env
+        .storage()
+        .persistent()
+        .set(&DataKey::OptionalMessage(id.clone()), value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(
+        env,
+        &DataKey::OptionalMessage(id.clone()),
+    );
     value
 }
 
@@ -150,10 +194,9 @@ pub fn remove_initialized_status(env: &soroban_sdk::Env) {
 }
 
 pub fn is_paused(env: &soroban_sdk::Env) -> bool {
-    let key = DataKey::Paused;
-    let value = env.storage().persistent().has(&key);
+    let value = env.storage().persistent().has(&DataKey::Paused);
     if value {
-        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &DataKey::Paused)
     }
     value
 }

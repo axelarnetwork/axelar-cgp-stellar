@@ -40,7 +40,7 @@ impl Contract {
     pub const fn __constructor() {}
 
     pub fn increment_counter(env: &Env) -> u32 {
-        let current_counter = storage::counter(env).unwrap_or(0);
+        let current_counter = storage::try_counter(env).unwrap_or(0);
         let new_counter = current_counter + 1;
         storage::set_counter(env, &new_counter);
         new_counter
@@ -51,7 +51,7 @@ impl Contract {
     }
 
     pub fn message(env: &Env, sender: Address) -> Option<String> {
-        storage::message(env, sender)
+        storage::try_message(env, sender)
     }
 
     pub fn set_last_caller(env: &Env, timestamp: u64, caller: Address) {
@@ -59,7 +59,7 @@ impl Contract {
     }
 
     pub fn last_caller(env: &Env, timestamp: u64) -> Option<Address> {
-        storage::last_caller(env, timestamp)
+        storage::try_last_caller(env, timestamp)
     }
 
     pub fn set_flag(env: &Env, key: String, owner: Address, value: bool) {
@@ -67,7 +67,7 @@ impl Contract {
     }
 
     pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
-        storage::flag(env, key, owner)
+        storage::try_flag(env, key, owner)
     }
 
     pub fn set_optional_message(env: &Env, id: u32, message: Option<String>) {
@@ -75,15 +75,15 @@ impl Contract {
     }
 
     pub fn optional_message(env: &Env, id: u32) -> Option<Option<String>> {
-        storage::optional_message(env, id)
+        storage::try_optional_message(env, id)
     }
 
     pub fn message_required(env: &Env, sender: Address) -> String {
-        storage::message_required(env, sender)
+        storage::message(env, sender)
     }
 
     pub fn flag_required(env: &Env, key: String, owner: Address) -> bool {
-        storage::flag_required(env, key, owner)
+        storage::flag(env, key, owner)
     }
 }
 

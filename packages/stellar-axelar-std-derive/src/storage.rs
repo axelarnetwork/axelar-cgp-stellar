@@ -16,17 +16,24 @@ impl TryFrom<&[Attribute]> for Value {
 
     fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
         let has_status = attrs.iter().any(|attr| attr.path().is_ident("status"));
-        let value_attrs: Vec<_> = attrs.iter().filter(|attr| attr.path().is_ident("value")).collect();
+        let value_attrs: Vec<_> = attrs
+            .iter()
+            .filter(|attr| attr.path().is_ident("value"))
+            .collect();
 
         match (has_status, value_attrs.as_slice()) {
             (true, []) => Ok(Self::Status),
-            (false, [Attribute { meta: Meta::List(list), .. }]) => {
-                Ok(Self::Type(
-                    list.parse_args::<Type>()
-                        .map_err(|_| "failed to parse value type".to_string())?,
-                ))
-            }
-            _ => Err("exactly one of #[status] and #[value(Type)] must be provided".to_string())
+            (
+                false,
+                [Attribute {
+                    meta: Meta::List(list),
+                    ..
+                }],
+            ) => Ok(Self::Type(
+                list.parse_args::<Type>()
+                    .map_err(|_| "failed to parse value type".to_string())?,
+            )),
+            _ => Err("exactly one of #[status] and #[value(Type)] must be provided".to_string()),
         }
     }
 }
@@ -34,10 +41,10 @@ impl TryFrom<&[Attribute]> for Value {
 impl Value {
     /// Returns the getter, setter, and remover functions for a storage enum variant.
     fn fns(&self, enum_name: &Ident, storage_type: &StorageType, variant: &Variant) -> TokenStream {
-        let (getter_name, setter_name, remover_name, required_getter_name) =
+        let (getter_name, setter_name, remover_name, try_getter_name) =
             self.fn_names(&variant.ident);
         let param_list = Self::param_list(variant);
-        let key = Self::storage_key(enum_name, variant);
+        let storage_key = Self::storage_key(enum_name, variant);
 
         match self {
             Self::Status => {
@@ -46,24 +53,24 @@ impl Value {
                     &setter_name,
                     &remover_name,
                     &param_list,
-                    &key,
+                    &storage_key,
                 );
 
                 quote! { #status_fns }
-            },
+            }
             Self::Type(value_type) => {
                 let value_fns = storage_type.value_fns(
                     &getter_name,
-                    &required_getter_name,
                     &setter_name,
                     &remover_name,
+                    &try_getter_name,
                     &param_list,
-                    &key,
+                    &storage_key,
                     &value_type,
                 );
 
                 quote! { #value_fns }
-            },
+            }
         }
     }
 
@@ -81,7 +88,7 @@ impl Value {
                 format_ident!("{}", ident),
                 format_ident!("set_{}", ident),
                 format_ident!("remove_{}", ident),
-                format_ident!("{}_required", ident),
+                format_ident!("try_{}", ident),
             ),
         }
     }
@@ -132,13 +139,12 @@ impl StorageType {
         match self {
             Self::Persistent => quote! {
                 pub fn #getter_name(#param_list) -> bool {
-                    let key = #key;
                     let value = env.storage()
                         .persistent()
-                        .has(&key);
+                        .has(&#key);
 
                     if value {
-                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key)
                     }
 
                     value
@@ -206,48 +212,44 @@ impl StorageType {
     pub fn value_fns(
         &self,
         getter_name: &Ident,
-        required_getter_name: &Ident,
         setter_name: &Ident,
         remover_name: &Ident,
+        try_getter_name: &Ident,
         param_list: &TokenStream,
         key: &TokenStream,
-        value_type: &Type
+        value_type: &Type,
     ) -> TokenStream {
         match self {
             Self::Persistent => quote! {
-                pub fn #getter_name(#param_list) -> Option<#value_type> {
-                    let key = #key;
+                pub fn #getter_name(#param_list) -> #value_type {
                     let value = env.storage()
                         .persistent()
-                        .get::<_, #value_type>(&key);
+                        .get::<_, #value_type>(&#key)
+                        .unwrap();
+
+                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key);
+
+                    value
+                }
+
+                pub fn #try_getter_name(#param_list) -> Option<#value_type> {
+                    let value = env.storage()
+                        .persistent()
+                        .get::<_, #value_type>(&#key);
 
                     if value.is_some() {
-                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key)
+                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key)
                     }
 
                     value
                 }
 
-                pub fn #required_getter_name(#param_list) -> #value_type {
-                    let key = #key;
-                    let value = env.storage()
-                        .persistent()
-                        .get::<_, #value_type>(&key)
-                        .unwrap();
-
-                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
-
-                    value
-                }
-
                 pub fn #setter_name(#param_list, value: &#value_type) {
-                    let key = #key;
-
                     let value = env.storage()
                         .persistent()
-                        .set(&key, value);
+                        .set(&#key, value);
 
-                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key);
 
                     value
                 }
@@ -259,7 +261,18 @@ impl StorageType {
                 }
             },
             Self::Instance => quote! {
-                pub fn #getter_name(#param_list) -> Option<#value_type> {
+                pub fn #getter_name(#param_list) -> #value_type {
+                    let value = env.storage()
+                        .instance()
+                        .get::<_, #value_type>(&#key)
+                        .unwrap();
+
+                    stellar_axelar_std::ttl::extend_instance_ttl(env);
+
+                    value
+                }
+
+                pub fn #try_getter_name(#param_list) -> Option<#value_type> {
                     let value = env.storage()
                         .instance()
                         .get::<_, #value_type>(&#key);
@@ -271,23 +284,10 @@ impl StorageType {
                     value
                 }
 
-                pub fn #required_getter_name(#param_list) -> #value_type {
-                    let value = env.storage()
-                        .instance()
-                        .get::<_, #value_type>(&#key)
-                        .unwrap();
-
-                    stellar_axelar_std::ttl::extend_instance_ttl(env);
-
-                    value
-                }
-
                 pub fn #setter_name(#param_list, value: &#value_type) {
-                    let key = #key;
-
                     env.storage()
                         .instance()
-                        .set(&key, value);
+                        .set(&#key, value);
 
                     stellar_axelar_std::ttl::extend_instance_ttl(env)
                 }
@@ -299,17 +299,17 @@ impl StorageType {
                 }
             },
             Self::Temporary => quote! {
-                pub fn #getter_name(#param_list) -> Option<#value_type> {
-                    env.storage()
-                        .temporary()
-                        .get::<_, #value_type>(&#key)
-                }
-
-                pub fn #required_getter_name(#param_list) -> #value_type {
+                pub fn #getter_name(#param_list) -> #value_type {
                     env.storage()
                         .temporary()
                         .get::<_, #value_type>(&#key)
                         .unwrap()
+                }
+
+                pub fn #try_getter_name(#param_list) -> Option<#value_type> {
+                    env.storage()
+                        .temporary()
+                        .get::<_, #value_type>(&#key)
                 }
 
                 pub fn #setter_name(#param_list, value: &#value_type) {

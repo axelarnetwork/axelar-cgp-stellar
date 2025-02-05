@@ -34,7 +34,7 @@ impl AxelarExecutableInterface for Example {
     type Error = ExampleError;
 
     fn gateway(env: &Env) -> Address {
-        storage::gateway(env).expect("gateway not found")
+        storage::gateway(env)
     }
 
     fn execute(
@@ -62,7 +62,7 @@ impl CustomInterchainTokenExecutable for Example {
     type Error = ExampleError;
 
     fn __interchain_token_service(env: &Env) -> Address {
-        storage::interchain_token_service(env).expect("interchain token service not found")
+        storage::interchain_token_service(env)
     }
 
     fn __authorized_execute_with_token(
@@ -118,7 +118,7 @@ impl Example {
 #[contractimpl]
 impl ExampleInterface for Example {
     fn gas_service(env: &Env) -> Address {
-        storage::gas_service(env).expect("gas service not found")
+        storage::gas_service(env)
     }
 
     fn send(
