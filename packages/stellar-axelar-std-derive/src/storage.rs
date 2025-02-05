@@ -16,25 +16,27 @@ impl TryFrom<&[Attribute]> for Value {
     type Error = String;
 
     fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
-        let has_status = attrs.iter().any(|attr| attr.path().is_ident("status"));
-        let value_attrs: Vec<_> = attrs
+        let attr = attrs
             .iter()
-            .filter(|attr| attr.path().is_ident("value"))
-            .collect();
+            .filter(|attr| attr.path().is_ident("status") || attr.path().is_ident("value"))
+            .exactly_one()
+            .map_err(|_| {
+                "exactly one of #[status] and #[value(Type)] must be provided".to_string()
+            })?;
 
-        match (has_status, value_attrs.as_slice()) {
-            (true, []) => Ok(Self::Status),
-            (
-                false,
-                [Attribute {
-                    meta: Meta::List(list),
-                    ..
-                }],
-            ) => Ok(Self::Type(
-                list.parse_args::<Type>()
-                    .map_err(|_| "failed to parse value type".to_string())?,
-            )),
-            _ => Err("exactly one of #[status] and #[value(Type)] must be provided".to_string()),
+        if let Meta::List(list) = &attr.meta {
+            if attr.path().is_ident("value") {
+                Ok(Self::Type(
+                    list.parse_args::<Type>()
+                        .map_err(|_| "failed to parse value type".to_string())?,
+                ))
+            } else {
+                Err("status attribute cannot have parameters".to_string())
+            }
+        } else if attr.path().is_ident("status") {
+            Ok(Self::Status)
+        } else {
+            Err("value attribute must contain a type parameter: #[value(Type)]".to_string())
         }
     }
 }
@@ -619,6 +621,34 @@ mod tests {
             enum InvalidEnum {
                 #[instance]
                 #[value(!@$Type)]
+                InvalidKey,
+            }
+        };
+
+        contract_storage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "status attribute cannot have parameters")]
+    fn status_with_params_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[status(bool)]
+                InvalidKey,
+            }
+        };
+
+        contract_storage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "value attribute must contain a type parameter: #[value(Type)]")]
+    fn value_without_type_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[value]
                 InvalidKey,
             }
         };
