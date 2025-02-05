@@ -21,15 +21,12 @@ stellar-interchain-token-service = { workspace = true, features = ["library"] }
 
 [dev-dependencies]
 goldie = { workspace = true }
-prettyplease = { workspace = true }
-quote = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
 stellar-interchain-token-service = { workspace = true, features = ["testutils"] }
-syn = { workspace = true }
 
 [lints]
 workspace = true

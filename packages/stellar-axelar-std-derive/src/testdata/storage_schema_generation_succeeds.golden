@@ -168,24 +168,11 @@ pub fn remove_paused_status(env: &soroban_sdk::Env) {
 
 #[cfg(test)]
 mod data_key_storage_layout_tests {
-    use prettyplease;
-    use quote::quote;
-    use syn::DeriveInput;
+    use goldie;
     #[test]
     fn ensure_data_key_storage_schema_is_unchanged() {
-        let r#enum = quote! {
-            enum DataKey { #[instance] #[value(u32)] Counter, #[persistent]
-            #[value(String)] Message { sender : Address }, #[temporary] #[value(Address)]
-            LastCaller { timestamp : u64 }, #[persistent] #[value(bool)] Flag { key :
-            String, owner : Address }, #[persistent] #[value(Option < String >)]
-            OptionalMessage { id : u32 }, #[instance] #[status] Initialized,
-            #[persistent] #[status] Paused, }
-        };
-        let enum_file: syn::File = syn::parse2(r#enum).unwrap();
-        let formatted_enum = prettyplease::unparse(&enum_file)
-            .replace("    #[instance]", "\n    #[instance]")
-            .replace("    #[persistent]", "\n    #[persistent]")
-            .replace("    #[temporary]", "\n    #[temporary]");
-        goldie::assert!(formatted_enum);
+        goldie::assert!(
+            "enum DataKey {\n\n    #[instance]\n    #[value(u32)]\n    Counter,\n\n    #[persistent]\n    #[value(String)]\n    Message { sender: Address },\n\n    #[temporary]\n    #[value(Address)]\n    LastCaller { timestamp: u64 },\n\n    #[persistent]\n    #[value(bool)]\n    Flag { key: String, owner: Address },\n\n    #[persistent]\n    #[value(Option<String>)]\n    OptionalMessage { id: u32 },\n\n    #[instance]\n    #[status]\n    Initialized,\n\n    #[persistent]\n    #[status]\n    Paused,\n}\n"
+        );
     }
 }

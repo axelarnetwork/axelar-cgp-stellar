@@ -1,5 +1,6 @@
 use heck::ToSnakeCase;
 use itertools::Itertools;
+use prettyplease::unparse;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use std::convert::TryFrom;
@@ -445,24 +446,20 @@ fn contract_storage_tests(enum_name: &Ident, enum_input: &DeriveInput) -> TokenS
         enum_name.to_string().to_snake_case()
     );
 
+    let enum_file: syn::File = syn::parse2(quote! { #enum_input }).unwrap();
+    let formatted_enum = unparse(&enum_file)
+        .replace("    #[instance]", "\n    #[instance]")
+        .replace("    #[persistent]", "\n    #[persistent]")
+        .replace("    #[temporary]", "\n    #[temporary]");
+
     quote! {
         #[cfg(test)]
         mod #test_module_name {
-            use prettyplease;
-            use quote::quote;
-            use syn::DeriveInput;
+            use goldie;
 
             #[test]
             fn #test_name() {
-                let r#enum = quote! {
-                    #enum_input
-                };
-                let enum_file: syn::File = syn::parse2(r#enum).unwrap();
-                let formatted_enum = prettyplease::unparse(&enum_file)
-                    .replace("    #[instance]", "\n    #[instance]")
-                    .replace("    #[persistent]", "\n    #[persistent]")
-                    .replace("    #[temporary]", "\n    #[temporary]");
-                goldie::assert!(formatted_enum);
+                goldie::assert!(#formatted_enum);
             }
         }
     }
