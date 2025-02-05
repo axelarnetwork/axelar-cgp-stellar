@@ -1,3 +1,6 @@
 [alias]
 wasm = "build --release --lib --target wasm32-unknown-unknown --locked --workspace"
 unit-test = "test --lib"
+
+[build]
+rustdocflags = ["-D", "warnings"]
