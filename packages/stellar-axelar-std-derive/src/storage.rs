@@ -2,6 +2,7 @@ use heck::ToSnakeCase;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
+use std::convert::TryFrom;
 use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Type, Variant};
 
 enum Value {
@@ -9,37 +10,34 @@ enum Value {
     Type(Type),
 }
 
-impl Value {
-    /// (constructor) Returns the status xor value type of a storage enum variant.
-    pub fn from_attrs(attrs: &[Attribute]) -> Self {
-        let has_status = attrs.iter().any(|attr| attr.path().is_ident("status"));
-        let value_attrs: Vec<_> = attrs
-            .iter()
-            .filter(|attr| attr.path().is_ident("value"))
-            .collect();
+impl TryFrom<&[Attribute]> for Value {
+    type Error = String;
 
-        match (has_status, !value_attrs.is_empty()) {
-            (true, false) => Self::Status,
-            (false, true) => {
-                let attr = value_attrs[0];
-                if let Meta::List(list) = &attr.meta {
-                    Self::Type(
-                        list.parse_args::<Type>()
-                            .expect("failed to parse value type"),
-                    )
-                } else {
-                    panic!("value attribute must contain a type parameter: #[value(Type)]");
-                }
+    fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
+        let attr = attrs
+            .iter()
+            .filter(|attr| attr.path().is_ident("status") || attr.path().is_ident("value"))
+            .exactly_one()
+            .map_err(|_| "exactly one of #[status] and #[value(Type)] must be provided".to_string())?;
+
+        if let Meta::List(list) = &attr.meta {
+            if attr.path().is_ident("value") {
+                Ok(Self::Type(
+                    list.parse_args::<Type>()
+                        .map_err(|_| "failed to parse value type".to_string())?,
+                ))
+            } else {
+                Err("status attribute cannot have parameters".to_string())
             }
-            (false, false) => {
-                panic!("missing required attribute: either #[status] xor #[value(Type)]")
-            }
-            (true, true) => {
-                panic!("a storage key cannot have both #[status] and #[value] attributes")
-            }
+        } else if attr.path().is_ident("status") {
+            Ok(Self::Status)
+        } else {
+            Err("value attribute must contain a type parameter: #[value(Type)]".to_string())
         }
     }
+}
 
+impl Value {
     /// Returns the getter, setter, and remover functions for a storage enum variant.
     fn fns(&self, enum_name: &Ident, storage_type: &StorageType, variant: &Variant) -> TokenStream {
         let (getter_name, setter_name, remover_name, required_getter_name) =
@@ -205,7 +203,9 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     let fns: Vec<_> = variants
         .iter()
         .map(|variant| {
-            Value::from_attrs(&variant.attrs).fns(name, &storage_type(&variant.attrs), variant)
+            Value::try_from(variant.attrs.as_slice())
+                .unwrap_or_else(|e| panic!("{}", e))
+                .fns(name, &storage_type(&variant.attrs), variant)
         })
         .collect();
 
@@ -323,9 +323,9 @@ fn contract_storage_tests(enum_name: &Ident, enum_input: &DeriveInput) -> TokenS
                 };
                 let enum_file: syn::File = syn::parse2(r#enum).unwrap();
                 let formatted_enum = prettyplease::unparse(&enum_file)
-                    .replace("#[instance]", "\n\t#[instance]")
-                    .replace("#[persistent]", "\n\t#[persistent]")
-                    .replace("#[temporary]", "\n\t#[temporary]");
+                    .replace("    #[instance]", "\n    #[instance]")
+                    .replace("    #[persistent]", "\n    #[persistent]")
+                    .replace("    #[temporary]", "\n    #[temporary]");
                 goldie::assert!(formatted_enum);
             }
         }
@@ -438,8 +438,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "missing required attribute: either #[status] xor #[value(Type)]")]
-    fn missing_value_attribute_fails() {
+    #[should_panic(expected = "exactly one of #[status] and #[value(Type)] must be provided")]
+    fn missing_value_and_status_attribute_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
@@ -461,13 +461,41 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "a storage key cannot have both #[status] and #[value] attributes")]
+    #[should_panic(expected = "exactly one of #[status] and #[value(Type)] must be provided")]
     fn status_and_value_fails() {
         let input: DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 #[value(bool)]
                 #[status]
+                InvalidKey,
+            }
+        };
+
+        contract_storage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "failed to parse value type")]
+    fn invalid_value_type_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[value(!@$Type)]
+                InvalidKey,
+            }
+        };
+
+        contract_storage(&input);
+    }
+
+    #[test]
+    #[should_panic(expected = "status attribute cannot have parameters")]
+    fn status_with_parameters_fails() {
+        let input: DeriveInput = syn::parse_quote! {
+            enum InvalidEnum {
+                #[instance]
+                #[status(invalid_param)]
                 InvalidKey,
             }
         };

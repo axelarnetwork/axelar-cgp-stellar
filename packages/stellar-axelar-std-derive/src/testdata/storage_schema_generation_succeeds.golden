@@ -225,9 +225,9 @@ mod data_key_storage_layout_tests {
         };
         let enum_file: syn::File = syn::parse2(r#enum).unwrap();
         let formatted_enum = prettyplease::unparse(&enum_file)
-            .replace("#[instance]", "\n\t#[instance]")
-            .replace("#[persistent]", "\n\t#[persistent]")
-            .replace("#[temporary]", "\n\t#[temporary]");
+            .replace("    #[instance]", "\n    #[instance]")
+            .replace("    #[persistent]", "\n    #[persistent]")
+            .replace("    #[temporary]", "\n    #[temporary]");
         goldie::assert!(formatted_enum);
     }
 }
