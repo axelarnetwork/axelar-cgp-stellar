@@ -32,6 +32,10 @@ mod storage {
         #[persistent]
         #[value(Option<String>)]
         OptionalMessage { id: u32 },
+
+        #[temporary]
+        #[status]
+        TempStatus { id: u32 },
     }
 }
 
@@ -84,6 +88,14 @@ impl Contract {
 
     pub fn flag_required(env: &Env, key: String, owner: Address) -> bool {
         storage::flag(env, key, owner)
+    }
+
+    pub fn set_temp_status(env: &Env, id: u32) {
+        storage::set_temp_status_status(env, id);
+    }
+
+    pub fn is_temp_status(env: &Env, id: u32) -> bool {
+        storage::is_temp_status(env, id)
     }
 }
 
@@ -263,4 +275,18 @@ fn required_getter_succeeds_when_set() {
 
     client.set_message(&sender, &message);
     assert_eq!(client.message_required(&sender), message);
+}
+
+#[test]
+fn temporary_status_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let id = 1u32;
+
+    assert!(!client.is_temp_status(&id));
+
+    client.set_temp_status(&id);
+    assert!(client.is_temp_status(&id));
 }
