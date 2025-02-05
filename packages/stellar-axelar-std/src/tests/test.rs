@@ -5,7 +5,7 @@ use crate as stellar_axelar_std;
 
 mod operatable {
     use stellar_axelar_std::interfaces::OperatableClient;
-    use stellar_axelar_std::{assert_auth, only_operator};
+    use stellar_axelar_std::{assert_auth, assert_auth_err, only_operator};
     use stellar_axelar_std_derive::Operatable;
 
     use super::*;
@@ -42,7 +42,6 @@ mod operatable {
     }
 
     #[test]
-    #[should_panic(expected = "InvalidAction")]
     fn operator_function_fails_with_incorrect_operator() {
         let env = Env::default();
         let operator = Address::generate(&env);
@@ -50,7 +49,7 @@ mod operatable {
         let contract_id = env.register(Contract, (operator,));
         let client = ContractClient::new(&env, &contract_id);
 
-        assert_auth!(non_operator, client.operator_function());
+        assert_auth_err!(non_operator, client.operator_function());
     }
 
     #[test]
@@ -69,7 +68,7 @@ mod operatable {
 
 mod ownable {
     use stellar_axelar_std::interfaces::OwnableClient;
-    use stellar_axelar_std::{assert_auth, only_owner};
+    use stellar_axelar_std::{assert_auth, assert_auth_err, only_owner};
     use stellar_axelar_std_derive::Ownable;
 
     use super::*;
@@ -106,7 +105,6 @@ mod ownable {
     }
 
     #[test]
-    #[should_panic(expected = "InvalidAction")]
     fn owner_function_fails_with_incorrect_owner() {
         let env = Env::default();
         let owner = Address::generate(&env);
@@ -114,7 +112,42 @@ mod ownable {
         let contract_id = env.register(Contract, (owner,));
         let client = ContractClient::new(&env, &contract_id);
 
-        assert_auth!(non_owner, client.owner_function());
+        assert_auth_err!(non_owner, client.owner_function());
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be a typed parameter")]
+    fn test_first_parameter_not_typed() {
+        let input_fn: ItemFn = parse_quote! {
+            #[only_owner]
+            fn test_function() {}
+        };
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be a simple identifier")]
+    fn test_first_parameter_not_simple_identifier() {
+        let input_fn: ItemFn = parse_quote! {
+            #[only_owner]
+            fn test_function((env, other): (Env, Other)) {}
+        };
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be named 'env'")]
+    fn test_first_parameter_not_named_env() {
+        let input_fn: ItemFn = parse_quote! {
+            #[only_owner]
+            fn test_function(other: Env) {}
+        };
+    }
+
+    #[test]
+    fn test_first_parameter_correct() {
+        let input_fn: ItemFn = parse_quote! {
+            #[only_owner]
+            fn test_function(env: Env) {}
+        };
     }
 
     #[test]
@@ -221,6 +254,3 @@ mod upgradable {
         assert_auth!(owner, client.migrate(&()));
     }
 }
-
-// Modify this file, add tests for only_owner and only_operator
-// add them in ownable and operatable
