@@ -1,9 +1,10 @@
+use std::convert::TryFrom;
+
 use heck::ToSnakeCase;
 use itertools::Itertools;
 use prettyplease::unparse;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use std::convert::TryFrom;
 use syn::{Attribute, Data, DataEnum, DeriveInput, Fields, FieldsNamed, Meta, Type, Variant};
 
 enum Value {
