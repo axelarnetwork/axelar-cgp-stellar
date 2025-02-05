@@ -36,7 +36,7 @@ impl Value {
         let (getter_name, setter_name, remover_name, required_getter_name) =
             self.fn_names(&variant.ident);
         let param_list = Self::param_list(variant);
-        let key = Self::key(enum_name, variant);
+        let key = Self::storage_key(enum_name, variant);
 
         let storage_method = storage_type.storage_method();
         let ttl_fn = storage_type.ttl_method(&key);
@@ -139,7 +139,7 @@ impl Value {
     }
 
     /// Returns the key for a storage enum variant.
-    fn key(enum_name: &Ident, variant: &Variant) -> TokenStream {
+    fn storage_key(enum_name: &Ident, variant: &Variant) -> TokenStream {
         let (field_names, _) = fields_data(&variant.fields);
         let variant_ident = &variant.ident;
 
