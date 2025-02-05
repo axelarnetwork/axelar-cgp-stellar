@@ -6,7 +6,9 @@ use crate::error::ContractError;
 
 #[allow(dead_code)]
 #[contractclient(name = "InterchainTokenClient")]
-pub trait InterchainTokenInterface: token::Interface + StellarAssetInterface + OwnableInterface {
+pub trait InterchainTokenInterface:
+    token::Interface + StellarAssetInterface + OwnableInterface
+{
     /// Returns the Interchain Token ID
     fn token_id(env: &Env) -> BytesN<32>;
 
