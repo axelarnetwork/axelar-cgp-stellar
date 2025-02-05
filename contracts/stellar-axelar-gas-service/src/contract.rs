@@ -24,8 +24,6 @@ impl AxelarGasService {
 
 impl CustomMigratableInterface for AxelarGasService {
     type MigrationData = ();
-
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
 #[contractimpl]

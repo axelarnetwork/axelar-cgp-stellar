@@ -37,6 +37,4 @@ impl TokenManagerInterface for TokenManager {
 
 impl CustomMigratableInterface for TokenManager {
     type MigrationData = ();
-
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }

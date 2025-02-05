@@ -144,8 +144,6 @@ mod upgradable {
 
     impl CustomMigratableInterface for Contract {
         type MigrationData = ();
-
-        fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
     }
 
     const UPGRADED_WASM: &[u8] = include_bytes!("testdata/contract.wasm");

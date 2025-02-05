@@ -90,5 +90,4 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
 impl CustomMigratableInterface for AxelarOperators {
     type MigrationData = ();
-    fn __migrate(_env: &Env, _migration_data: ()) {}
 }

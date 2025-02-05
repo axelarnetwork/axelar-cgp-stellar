@@ -250,8 +250,6 @@ impl token::Interface for InterchainToken {
 
 impl CustomMigratableInterface for InterchainToken {
     type MigrationData = ();
-
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
 impl InterchainToken {

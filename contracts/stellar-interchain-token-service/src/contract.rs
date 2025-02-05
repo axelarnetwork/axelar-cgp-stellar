@@ -383,8 +383,6 @@ impl AxelarExecutableInterface for InterchainTokenService {
 
 impl CustomMigratableInterface for InterchainTokenService {
     type MigrationData = ();
-
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
 impl InterchainTokenService {

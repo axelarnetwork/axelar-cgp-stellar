@@ -237,8 +237,6 @@ impl AxelarGatewayInterface for AxelarGateway {
 
 impl CustomMigratableInterface for AxelarGateway {
     type MigrationData = ();
-
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
 impl AxelarGateway {

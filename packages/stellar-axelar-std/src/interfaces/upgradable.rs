@@ -29,7 +29,7 @@ pub trait CustomMigratableInterface: UpgradableInterface {
     type MigrationData: FromVal<Env, Val>;
 
     /// Migrates contract state after upgrading the contract code.
-    fn __migrate(env: &Env, migration_data: Self::MigrationData);
+    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
 /// This function checks that the caller can authenticate as the owner of the contract,
