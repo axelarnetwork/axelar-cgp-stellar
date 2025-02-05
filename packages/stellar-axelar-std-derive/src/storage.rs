@@ -66,9 +66,7 @@ impl VariantExt for Variant {
         if field_names.is_empty() {
             quote! { #enum_name::#variant_ident }
         } else {
-            let field_names = field_names.iter().map(|name| {
-                quote! { #name.clone() }
-            });
+            let field_names = field_names.iter().map(|name| quote! { #name });
             quote! { #enum_name::#variant_ident(#(#field_names),*) }
         }
     }
@@ -227,13 +225,13 @@ impl StorageType {
                 pub fn #setter_name(#param_list) {
                     env.storage()
                         .temporary()
-                        .set(&#key, &())
+                        .set(&#key, &());
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .temporary()
-                        .remove(&#key)
+                        .remove(&#key);
                 }
             },
         }
@@ -252,36 +250,37 @@ impl StorageType {
         match self {
             Self::Persistent => quote! {
                 pub fn #getter_name(#param_list) -> #value_type {
+                    let key = #key;
                     let value = env.storage()
                         .persistent()
-                        .get::<_, #value_type>(&#key)
+                        .get::<_, #value_type>(&key)
                         .unwrap();
 
-                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key);
+                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
 
                     value
                 }
 
                 pub fn #try_getter_name(#param_list) -> Option<#value_type> {
+                    let key = #key;
                     let value = env.storage()
                         .persistent()
-                        .get::<_, #value_type>(&#key);
+                        .get::<_, #value_type>(&key);
 
                     if value.is_some() {
-                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key)
+                        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
                     }
 
                     value
                 }
 
                 pub fn #setter_name(#param_list, value: &#value_type) {
-                    let value = env.storage()
+                    let key = #key;
+                    env.storage()
                         .persistent()
-                        .set(&#key, value);
+                        .set(&key, value);
 
-                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &#key);
-
-                    value
+                    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
                 }
 
                 pub fn #remover_name(#param_list) {
@@ -308,7 +307,7 @@ impl StorageType {
                         .get::<_, #value_type>(&#key);
 
                     if value.is_some() {
-                        stellar_axelar_std::ttl::extend_instance_ttl(env)
+                        stellar_axelar_std::ttl::extend_instance_ttl(env);
                     }
 
                     value
@@ -319,13 +318,13 @@ impl StorageType {
                         .instance()
                         .set(&#key, value);
 
-                    stellar_axelar_std::ttl::extend_instance_ttl(env)
+                    stellar_axelar_std::ttl::extend_instance_ttl(env);
                 }
 
                 pub fn #remover_name(#param_list) {
                     env.storage()
                         .instance()
-                        .remove(&#key)
+                        .remove(&#key);
                 }
             },
             Self::Temporary => quote! {
@@ -345,7 +344,7 @@ impl StorageType {
                 pub fn #setter_name(#param_list, value: &#value_type) {
                     env.storage()
                         .temporary()
-                        .set(&#key, value)
+                        .set(&#key, value);
                 }
 
                 pub fn #remover_name(#param_list) {
