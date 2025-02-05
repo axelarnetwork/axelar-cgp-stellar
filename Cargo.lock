@@ -1992,10 +1992,13 @@ dependencies = [
  "hex",
  "hex-literal",
  "paste",
+ "prettyplease",
+ "quote",
  "rand",
  "rand_chacha",
  "soroban-sdk",
  "stellar-axelar-std",
+ "syn 2.0.87",
 ]
 
 [[package]]

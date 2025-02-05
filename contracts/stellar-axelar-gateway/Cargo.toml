@@ -22,10 +22,13 @@ goldie = { workspace = true }
 hex = { workspace = true }
 hex-literal = "0.4"
 paste = { workspace = true }
+prettyplease = { workspace = true }
+quote = { workspace = true }
 rand = { workspace = true }
 rand_chacha = { version = "0.3" }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 stellar-axelar-std = { workspace = true, features = ["testutils"] }
+syn = { workspace = true }
 
 [features]
 library = [] # Only export the contract interface

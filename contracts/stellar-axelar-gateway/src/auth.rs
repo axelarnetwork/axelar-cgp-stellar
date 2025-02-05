@@ -4,7 +4,7 @@ use stellar_axelar_std::events::Event;
 
 use crate::error::ContractError;
 use crate::event::SignersRotatedEvent;
-use crate::storage_types::DataKey;
+use crate::storage;
 use crate::types::{Proof, ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 
 pub fn initialize_auth(
@@ -14,20 +14,10 @@ pub fn initialize_auth(
     previous_signer_retention: u64,
     initial_signers: Vec<WeightedSigners>,
 ) -> Result<(), ContractError> {
-    env.storage().instance().set(&DataKey::Epoch, &0_u64);
-
-    env.storage().instance().set(
-        &DataKey::PreviousSignerRetention,
-        &previous_signer_retention,
-    );
-
-    env.storage()
-        .instance()
-        .set(&DataKey::DomainSeparator, &domain_separator);
-
-    env.storage()
-        .instance()
-        .set(&DataKey::MinimumRotationDelay, &minimum_rotation_delay);
+    storage::set_epoch(&env, &0_u64);
+    storage::set_previous_signer_retention(&env, &previous_signer_retention);
+    storage::set_domain_separator(&env, &domain_separator);
+    storage::set_minimum_rotation_delay(&env, &minimum_rotation_delay);
 
     ensure!(!initial_signers.is_empty(), ContractError::EmptySigners);
 
@@ -36,27 +26,6 @@ pub fn initialize_auth(
     }
 
     Ok(())
-}
-
-pub fn domain_separator(env: &Env) -> BytesN<32> {
-    env.storage()
-        .instance()
-        .get(&DataKey::DomainSeparator)
-        .expect("domain_separator not found")
-}
-
-pub fn minimum_rotation_delay(env: &Env) -> u64 {
-    env.storage()
-        .instance()
-        .get(&DataKey::MinimumRotationDelay)
-        .expect("minimum_rotation_delay not found")
-}
-
-pub fn previous_signers_retention(env: &Env) -> u64 {
-    env.storage()
-        .instance()
-        .get(&DataKey::PreviousSignerRetention)
-        .expect("previous_signers_retention not found")
 }
 
 pub fn validate_proof(
@@ -68,14 +37,15 @@ pub fn validate_proof(
 
     let signers_hash = signers_set.hash(env);
 
-    let signers_epoch = epoch_by_signers_hash(env, signers_hash.clone())?;
+    let signers_epoch = storage::epoch_by_signers_hash(env, signers_hash.clone())
+        .ok_or(ContractError::InvalidSignersHash)?;
 
-    let current_epoch = epoch(env);
+    let current_epoch = storage::epoch_required(env);
 
     let is_latest_signers: bool = signers_epoch == current_epoch;
 
     ensure!(
-        current_epoch - signers_epoch <= previous_signers_retention(env),
+        current_epoch - signers_epoch <= storage::previous_signer_retention_required(env),
         ContractError::OutdatedSigners
     );
 
@@ -100,23 +70,20 @@ pub fn rotate_signers(
 
     let new_signers_hash = new_signers.hash(env);
 
-    let new_epoch: u64 = epoch(env) + 1;
+    let new_epoch: u64 = storage::epoch_required(env) + 1;
 
-    env.storage().instance().set(&DataKey::Epoch, &new_epoch);
+    storage::set_epoch(env, &new_epoch);
 
-    env.storage()
-        .persistent()
-        .set(&DataKey::SignersHashByEpoch(new_epoch), &new_signers_hash);
+    storage::set_signers_hash_by_epoch(env, new_epoch, &new_signers_hash);
 
     ensure!(
-        epoch_by_signers_hash(env, new_signers_hash.clone()).is_err(),
+        storage::epoch_by_signers_hash(env, new_signers_hash.clone())
+            .ok_or(ContractError::InvalidSignersHash)
+            .is_err(),
         ContractError::DuplicateSigners
     );
 
-    env.storage().persistent().set(
-        &DataKey::EpochBySignersHash(new_signers_hash.clone()),
-        &new_epoch,
-    );
+    storage::set_epoch_by_signers_hash(env, new_signers_hash.clone(), &new_epoch);
 
     SignersRotatedEvent {
         epoch: new_epoch,
@@ -128,29 +95,8 @@ pub fn rotate_signers(
     Ok(())
 }
 
-pub fn epoch(env: &Env) -> u64 {
-    env.storage()
-        .instance()
-        .get(&DataKey::Epoch)
-        .expect("epoch not found")
-}
-
-pub fn epoch_by_signers_hash(env: &Env, signers_hash: BytesN<32>) -> Result<u64, ContractError> {
-    env.storage()
-        .persistent()
-        .get(&DataKey::EpochBySignersHash(signers_hash))
-        .ok_or(ContractError::InvalidSignersHash)
-}
-
-pub fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError> {
-    env.storage()
-        .persistent()
-        .get(&DataKey::SignersHashByEpoch(epoch))
-        .ok_or(ContractError::InvalidEpoch)
-}
-
 fn message_hash_to_sign(env: &Env, signers_hash: BytesN<32>, data_hash: &BytesN<32>) -> BytesN<32> {
-    let mut msg: Bytes = domain_separator(env).into();
+    let mut msg: Bytes = storage::domain_separator_required(env).into();
     msg.extend_from_array(&signers_hash.to_array());
     msg.extend_from_array(&data_hash.to_array());
 
@@ -158,24 +104,17 @@ fn message_hash_to_sign(env: &Env, signers_hash: BytesN<32>, data_hash: &BytesN<
 }
 
 fn update_rotation_timestamp(env: &Env, enforce_rotation_delay: bool) -> Result<(), ContractError> {
-    let last_rotation_timestamp: u64 = env
-        .storage()
-        .instance()
-        .get(&DataKey::LastRotationTimestamp)
-        .unwrap_or(0);
-
     let current_timestamp = env.ledger().timestamp();
 
     if enforce_rotation_delay {
         ensure!(
-            current_timestamp - last_rotation_timestamp >= minimum_rotation_delay(env),
+            current_timestamp - storage::last_rotation_timestamp_required(env)
+                >= storage::minimum_rotation_delay_required(env),
             ContractError::InsufficientRotationDelay
         );
     }
 
-    env.storage()
-        .instance()
-        .set(&DataKey::LastRotationTimestamp, &current_timestamp);
+    storage::set_last_rotation_timestamp(env, &current_timestamp);
 
     Ok(())
 }

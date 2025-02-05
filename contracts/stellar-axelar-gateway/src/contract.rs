@@ -6,13 +6,13 @@ use stellar_axelar_std::{
     ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
 };
 
-use crate::auth;
 use crate::error::ContractError;
 use crate::event::{ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent};
 use crate::interface::AxelarGatewayInterface;
 use crate::messaging_interface::AxelarGatewayMessagingInterface;
-use crate::storage_types::{DataKey, MessageApprovalKey, MessageApprovalValue};
+use crate::storage::{MessageApprovalKey, MessageApprovalValue};
 use crate::types::{CommandType, Message, Proof, WeightedSigners};
+use crate::{auth, storage};
 
 #[contract]
 #[derive(Operatable, Ownable, Pausable, Upgradable)]
@@ -110,7 +110,8 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
             source_chain: source_chain.clone(),
             message_id: message_id.clone(),
         };
-        let message_approval = Self::message_approval_by_key(&env, key.clone());
+        let message_approval = storage::message_approval(&env, key.clone())
+            .unwrap_or(MessageApprovalValue::NotApproved);
         let message = Message {
             source_chain,
             message_id,
@@ -120,10 +121,7 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
         };
 
         if message_approval == Self::message_approval_hash(&env, message.clone()) {
-            env.storage().persistent().set(
-                &DataKey::MessageApproval(key),
-                &MessageApprovalValue::Executed,
-            );
+            storage::set_message_approval(&env, key, &MessageApprovalValue::Executed);
 
             MessageExecutedEvent { message }.emit(&env);
 
@@ -137,15 +135,15 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
 #[contractimpl]
 impl AxelarGatewayInterface for AxelarGateway {
     fn domain_separator(env: &Env) -> BytesN<32> {
-        auth::domain_separator(env)
+        storage::domain_separator_required(env)
     }
 
     fn minimum_rotation_delay(env: &Env) -> u64 {
-        auth::minimum_rotation_delay(env)
+        storage::minimum_rotation_delay_required(env)
     }
 
     fn previous_signers_retention(env: &Env) -> u64 {
-        auth::previous_signers_retention(env)
+        storage::previous_signer_retention_required(env)
     }
 
     #[when_not_paused]
@@ -170,13 +168,15 @@ impl AxelarGatewayInterface for AxelarGateway {
             };
 
             // Prevent replay if message is already approved/executed
-            let message_approval = Self::message_approval_by_key(env, key.clone());
+            let message_approval = storage::message_approval(env, key.clone())
+                .unwrap_or(MessageApprovalValue::NotApproved);
             if message_approval != MessageApprovalValue::NotApproved {
                 continue;
             }
 
-            env.storage().persistent().set(
-                &DataKey::MessageApproval(key),
+            storage::set_message_approval(
+                env,
+                key,
                 &Self::message_approval_hash(env, message.clone()),
             );
 
@@ -214,15 +214,15 @@ impl AxelarGatewayInterface for AxelarGateway {
     }
 
     fn epoch(env: &Env) -> u64 {
-        auth::epoch(env)
+        storage::epoch_required(env)
     }
 
     fn epoch_by_signers_hash(env: &Env, signers_hash: BytesN<32>) -> Result<u64, ContractError> {
-        auth::epoch_by_signers_hash(env, signers_hash)
+        storage::epoch_by_signers_hash(env, signers_hash).ok_or(ContractError::InvalidSignersHash)
     }
 
     fn signers_hash_by_epoch(env: &Env, epoch: u64) -> Result<BytesN<32>, ContractError> {
-        auth::signers_hash_by_epoch(env, epoch)
+        storage::signers_hash_by_epoch(env, epoch).ok_or(ContractError::InvalidEpoch)
     }
 
     fn validate_proof(
@@ -246,15 +246,7 @@ impl AxelarGateway {
             message_id,
         };
 
-        Self::message_approval_by_key(env, key)
-    }
-
-    /// Get the message approval value by key, defaulting to `MessageNotApproved`
-    fn message_approval_by_key(env: &Env, key: MessageApprovalKey) -> MessageApprovalValue {
-        env.storage()
-            .persistent()
-            .get(&DataKey::MessageApproval(key))
-            .unwrap_or(MessageApprovalValue::NotApproved)
+        storage::message_approval(env, key).unwrap_or(MessageApprovalValue::NotApproved)
     }
 
     fn message_approval_hash(env: &Env, message: Message) -> MessageApprovalValue {
