@@ -26,9 +26,11 @@ pub trait MigratableInterface: UpgradableInterface + CustomMigratableInterface {
 
 pub trait CustomMigratableInterface: UpgradableInterface {
     /// Data needed during the migration. Each contract can define its own data type.
+    /// Choose `()` if no migration is necessary
     type MigrationData: FromVal<Env, Val>;
 
     /// Migrates contract state after upgrading the contract code.
+    /// Custom implementation can be omitted if no migration is needed
     fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
 }
 
