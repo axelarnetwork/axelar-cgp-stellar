@@ -36,16 +36,16 @@ impl TryFrom<&[Attribute]> for Value {
 }
 
 trait FieldsExt {
-    fn fields_data(&self) -> (Vec<&Option<Ident>>, Vec<&Type>);
+    fn fields_data(&self) -> (Vec<&Ident>, Vec<&Type>);
 }
 
 impl FieldsExt for Fields {
     /// Returns the field names and types of a storage enum variant.
-    fn fields_data(&self) -> (Vec<&Option<Ident>>, Vec<&Type>) {
+    fn fields_data(&self) -> (Vec<&Ident>, Vec<&Type>) {
         match self {
             Self::Unit => (vec![], vec![]),
             Self::Named(fields) => {
-                let names = fields.named.iter().map(|f| &f.ident).collect();
+                let names = fields.named.iter().map(|f| f.ident.as_ref().unwrap()).collect();
                 let types = fields.named.iter().map(|f| &f.ty).collect();
                 (names, types)
             }
