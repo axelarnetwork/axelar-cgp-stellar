@@ -70,7 +70,7 @@ pub fn rotate_signers(
 
     let new_signers_hash = new_signers.hash(env);
 
-    let new_epoch: u64 = storage::epoch(env) + 1;
+    let new_epoch = storage::epoch(env) + 1;
 
     storage::set_epoch(env, &new_epoch);
 
