@@ -27,7 +27,7 @@ mod storage {
 
         #[persistent]
         #[value(bool)]
-        Flag { key: String, owner: Address },
+        Flag { flag_key: String, owner: Address },
 
         #[persistent]
         #[value(Option<String>)]
