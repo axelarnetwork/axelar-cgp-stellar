@@ -140,7 +140,7 @@ impl Value {
         storage_key: &TokenStream,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_fn = storage_type.ttl_fn(&storage_key);
+        let ttl_fn = storage_type.ttl_fn(&quote! { key });
 
         quote! {
             pub fn #getter_name(#param_list) -> bool {
@@ -184,7 +184,7 @@ impl Value {
         value_type: &Type,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_fn = storage_type.ttl_fn(&storage_key);
+        let ttl_fn = storage_type.ttl_fn(&quote! { key });
 
         quote! {
             pub fn #getter_name(#param_list) -> #value_type {

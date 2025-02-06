@@ -32,7 +32,8 @@ pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
 }
 
 pub fn remove_counter(env: &soroban_sdk::Env) {
-    env.storage().instance().remove(&DataKey::Counter);
+    let key = DataKey::Counter;
+    env.storage().instance().remove(&key);
 }
 
 pub fn message(env: &soroban_sdk::Env, sender: Address) -> String {
@@ -58,7 +59,8 @@ pub fn set_message(env: &soroban_sdk::Env, sender: Address, value: &String) {
 }
 
 pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
-    env.storage().persistent().remove(&DataKey::Message(sender));
+    let key = DataKey::Message(sender);
+    env.storage().persistent().remove(&key);
 }
 
 pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Address {
@@ -80,7 +82,8 @@ pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) 
 }
 
 pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
-    env.storage().temporary().remove(&DataKey::LastCaller(timestamp));
+    let key = DataKey::LastCaller(timestamp);
+    env.storage().temporary().remove(&key);
 }
 
 pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
@@ -106,7 +109,8 @@ pub fn set_flag(env: &soroban_sdk::Env, key: String, owner: Address, value: &boo
 }
 
 pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
-    env.storage().persistent().remove(&DataKey::Flag(key, owner));
+    let key = DataKey::Flag(key, owner);
+    env.storage().persistent().remove(&key);
 }
 
 pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<String> {
@@ -132,35 +136,44 @@ pub fn set_optional_message(env: &soroban_sdk::Env, id: u32, value: &Option<Stri
 }
 
 pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
-    env.storage().persistent().remove(&DataKey::OptionalMessage(id));
+    let key = DataKey::OptionalMessage(id);
+    env.storage().persistent().remove(&key);
 }
 
 pub fn is_initialized(env: &soroban_sdk::Env) -> bool {
-    let value = env.storage().instance().has(&DataKey::Initialized);
+    let key = DataKey::Initialized;
+    let value = env.storage().instance().has(&key);
     stellar_axelar_std::ttl::extend_instance_ttl(env);
     value
 }
 
 pub fn set_initialized_status(env: &soroban_sdk::Env) {
-    env.storage().instance().set(&DataKey::Initialized, &());
+    let key = DataKey::Initialized;
+    env.storage().instance().set(&key, &());
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
 }
 
 pub fn remove_initialized_status(env: &soroban_sdk::Env) {
-    env.storage().instance().remove(&DataKey::Initialized);
+    let key = DataKey::Initialized;
+    env.storage().instance().remove(&key);
 }
 
 pub fn is_paused(env: &soroban_sdk::Env) -> bool {
-    let value = env.storage().persistent().has(&DataKey::Paused);
+    let key = DataKey::Paused;
+    let value = env.storage().persistent().has(&key);
     stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
     value
 }
 
 pub fn set_paused_status(env: &soroban_sdk::Env) {
-    env.storage().persistent().set(&DataKey::Paused, &());
+    let key = DataKey::Paused;
+    env.storage().persistent().set(&key, &());
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
 }
 
 pub fn remove_paused_status(env: &soroban_sdk::Env) {
-    env.storage().persistent().remove(&DataKey::Paused);
+    let key = DataKey::Paused;
+    env.storage().persistent().remove(&key);
 }
 
 #[cfg(test)]
