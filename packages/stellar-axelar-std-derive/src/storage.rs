@@ -36,19 +36,30 @@ impl TryFrom<&[Attribute]> for Value {
 }
 
 trait FieldsExt {
-    fn fields_data(&self) -> (Vec<&Ident>, Vec<&Type>);
+    fn names(&self) -> Vec<&Ident>;
+
+    fn types(&self) -> Vec<&Type>;
 }
 
 impl FieldsExt for Fields {
-    /// Returns the field names and types of a storage enum variant.
-    fn fields_data(&self) -> (Vec<&Ident>, Vec<&Type>) {
+    /// Returns the field names of a storage enum variant.
+    fn names(&self) -> Vec<&Ident> {
         match self {
-            Self::Unit => (vec![], vec![]),
-            Self::Named(fields) => {
-                let names = fields.named.iter().map(|f| f.ident.as_ref().unwrap()).collect();
-                let types = fields.named.iter().map(|f| &f.ty).collect();
-                (names, types)
-            }
+            Self::Unit => vec![],
+            Self::Named(fields) => fields
+                .named
+                .iter()
+                .map(|f| f.ident.as_ref().unwrap())
+                .collect(),
+            _ => panic!("only unit variants or named fields are supported in storage enums"),
+        }
+    }
+
+    /// Returns the field types of a storage enum variant.
+    fn types(&self) -> Vec<&Type> {
+        match self {
+            Self::Unit => vec![],
+            Self::Named(fields) => fields.named.iter().map(|f| &f.ty).collect(),
             _ => panic!("only unit variants or named fields are supported in storage enums"),
         }
     }
@@ -62,7 +73,7 @@ trait VariantExt {
 impl VariantExt for Variant {
     /// Returns the parameter list for a storage enum variant.
     fn storage_params(&self) -> TokenStream {
-        let (field_names, field_types) = self.fields.fields_data();
+        let (field_names, field_types) = (self.fields.names(), self.fields.types());
 
         if field_names.is_empty() {
             quote! { env: &soroban_sdk::Env }
@@ -73,7 +84,7 @@ impl VariantExt for Variant {
 
     /// Returns the key for a storage enum variant.
     fn storage_key(&self, enum_name: &Ident) -> TokenStream {
-        let (field_names, _) = self.fields.fields_data();
+        let field_names = self.fields.names();
         let variant_ident = &self.ident;
 
         if field_names.is_empty() {
@@ -510,13 +521,24 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
-    fn fields_data_tuple_variant_fails() {
+    fn fields_names_tuple_variant_fails() {
         use super::FieldsExt;
         let fields = Fields::Unnamed(syn::parse_quote! {
             (String, u32)
         });
 
-        fields.fields_data();
+        fields.names();
+    }
+
+    #[test]
+    #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
+    fn fields_types_tuple_variant_fails() {
+        use super::FieldsExt;
+        let fields = Fields::Unnamed(syn::parse_quote! {
+            (String, u32)
+        });
+
+        fields.types();
     }
 
     #[test]
