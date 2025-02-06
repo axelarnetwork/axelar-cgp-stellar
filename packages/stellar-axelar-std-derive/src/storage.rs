@@ -43,8 +43,8 @@ impl FieldsExt for Fields {
     /// Returns the field names and types of a storage enum variant.
     fn fields_data(&self) -> (Vec<&Option<Ident>>, Vec<&Type>) {
         match self {
-            Fields::Unit => (vec![], vec![]),
-            Fields::Named(fields) => {
+            Self::Unit => (vec![], vec![]),
+            Self::Named(fields) => {
                 let names = fields.named.iter().map(|f| &f.ident).collect();
                 let types = fields.named.iter().map(|f| &f.ty).collect();
                 (names, types)
@@ -101,7 +101,7 @@ impl Value {
         match self {
             Self::Status => {
                 let status_fns = self.status_fns(
-                    &storage_type,
+                    storage_type,
                     &getter_name,
                     &setter_name,
                     &remover_name,
@@ -113,7 +113,7 @@ impl Value {
             }
             Self::Type(value_type) => {
                 let value_fns = self.value_fns(
-                    &storage_type,
+                    storage_type,
                     &getter_name,
                     &setter_name,
                     &remover_name,
