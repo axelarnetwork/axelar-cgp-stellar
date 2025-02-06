@@ -106,7 +106,7 @@ impl Value {
     ) -> TokenStream {
         let (getter_name, setter_name, remover_name, try_getter_name) =
             self.fn_names(&variant.ident);
-        let param_list = variant.storage_params();
+        let params = variant.storage_params();
         let storage_key = variant.storage_key(enum_name);
 
         match self {
@@ -116,7 +116,7 @@ impl Value {
                     &getter_name,
                     &setter_name,
                     &remover_name,
-                    &param_list,
+                    &params,
                     &storage_key,
                 );
 
@@ -129,7 +129,7 @@ impl Value {
                     &setter_name,
                     &remover_name,
                     &try_getter_name,
-                    &param_list,
+                    &params,
                     &storage_key,
                     value_type,
                 );
@@ -145,14 +145,14 @@ impl Value {
         getter_name: &Ident,
         setter_name: &Ident,
         remover_name: &Ident,
-        param_list: &TokenStream,
+        params: &TokenStream,
         storage_key: &TokenStream,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
         let ttl_fn = storage_type.ttl_fn(&quote! { key });
 
         quote! {
-            pub fn #getter_name(#param_list) -> bool {
+            pub fn #getter_name(#params) -> bool {
                 let key = #storage_key;
                 let value = env.storage()
                     .#storage_method
@@ -163,7 +163,7 @@ impl Value {
                 value
             }
 
-            pub fn #setter_name(#param_list) {
+            pub fn #setter_name(#params) {
                 let key = #storage_key;
                 env.storage()
                     .#storage_method
@@ -172,7 +172,7 @@ impl Value {
                 #ttl_fn
             }
 
-            pub fn #remover_name(#param_list) {
+            pub fn #remover_name(#params) {
                 let key = #storage_key;
                 env.storage()
                     .#storage_method
@@ -188,7 +188,7 @@ impl Value {
         setter_name: &Ident,
         remover_name: &Ident,
         try_getter_name: &Ident,
-        param_list: &TokenStream,
+        params: &TokenStream,
         storage_key: &TokenStream,
         value_type: &Type,
     ) -> TokenStream {
@@ -196,7 +196,7 @@ impl Value {
         let ttl_fn = storage_type.ttl_fn(&quote! { key });
 
         quote! {
-            pub fn #getter_name(#param_list) -> #value_type {
+            pub fn #getter_name(#params) -> #value_type {
                 let key = #storage_key;
                 let value = env.storage()
                     .#storage_method
@@ -208,7 +208,7 @@ impl Value {
                 value
             }
 
-            pub fn #try_getter_name(#param_list) -> Option<#value_type> {
+            pub fn #try_getter_name(#params) -> Option<#value_type> {
                 let key = #storage_key;
                 let value = env.storage()
                     .#storage_method
@@ -221,7 +221,7 @@ impl Value {
                 value
             }
 
-            pub fn #setter_name(#param_list, value: &#value_type) {
+            pub fn #setter_name(#params, value: &#value_type) {
                 let key = #storage_key;
                 env.storage()
                     .#storage_method
@@ -230,7 +230,7 @@ impl Value {
                 #ttl_fn
             }
 
-            pub fn #remover_name(#param_list) {
+            pub fn #remover_name(#params) {
                 let key = #storage_key;
                 env.storage()
                     .#storage_method
