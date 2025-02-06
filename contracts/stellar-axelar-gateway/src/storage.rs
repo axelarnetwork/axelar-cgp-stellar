@@ -19,14 +19,12 @@ pub enum MessageApprovalValue {
 #[contractstorage]
 #[derive(Clone, Debug)]
 pub enum DataKey {
-    /// Gateway
     #[persistent]
     #[value(MessageApprovalValue)]
     MessageApproval {
         message_approval_key: MessageApprovalKey,
     },
 
-    /// Auth Module
     #[instance]
     #[value(u64)]
     PreviousSignerRetention,

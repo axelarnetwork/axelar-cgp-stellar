@@ -77,9 +77,7 @@ pub fn rotate_signers(
     storage::set_signers_hash_by_epoch(env, new_epoch, &new_signers_hash);
 
     ensure!(
-        storage::try_epoch_by_signers_hash(env, new_signers_hash.clone())
-            .ok_or(ContractError::InvalidSignersHash)
-            .is_err(),
+        storage::try_epoch_by_signers_hash(env, new_signers_hash.clone()).is_none(),
         ContractError::DuplicateSigners
     );
 

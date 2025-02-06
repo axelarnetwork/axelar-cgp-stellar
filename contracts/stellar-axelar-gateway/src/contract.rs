@@ -162,13 +162,13 @@ impl AxelarGatewayInterface for AxelarGateway {
         ensure!(!messages.is_empty(), ContractError::EmptyMessages);
 
         for message in messages.into_iter() {
-            let key = MessageApprovalKey {
+            let message_approval_key = MessageApprovalKey {
                 source_chain: message.source_chain.clone(),
                 message_id: message.message_id.clone(),
             };
 
             // Prevent replay if message is already approved/executed
-            let message_approval = storage::try_message_approval(env, key.clone())
+            let message_approval = storage::try_message_approval(env, message_approval_key.clone())
                 .unwrap_or(MessageApprovalValue::NotApproved);
             if message_approval != MessageApprovalValue::NotApproved {
                 continue;
@@ -176,7 +176,7 @@ impl AxelarGatewayInterface for AxelarGateway {
 
             storage::set_message_approval(
                 env,
-                key,
+                message_approval_key,
                 &Self::message_approval_hash(env, message.clone()),
             );
 
