@@ -154,9 +154,7 @@ impl Value {
         quote! {
             pub fn #getter_name(#params) -> bool {
                 let key = #storage_key;
-                let value = env.storage()
-                    .#storage_method
-                    .has(&key);
+                let value = #storage_method.has(&key);
 
                 #ttl_fn
 
@@ -165,18 +163,14 @@ impl Value {
 
             pub fn #setter_name(#params) {
                 let key = #storage_key;
-                env.storage()
-                    .#storage_method
-                    .set(&key, &());
+                #storage_method.set(&key, &());
 
                 #ttl_fn
             }
 
             pub fn #remover_name(#params) {
                 let key = #storage_key;
-                env.storage()
-                    .#storage_method
-                    .remove(&key);
+                #storage_method.remove(&key);
             }
         }
     }
@@ -198,8 +192,7 @@ impl Value {
         quote! {
             pub fn #getter_name(#params) -> #value_type {
                 let key = #storage_key;
-                let value = env.storage()
-                    .#storage_method
+                let value = #storage_method
                     .get::<_, #value_type>(&key)
                     .unwrap();
 
@@ -210,9 +203,7 @@ impl Value {
 
             pub fn #try_getter_name(#params) -> Option<#value_type> {
                 let key = #storage_key;
-                let value = env.storage()
-                    .#storage_method
-                    .get::<_, #value_type>(&key);
+                let value = #storage_method.get::<_, #value_type>(&key);
 
                 if value.is_some() {
                     #ttl_fn
@@ -223,18 +214,14 @@ impl Value {
 
             pub fn #setter_name(#params, value: &#value_type) {
                 let key = #storage_key;
-                env.storage()
-                    .#storage_method
-                    .set(&key, value);
+                #storage_method.set(&key, value);
 
                 #ttl_fn
             }
 
             pub fn #remover_name(#params) {
                 let key = #storage_key;
-                env.storage()
-                    .#storage_method
-                    .remove(&key);
+                #storage_method.remove(&key);
             }
         }
     }
@@ -289,9 +276,9 @@ impl TryFrom<&[Attribute]> for StorageType {
 impl StorageType {
     fn storage_method(&self) -> TokenStream {
         match self {
-            Self::Persistent => quote! { persistent() },
-            Self::Instance => quote! { instance() },
-            Self::Temporary => quote! { temporary() },
+            Self::Persistent => quote! { env.storage().persistent() },
+            Self::Instance => quote! { env.storage().instance() },
+            Self::Temporary => quote! { env.storage().temporary() },
         }
     }
 
