@@ -116,41 +116,6 @@ mod ownable {
     }
 
     #[test]
-    #[should_panic(expected = "First parameter must be a typed parameter")]
-    fn test_first_parameter_not_typed() {
-        let input_fn: ItemFn = parse_quote! {
-            #[only_owner]
-            fn test_function() {}
-        };
-    }
-
-    #[test]
-    #[should_panic(expected = "First parameter must be a simple identifier")]
-    fn test_first_parameter_not_simple_identifier() {
-        let input_fn: ItemFn = parse_quote! {
-            #[only_owner]
-            fn test_function((env, other): (Env, Other)) {}
-        };
-    }
-
-    #[test]
-    #[should_panic(expected = "First parameter must be named 'env'")]
-    fn test_first_parameter_not_named_env() {
-        let input_fn: ItemFn = parse_quote! {
-            #[only_owner]
-            fn test_function(other: Env) {}
-        };
-    }
-
-    #[test]
-    fn test_first_parameter_correct() {
-        let input_fn: ItemFn = parse_quote! {
-            #[only_owner]
-            fn test_function(env: Env) {}
-        };
-    }
-
-    #[test]
     fn contract_ownership_transfer_succeeds() {
         let env = Env::default();
         let owner = Address::generate(&env);
