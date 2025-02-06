@@ -139,7 +139,7 @@ impl Value {
         }
     }
 
-    pub fn status_fns(
+    fn status_fns(
         &self,
         storage_type: &StorageType,
         getter_name: &Ident,
@@ -181,7 +181,7 @@ impl Value {
         }
     }
 
-    pub fn value_fns(
+    fn value_fns(
         &self,
         storage_type: &StorageType,
         getter_name: &Ident,
