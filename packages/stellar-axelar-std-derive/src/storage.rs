@@ -24,15 +24,13 @@ impl TryFrom<&[Attribute]> for Value {
 
         if attr.path().is_ident("status") {
             Ok(Self::Status)
+        } else if let Meta::List(list) = &attr.meta {
+            Ok(Self::Type(
+                list.parse_args::<Type>()
+                    .map_err(|_| "failed to parse value type")?,
+            ))
         } else {
-            if let Meta::List(list) = &attr.meta {
-                Ok(Self::Type(
-                    list.parse_args::<Type>()
-                        .map_err(|_| "failed to parse value type")?,
-                ))
-            } else {
-                Err("value attribute must contain a type parameter: #[value(Type)]".into())
-            }
+            Err("value attribute must contain a type parameter: #[value(Type)]".into())
         }
     }
 }
