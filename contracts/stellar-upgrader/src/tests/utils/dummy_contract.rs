@@ -38,14 +38,18 @@ impl DummyContract {
     }
 }
 
-#[contractstorage]
-pub enum DataKey {
-    #[instance]
-    #[value(soroban_sdk::String)]
-    Data,
-}
-
 #[contracterror]
 pub enum ContractError {
     SomeFailure = 1,
+}
+
+pub mod storage {
+    use super::*;
+
+    #[contractstorage]
+    pub enum DataKey {
+        #[instance]
+        #[value(soroban_sdk::String)]
+        Data,
+    }
 }

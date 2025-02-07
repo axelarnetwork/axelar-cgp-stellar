@@ -39,20 +39,24 @@ impl DummyContract {
 
     pub fn migrate(env: Env, migration_data: soroban_sdk::String) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
-        set_data(&env, &migration_data);
+        storage::set_data(&env, &migration_data);
 
         Ok(())
     }
 }
 
-#[contractstorage]
-pub enum DataKey {
-    #[instance]
-    #[value(soroban_sdk::String)]
-    Data,
-}
-
 #[contracterror]
 pub enum ContractError {
     SomeFailure = 1,
+}
+
+mod storage {
+    use super::*;
+
+    #[contractstorage]
+    pub enum DataKey {
+        #[instance]
+        #[value(soroban_sdk::String)]
+        Data,
+    }
 }

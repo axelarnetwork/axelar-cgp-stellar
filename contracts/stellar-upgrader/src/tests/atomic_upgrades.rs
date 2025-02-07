@@ -2,8 +2,9 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, BytesN, Env, String};
 use stellar_axelar_std::{assert_contract_err, mock_auth};
 
-use super::utils::{self, DummyContract, DummyContractClient};
+use super::utils::{DummyContract, DummyContractClient};
 use crate::error::ContractError;
+use crate::tests::utils;
 use crate::{Upgrader, UpgraderClient};
 
 const WASM_AFTER_UPGRADE: &[u8] = include_bytes!("testdata/dummy.wasm");
@@ -42,7 +43,7 @@ fn upgrade_and_migrate_are_atomic() {
 
     // ensure migration was successful
     env.as_contract(&contract_address, || {
-        let data = utils::data(&env);
+        let data = utils::storage::data(&env);
         assert_eq!(data, expected_data);
     });
 }
