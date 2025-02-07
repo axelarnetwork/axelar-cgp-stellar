@@ -1,7 +1,7 @@
 //! Base for the dummy.wasm file. This is the dummy contract after upgrade.
 
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, BytesN, Env};
-use stellar_axelar_std::interfaces;
+use stellar_axelar_std::{contractstorage, interfaces};
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
 
 #[contract]
@@ -39,15 +39,16 @@ impl DummyContract {
 
     pub fn migrate(env: Env, migration_data: soroban_sdk::String) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
-        env.storage()
-            .instance()
-            .set(&DataKey::Data, &migration_data);
+        set_data(&env, &migration_data);
+
         Ok(())
     }
 }
 
-#[contracttype]
+#[contractstorage]
 pub enum DataKey {
+    #[instance]
+    #[value(soroban_sdk::String)]
     Data,
 }
 

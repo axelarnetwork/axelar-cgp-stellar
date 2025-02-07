@@ -1,0 +1,6 @@
+pub enum DataKey {
+
+    #[instance]
+    #[value(soroban_sdk::String)]
+    Data,
+}
