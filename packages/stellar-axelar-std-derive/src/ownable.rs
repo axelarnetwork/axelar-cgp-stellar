@@ -50,3 +50,53 @@ pub fn only_owner_impl(input_fn: ItemFn) -> TokenStream2 {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use syn::{parse_quote, ItemFn};
+
+    use super::*;
+
+    #[test]
+    fn test_first_parameter_is_typed() {
+        let input_fn: ItemFn = parse_quote! {
+            fn test_fn(env: &Env, other: i32) {}
+        };
+        only_owner_impl(input_fn);
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be a typed parameter")]
+    fn test_first_parameter_is_not_typed() {
+        let input_fn: ItemFn = parse_quote! {
+            fn test_fn() {}
+        };
+        only_owner_impl(input_fn);
+    }
+
+    #[test]
+    fn test_first_parameter_is_simple_identifier() {
+        let input_fn: ItemFn = parse_quote! {
+            fn test_fn(env: &Env, other: i32) {}
+        };
+        only_owner_impl(input_fn);
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be a simple identifier")]
+    fn test_first_parameter_is_not_simple_identifier() {
+        let input_fn: ItemFn = parse_quote! {
+            fn test_fn((env, other): (&Env, i32)) {}
+        };
+        only_owner_impl(input_fn);
+    }
+
+    #[test]
+    #[should_panic(expected = "First parameter must be named 'env'")]
+    fn test_first_parameter_is_not_named_env() {
+        let input_fn: ItemFn = parse_quote! {
+            fn test_fn(not_env: &Env, other: i32) {}
+        };
+        only_owner_impl(input_fn);
+    }
+}
