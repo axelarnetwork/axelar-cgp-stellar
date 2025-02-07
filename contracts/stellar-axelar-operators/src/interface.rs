@@ -22,7 +22,7 @@ pub trait AxelarOperatorsInterface: OwnableInterface {
     /// - [`ContractError::OperatorAlreadyAdded`]: If the specified account is already an operator.
     ///
     /// # Authorization
-    /// - [`Self::owner`] must authorize.
+    /// - [`OwnableInterface::owner`] must authorize.
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError>;
 
     /// Remove an address as an operator.
@@ -36,7 +36,7 @@ pub trait AxelarOperatorsInterface: OwnableInterface {
     /// - [`ContractError::NotAnOperator`]: If the specified account is not an operator.
     ///
     /// # Authorization
-    ///  - [`Self::owner`] must authorize.
+    ///  - [`OwnableInterface::owner`] must authorize.
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError>;
 
     /// Execute a function on any contract as the operators contract.

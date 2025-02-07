@@ -98,9 +98,8 @@ pub fn derive_pausable(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```rust,ignore
-/// # mod test {
-/// # use soroban_sdk::{contract, contractimpl, Address, Env};
-/// use stellar_axelar_std_derive::when_not_paused;
+/// # use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};
+/// use stellar_axelar_std::{Pausable, when_not_paused};
 ///
 /// #[contracttype]
 /// pub enum ContractError {

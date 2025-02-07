@@ -3,7 +3,7 @@
 //! This is an executable interface that accepts an interchain token from ITS contract
 //! along with an arbitrary message.
 //!
-//! This is similar to the [AxelarExecutableInterface] but meant for messages sent with an ITS token.
+//! This is similar to the [`AxelarExecutableInterface`](stellar_axelar_gateway::executable::AxelarExecutableInterface) but meant for messages sent with an ITS token.
 
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
 pub use stellar_axelar_std::InterchainTokenExecutable;
@@ -11,7 +11,7 @@ pub use stellar_axelar_std::InterchainTokenExecutable;
 /// This trait must be implemented by a contract to be compatible with the [`InterchainTokenExecutableInterface`].
 ///
 /// To make a contract executable by the interchain token service contract, it must implement the [`InterchainTokenExecutableInterface`] trait.
-/// For security purposes and convenience, sender authorization and other commonly shared code necessary to implement that trait can be automatically generated with the [`axelar_soroban_std::Executable`] derive macro.
+/// For security purposes and convenience, sender authorization and other commonly shared code necessary to implement that trait can be automatically generated with the [`InterchainTokenExecutable`] derive macro.
 /// All parts that are specific to an individual ITS executable contract are collected in this [`CustomInterchainTokenExecutable`] trait and must be implemented by the contract to be compatible with the [`InterchainTokenExecutableInterface`] trait.
 ///
 /// Do NOT add the implementation of [`CustomInterchainTokenExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
@@ -36,7 +36,7 @@ pub trait CustomInterchainTokenExecutable {
     ) -> Result<(), Self::Error>;
 }
 
-/// Interface for an Interchain Token Executable app. Use the [`stellar_axelar_std::Executable`] derive macro to implement this interface.
+/// Interface for an Interchain Token Executable app. Use the [`InterchainTokenExecutable`] derive macro to implement this interface.
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]

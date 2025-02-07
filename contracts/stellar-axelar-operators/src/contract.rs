@@ -6,7 +6,7 @@ use stellar_axelar_std::{ensure, interfaces, only_owner, Ownable, Upgradable};
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
-use crate::storage_types::DataKey;
+use crate::storage;
 
 #[contract]
 #[derive(Ownable, Upgradable)]
@@ -22,21 +22,17 @@ impl AxelarOperators {
 #[contractimpl]
 impl AxelarOperatorsInterface for AxelarOperators {
     fn is_operator(env: Env, account: Address) -> bool {
-        let key = DataKey::Operators(account);
-
-        env.storage().instance().has(&key)
+        storage::is_operators(&env, account)
     }
 
     #[only_owner]
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
-        let key = DataKey::Operators(account.clone());
-
         ensure!(
-            !env.storage().instance().has(&key),
+            !storage::is_operators(&env, account.clone()),
             ContractError::OperatorAlreadyAdded
         );
 
-        env.storage().instance().set(&key, &true);
+        storage::set_operators_status(&env, account.clone());
 
         extend_instance_ttl(&env);
 
@@ -47,14 +43,12 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
     #[only_owner]
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
-        let key = DataKey::Operators(account.clone());
-
         ensure!(
-            env.storage().instance().has(&key),
+            storage::is_operators(&env, account.clone()),
             ContractError::NotAnOperator
         );
 
-        env.storage().instance().remove(&key);
+        storage::remove_operators_status(&env, account.clone());
 
         OperatorRemovedEvent { operator: account }.emit(&env);
 
@@ -70,10 +64,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
     ) -> Result<Val, ContractError> {
         operator.require_auth();
 
-        let key = DataKey::Operators(operator);
-
         ensure!(
-            env.storage().instance().has(&key),
+            storage::is_operators(&env, operator),
             ContractError::NotAnOperator
         );
 

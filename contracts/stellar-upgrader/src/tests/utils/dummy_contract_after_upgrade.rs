@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, BytesN, Env};
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
-use stellar_axelar_std::{interfaces, only_owner};
+use stellar_axelar_std::{contractstorage, interfaces, only_owner};
 
 #[contract]
 pub struct DummyContract;
@@ -38,19 +38,24 @@ impl DummyContract {
 
     #[only_owner]
     pub fn migrate(env: Env, migration_data: soroban_sdk::String) -> Result<(), ContractError> {
-        env.storage()
-            .instance()
-            .set(&DataKey::Data, &migration_data);
+        storage::set_data(&env, &migration_data);
+
         Ok(())
     }
-}
-
-#[contracttype]
-pub enum DataKey {
-    Data,
 }
 
 #[contracterror]
 pub enum ContractError {
     SomeFailure = 1,
+}
+
+mod storage {
+    use super::*;
+
+    #[contractstorage]
+    pub enum DataKey {
+        #[instance]
+        #[value(soroban_sdk::String)]
+        Data,
+    }
 }
