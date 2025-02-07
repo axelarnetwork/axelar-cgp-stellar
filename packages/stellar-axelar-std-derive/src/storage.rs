@@ -153,7 +153,9 @@ impl Value {
                 let key = #storage_key;
                 let value = #storage_method.has(&key);
 
-                #custom_ttl_fn
+                if value {
+                    #custom_ttl_fn
+                }
 
                 value
             }
