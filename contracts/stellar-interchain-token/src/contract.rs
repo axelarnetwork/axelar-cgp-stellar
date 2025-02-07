@@ -5,13 +5,13 @@ use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::OwnableInterface;
-use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{MinterAddedEvent, MinterRemovedEvent};
 use crate::interface::InterchainTokenInterface;
-use crate::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
+use crate::storage::{self, AllowanceDataKey, AllowanceValue};
 
 #[contract]
 #[derive(Upgradable)]
@@ -30,12 +30,10 @@ impl InterchainToken {
 
         Self::write_metadata(&env, token_metadata);
 
-        env.storage().instance().set(&DataKey::TokenId, &token_id);
+        storage::set_token_id(&env, &token_id);
 
         if let Some(minter) = minter {
-            env.storage()
-                .instance()
-                .set(&DataKey::Minter(minter.clone()), &());
+            storage::set_minter_status(&env, minter.clone());
 
             MinterAddedEvent { minter }.emit(&env);
         }
@@ -96,14 +94,11 @@ impl StellarAssetInterface for InterchainToken {
 #[contractimpl]
 impl InterchainTokenInterface for InterchainToken {
     fn token_id(env: &Env) -> BytesN<32> {
-        env.storage()
-            .instance()
-            .get(&DataKey::TokenId)
-            .expect("token id not found")
+        storage::token_id(env)
     }
 
     fn is_minter(env: &Env, minter: Address) -> bool {
-        env.storage().instance().has(&DataKey::Minter(minter))
+        storage::is_minter(env, minter)
     }
 
     fn mint_from(
@@ -133,11 +128,7 @@ impl InterchainTokenInterface for InterchainToken {
     fn add_minter(env: &Env, minter: Address) {
         Self::owner(env).require_auth();
 
-        env.storage()
-            .instance()
-            .set(&DataKey::Minter(minter.clone()), &());
-
-        extend_instance_ttl(env);
+        storage::set_minter_status(env, minter.clone());
 
         MinterAddedEvent { minter }.emit(env);
     }
@@ -145,11 +136,7 @@ impl InterchainTokenInterface for InterchainToken {
     fn remove_minter(env: &Env, minter: Address) {
         Self::owner(env).require_auth();
 
-        env.storage()
-            .instance()
-            .remove(&DataKey::Minter(minter.clone()));
-
-        extend_instance_ttl(env);
+        storage::remove_minter_status(env, minter.clone());
 
         MinterRemovedEvent { minter }.emit(env);
     }
@@ -183,8 +170,7 @@ impl token::Interface for InterchainToken {
     }
 
     fn balance(env: Env, id: Address) -> i128 {
-        extend_instance_ttl(&env);
-        Self::read_balance(&env, id)
+        storage::try_balance(&env, id).unwrap_or_default()
     }
 
     fn transfer(env: Env, from: Address, to: Address, amount: i128) {
@@ -257,26 +243,23 @@ impl InterchainToken {
     }
 
     fn read_allowance(env: &Env, from: Address, spender: Address) -> AllowanceValue {
-        let key = DataKey::Allowance(AllowanceDataKey { from, spender });
-        env.storage()
-            .temporary()
-            .get::<_, AllowanceValue>(&key)
-            .map_or(
-                AllowanceValue {
-                    amount: 0,
-                    expiration_ledger: 0,
-                },
-                |allowance| {
-                    if allowance.expiration_ledger < env.ledger().sequence() {
-                        AllowanceValue {
-                            amount: 0,
-                            expiration_ledger: allowance.expiration_ledger,
-                        }
-                    } else {
-                        allowance
+        let key = AllowanceDataKey { from, spender };
+        storage::try_allowance(env, key).map_or(
+            AllowanceValue {
+                amount: 0,
+                expiration_ledger: 0,
+            },
+            |allowance| {
+                if allowance.expiration_ledger < env.ledger().sequence() {
+                    AllowanceValue {
+                        amount: 0,
+                        expiration_ledger: allowance.expiration_ledger,
                     }
-                },
-            )
+                } else {
+                    allowance
+                }
+            },
+        )
     }
 
     fn write_allowance(
@@ -297,17 +280,15 @@ impl InterchainToken {
             ContractError::InvalidExpirationLedger
         );
 
-        let key = DataKey::Allowance(AllowanceDataKey { from, spender });
-        env.storage().temporary().set(&key, &allowance);
+        let key = AllowanceDataKey { from, spender };
+        storage::set_allowance(env, key.clone(), &allowance);
 
         if amount > 0 {
             let live_for = expiration_ledger
                 .checked_sub(env.ledger().sequence())
                 .unwrap();
 
-            env.storage()
-                .temporary()
-                .extend_ttl(&key, live_for, live_for)
+            storage::extend_allowance_ttl(env, key, live_for, live_for);
         }
     }
 
@@ -334,45 +315,21 @@ impl InterchainToken {
         }
     }
 
-    fn read_balance(env: &Env, addr: Address) -> i128 {
-        let key = DataKey::Balance(addr);
-        env.storage()
-            .persistent()
-            .get::<_, i128>(&key)
-            .inspect(|_| {
-                // Extend the TTL of the balance entry when the balance is successfully retrieved.
-                extend_persistent_ttl(env, &key);
-            })
-            .unwrap_or_default()
-    }
-
     fn receive_balance(env: &Env, addr: Address, amount: i128) {
-        let key = DataKey::Balance(addr);
+        let current_balance = storage::try_balance(env, addr.clone()).unwrap_or_default();
 
-        env.storage()
-            .persistent()
-            .update(&key, |balance: Option<i128>| {
-                balance.unwrap_or_default() + amount
-            });
+        storage::set_balance(env, addr, &(current_balance + amount));
     }
 
     fn spend_balance(env: &Env, addr: Address, amount: i128) {
-        let balance = Self::read_balance(env, addr.clone());
+        let balance = storage::try_balance(env, addr.clone()).unwrap_or_default();
 
         assert_with_error!(env, balance >= amount, ContractError::InsufficientBalance);
 
-        Self::write_balance(env, addr, balance - amount);
+        storage::set_balance(env, addr, &(balance - amount));
     }
 
     fn write_metadata(env: &Env, metadata: TokenMetadata) {
         TokenUtils::new(env).metadata().set_metadata(&metadata);
-    }
-
-    fn write_balance(env: &Env, addr: Address, amount: i128) {
-        let key = DataKey::Balance(addr);
-
-        env.storage().persistent().set(&key, &amount);
-
-        extend_persistent_ttl(env, &key);
     }
 }

@@ -96,6 +96,14 @@ impl VariantExt for Variant {
     }
 }
 
+struct FnNames {
+    getter_name: Ident,
+    setter_name: Ident,
+    remover_name: Ident,
+    try_getter_name: Ident,
+    ttl_extender_name: Ident,
+}
+
 impl Value {
     /// Returns the getter, setter, and remover functions for a storage enum variant.
     fn storage_fns(
@@ -104,35 +112,19 @@ impl Value {
         storage_type: &StorageType,
         variant: &Variant,
     ) -> TokenStream {
-        let (getter_name, setter_name, remover_name, try_getter_name) =
-            self.fn_names(&variant.ident);
+        let fn_names = self.fn_names(&variant.ident);
         let params = variant.storage_params();
         let storage_key = variant.storage_key(enum_name);
 
         match self {
             Self::Status => {
-                let status_fns = self.status_fns(
-                    storage_type,
-                    &getter_name,
-                    &setter_name,
-                    &remover_name,
-                    &params,
-                    &storage_key,
-                );
+                let status_fns = self.status_fns(storage_type, &fn_names, &params, &storage_key);
 
                 quote! { #status_fns }
             }
             Self::Type(value_type) => {
-                let value_fns = self.value_fns(
-                    storage_type,
-                    &getter_name,
-                    &setter_name,
-                    &remover_name,
-                    &try_getter_name,
-                    &params,
-                    &storage_key,
-                    value_type,
-                );
+                let value_fns =
+                    self.value_fns(storage_type, &fn_names, &params, &storage_key, value_type);
 
                 quote! { #value_fns }
             }
@@ -142,21 +134,26 @@ impl Value {
     fn status_fns(
         &self,
         storage_type: &StorageType,
-        getter_name: &Ident,
-        setter_name: &Ident,
-        remover_name: &Ident,
+        FnNames {
+            getter_name,
+            setter_name,
+            remover_name,
+            ttl_extender_name,
+            ..
+        }: &FnNames,
         params: &TokenStream,
         storage_key: &TokenStream,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
         let ttl_fn = storage_type.ttl_fn(&quote! { key });
+        let custom_ttl_fn = storage_type.custom_ttl_fn(&quote! { key });
 
         quote! {
             pub fn #getter_name(#params) -> bool {
                 let key = #storage_key;
                 let value = #storage_method.has(&key);
 
-                #ttl_fn
+                #custom_ttl_fn
 
                 value
             }
@@ -165,12 +162,17 @@ impl Value {
                 let key = #storage_key;
                 #storage_method.set(&key, &());
 
-                #ttl_fn
+                #custom_ttl_fn
             }
 
             pub fn #remover_name(#params) {
                 let key = #storage_key;
                 #storage_method.remove(&key);
+            }
+
+            pub fn #ttl_extender_name(#params, threshold: u32, extend_to: u32) {
+                let key = #storage_key;
+                #ttl_fn
             }
         }
     }
@@ -178,16 +180,20 @@ impl Value {
     fn value_fns(
         &self,
         storage_type: &StorageType,
-        getter_name: &Ident,
-        setter_name: &Ident,
-        remover_name: &Ident,
-        try_getter_name: &Ident,
+        FnNames {
+            getter_name,
+            setter_name,
+            remover_name,
+            try_getter_name,
+            ttl_extender_name,
+        }: &FnNames,
         params: &TokenStream,
         storage_key: &TokenStream,
         value_type: &Type,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
         let ttl_fn = storage_type.ttl_fn(&quote! { key });
+        let custom_ttl_fn = storage_type.custom_ttl_fn(&quote! { key });
 
         quote! {
             pub fn #getter_name(#params) -> #value_type {
@@ -196,7 +202,7 @@ impl Value {
                     .get::<_, #value_type>(&key)
                     .unwrap();
 
-                #ttl_fn
+                #custom_ttl_fn
 
                 value
             }
@@ -206,7 +212,7 @@ impl Value {
                 let value = #storage_method.get::<_, #value_type>(&key);
 
                 if value.is_some() {
-                    #ttl_fn
+                    #custom_ttl_fn
                 }
 
                 value
@@ -216,32 +222,39 @@ impl Value {
                 let key = #storage_key;
                 #storage_method.set(&key, value);
 
-                #ttl_fn
+                #custom_ttl_fn
             }
 
             pub fn #remover_name(#params) {
                 let key = #storage_key;
                 #storage_method.remove(&key);
             }
+
+            pub fn #ttl_extender_name(#params, threshold: u32, extend_to: u32) {
+                let key = #storage_key;
+                #ttl_fn
+            }
         }
     }
 
     /// Returns the getter, setter, and remover names for a storage enum variant.
-    fn fn_names(&self, variant_ident: &Ident) -> (Ident, Ident, Ident, Ident) {
+    fn fn_names(&self, variant_ident: &Ident) -> FnNames {
         let ident = variant_ident.to_string().to_snake_case();
         match self {
-            Self::Status => (
-                format_ident!("is_{}", ident),
-                format_ident!("set_{}_status", ident),
-                format_ident!("remove_{}_status", ident),
-                format_ident!("_"),
-            ),
-            Self::Type(_) => (
-                format_ident!("{}", ident),
-                format_ident!("set_{}", ident),
-                format_ident!("remove_{}", ident),
-                format_ident!("try_{}", ident),
-            ),
+            Self::Status => FnNames {
+                getter_name: format_ident!("is_{}", ident),
+                setter_name: format_ident!("set_{}_status", ident),
+                remover_name: format_ident!("remove_{}_status", ident),
+                try_getter_name: format_ident!("_"),
+                ttl_extender_name: format_ident!("extend_{}_ttl", ident),
+            },
+            Self::Type(_) => FnNames {
+                getter_name: format_ident!("{}", ident),
+                setter_name: format_ident!("set_{}", ident),
+                remover_name: format_ident!("remove_{}", ident),
+                try_getter_name: format_ident!("try_{}", ident),
+                ttl_extender_name: format_ident!("extend_{}_ttl", ident),
+            },
         }
     }
 }
@@ -283,6 +296,18 @@ impl StorageType {
     }
 
     fn ttl_fn(&self, ttl_fn_key: &TokenStream) -> TokenStream {
+        match self {
+            Self::Persistent => {
+                quote! { env.storage().persistent().extend_ttl(&#ttl_fn_key, threshold, extend_to); }
+            }
+            Self::Instance => quote! { env.storage().instance().extend_ttl(threshold, extend_to); },
+            Self::Temporary => {
+                quote! { env.storage().temporary().extend_ttl(&#ttl_fn_key, threshold, extend_to); }
+            }
+        }
+    }
+
+    fn custom_ttl_fn(&self, ttl_fn_key: &TokenStream) -> TokenStream {
         match self {
             Self::Persistent => {
                 quote! { stellar_axelar_std::ttl::extend_persistent_ttl(env, &#ttl_fn_key); }
