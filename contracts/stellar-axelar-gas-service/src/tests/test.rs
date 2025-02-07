@@ -68,12 +68,12 @@ fn register_gas_service() {
 }
 
 #[test]
-fn pay_gas_fails_with_zero_amount() {
+fn pay_gas_fails_with_minus_amount() {
     let (env, _, _, client) = setup_env();
 
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
-    let gas_amount: i128 = 0;
+    let gas_amount: i128 = -1;
     let token = Token {
         address: Address::generate(&env),
         amount: gas_amount,
@@ -94,6 +94,53 @@ fn pay_gas_fails_with_zero_amount() {
         ),
         ContractError::InvalidAmount
     );
+}
+
+#[test]
+fn pay_gas_succeeds_with_zero_amount() {
+    let (env, contract_id, _, client) = setup_env();
+
+    let spender: Address = Address::generate(&env);
+    let sender: Address = Address::generate(&env);
+    let gas_amount: i128 = 0;
+    let token = setup_token(&env, &spender, gas_amount);
+    let token_client = TokenClient::new(&env, &token.address);
+
+    let payload = bytes!(&env, 0x1234);
+    let (destination_chain, destination_address) = dummy_destination_data(&env);
+
+    let transfer_token_auth = mock_auth!(
+        env,
+        spender,
+        token.transfer(spender, client.address, token.amount)
+    );
+
+    let pay_gas_auth = mock_auth!(
+        env,
+        spender,
+        client.pay_gas(
+            sender,
+            destination_chain,
+            destination_address,
+            payload,
+            spender,
+            token,
+            Bytes::new(&env)
+        ),
+        &[(transfer_token_auth.invoke).clone()]
+    );
+
+    client.mock_auths(&[pay_gas_auth]).pay_gas(
+        &sender,
+        &destination_chain,
+        &destination_address,
+        &payload,
+        &spender,
+        &token,
+        &Bytes::new(&env),
+    );
+
+    assert_eq!(gas_amount, token_client.balance(&contract_id));
 }
 
 #[test]

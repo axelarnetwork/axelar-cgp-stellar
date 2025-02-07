@@ -40,7 +40,7 @@ impl AxelarGasServiceInterface for AxelarGasService {
     ) -> Result<(), ContractError> {
         spender.require_auth();
 
-        ensure!(token.amount > 0, ContractError::InvalidAmount);
+        ensure!(token.amount >= 0, ContractError::InvalidAmount);
 
         token::Client::new(&env, &token.address).transfer(
             &spender,
