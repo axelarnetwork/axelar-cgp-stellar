@@ -479,7 +479,7 @@ impl InterchainTokenService {
         env: &Env,
         token_id: BytesN<32>,
     ) -> Result<TokenIdConfigValue, ContractError> {
-        let config = Self::token_id_config(env, token_id.clone())?;
+        let config = Self::token_id_config(env, token_id)?;
 
         Ok(config)
     }
