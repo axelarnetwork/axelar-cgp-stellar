@@ -1,6 +1,7 @@
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::events::Event;
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{
     ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
@@ -235,6 +236,10 @@ impl AxelarGatewayInterface for AxelarGateway {
     }
 }
 
+impl CustomMigratableInterface for AxelarGateway {
+    type MigrationData = ();
+}
+
 impl AxelarGateway {
     /// Get the message approval value by `source_chain` and `message_id`, defaulting to `MessageNotApproved`
     fn message_approval(
@@ -253,7 +258,4 @@ impl AxelarGateway {
     fn message_approval_hash(env: &Env, message: Message) -> MessageApprovalValue {
         MessageApprovalValue::Approved(env.crypto().keccak256(&message.to_xdr(env)).into())
     }
-
-    // Modify this function to add migration logic
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
 }
