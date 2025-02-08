@@ -9,6 +9,7 @@ use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
@@ -378,10 +379,11 @@ impl AxelarExecutableInterface for InterchainTokenService {
     }
 }
 
-impl InterchainTokenService {
-    // Modify this function to add migration logic
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
+impl CustomMigratableInterface for InterchainTokenService {
+    type MigrationData = ();
+}
 
+impl InterchainTokenService {
     fn pay_gas_and_call_contract(
         env: &Env,
         caller: Address,

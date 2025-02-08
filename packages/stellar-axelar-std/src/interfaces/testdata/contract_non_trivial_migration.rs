@@ -4,7 +4,7 @@ use stellar_axelar_std_derive::{Ownable, Upgradable};
 
 use crate as stellar_axelar_std;
 use crate::interfaces::testdata::contract_trivial_migration::DataKey;
-use crate::interfaces::{operatable, ownable, MigratableInterface};
+use crate::interfaces::{operatable, ownable, CustomMigratableInterface, MigratableInterface};
 
 #[derive(Upgradable, Ownable)]
 #[migratable(with_type = MigrationData)]
@@ -34,8 +34,12 @@ impl ContractNonTrivial {
     pub fn migration_data(env: &Env) -> Option<String> {
         env.storage().instance().get(&DataKey::Data)
     }
+}
 
-    fn run_migration(env: &Env, migration_data: MigrationData) {
+impl CustomMigratableInterface for ContractNonTrivial {
+    type MigrationData = MigrationData;
+
+    fn __migrate(env: &Env, migration_data: Self::MigrationData) {
         env.storage()
             .instance()
             .set(&DataKey::Data, &migration_data.data1);

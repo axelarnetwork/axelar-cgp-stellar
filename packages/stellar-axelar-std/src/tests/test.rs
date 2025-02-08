@@ -168,6 +168,7 @@ mod upgradable {
     use stellar_axelar_std_derive::{Ownable, Upgradable};
 
     use super::*;
+    use crate::interfaces::CustomMigratableInterface;
     use crate::std::string::ToString;
     use crate::tests::testdata;
 
@@ -189,8 +190,8 @@ mod upgradable {
         }
     }
 
-    impl Contract {
-        const fn run_migration(_env: &Env, _migration_data: ()) {}
+    impl CustomMigratableInterface for Contract {
+        type MigrationData = ();
     }
 
     const UPGRADED_WASM: &[u8] = include_bytes!("testdata/contract.wasm");

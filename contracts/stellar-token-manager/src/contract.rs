@@ -1,4 +1,5 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, Val, Vec};
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{interfaces, only_owner, Ownable, Upgradable};
 
@@ -33,6 +34,6 @@ impl TokenManagerInterface for TokenManager {
     }
 }
 
-impl TokenManager {
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
+impl CustomMigratableInterface for TokenManager {
+    type MigrationData = ();
 }
