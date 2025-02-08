@@ -1,8 +1,8 @@
 //! Dummy contract to test the [crate::Upgrader]
 
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, BytesN, Env};
-use stellar_axelar_std::interfaces;
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
+use stellar_axelar_std::{contractstorage, interfaces};
 
 #[contract]
 pub struct DummyContract;
@@ -38,12 +38,18 @@ impl DummyContract {
     }
 }
 
-#[contracttype]
-pub enum DataKey {
-    Data,
-}
-
 #[contracterror]
 pub enum ContractError {
     SomeFailure = 1,
+}
+
+pub mod storage {
+    use super::*;
+
+    #[contractstorage]
+    pub enum DataKey {
+        #[instance]
+        #[value(soroban_sdk::String)]
+        Data,
+    }
 }

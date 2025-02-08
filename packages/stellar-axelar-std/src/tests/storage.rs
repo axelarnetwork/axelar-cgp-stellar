@@ -32,6 +32,10 @@ mod storage {
         #[persistent]
         #[value(Option<String>)]
         OptionalMessage { id: u32 },
+
+        #[temporary]
+        #[status]
+        TempStatus { id: u32 },
     }
 }
 
@@ -40,7 +44,7 @@ impl Contract {
     pub const fn __constructor() {}
 
     pub fn increment_counter(env: &Env) -> u32 {
-        let current_counter = storage::counter(env).unwrap_or(0);
+        let current_counter = storage::try_counter(env).unwrap_or(0);
         let new_counter = current_counter + 1;
         storage::set_counter(env, &new_counter);
         new_counter
@@ -51,7 +55,7 @@ impl Contract {
     }
 
     pub fn message(env: &Env, sender: Address) -> Option<String> {
-        storage::message(env, sender)
+        storage::try_message(env, sender)
     }
 
     pub fn set_last_caller(env: &Env, timestamp: u64, caller: Address) {
@@ -59,7 +63,7 @@ impl Contract {
     }
 
     pub fn last_caller(env: &Env, timestamp: u64) -> Option<Address> {
-        storage::last_caller(env, timestamp)
+        storage::try_last_caller(env, timestamp)
     }
 
     pub fn set_flag(env: &Env, key: String, owner: Address, value: bool) {
@@ -67,7 +71,7 @@ impl Contract {
     }
 
     pub fn flag(env: &Env, key: String, owner: Address) -> Option<bool> {
-        storage::flag(env, key, owner)
+        storage::try_flag(env, key, owner)
     }
 
     pub fn set_optional_message(env: &Env, id: u32, message: Option<String>) {
@@ -75,7 +79,23 @@ impl Contract {
     }
 
     pub fn optional_message(env: &Env, id: u32) -> Option<Option<String>> {
-        storage::optional_message(env, id)
+        storage::try_optional_message(env, id)
+    }
+
+    pub fn message_required(env: &Env, sender: Address) -> String {
+        storage::message(env, sender)
+    }
+
+    pub fn flag_required(env: &Env, key: String, owner: Address) -> bool {
+        storage::flag(env, key, owner)
+    }
+
+    pub fn set_temp_status(env: &Env, id: u32) {
+        storage::set_temp_status_status(env, id);
+    }
+
+    pub fn is_temp_status(env: &Env, id: u32) -> bool {
+        storage::is_temp_status(env, id)
     }
 }
 
@@ -231,4 +251,42 @@ fn optional_value_storage_succeeds() {
 
     client.set_optional_message(&id, &None);
     assert_eq!(client.optional_message(&id), None);
+}
+
+#[test]
+#[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+fn required_getter_fails_when_not_set() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    client.message_required(&sender);
+}
+
+#[test]
+fn required_getter_succeeds_when_set() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let sender = Address::generate(&env);
+    let message = String::from_str(&env, "Required message");
+
+    client.set_message(&sender, &message);
+    assert_eq!(client.message_required(&sender), message);
+}
+
+#[test]
+fn temporary_status_storage_succeeds() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let id = 1u32;
+
+    assert!(!client.is_temp_status(&id));
+
+    client.set_temp_status(&id);
+    assert!(client.is_temp_status(&id));
 }
