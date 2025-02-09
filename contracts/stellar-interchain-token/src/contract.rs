@@ -4,8 +4,8 @@ use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::interfaces::{CustomMigratableInterface, OwnableInterface};
+use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
 use crate::error::ContractError;

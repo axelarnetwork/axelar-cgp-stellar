@@ -155,15 +155,17 @@ impl Value {
         storage_key: &TokenStream,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_function = storage_type.ttl_function(&quote! { key });
-        let custom_ttl_function = storage_type.default_ttl_function(&quote! { key });
+        let ttl_function = storage_type.ttl_function(
+            &quote! { key },
+        );
+        let default_ttl_function = storage_type.default_ttl_function(&quote! { key });
 
         quote! {
             pub fn #getter(#params) -> bool {
                 let key = #storage_key;
                 let value = #storage_method.has(&key);
 
-                #custom_ttl_function
+                #default_ttl_function
 
                 value
             }
@@ -172,7 +174,7 @@ impl Value {
                 let key = #storage_key;
                 #storage_method.set(&key, &());
 
-                #custom_ttl_function
+                #default_ttl_function
             }
 
             pub fn #remover(#params) {
@@ -202,8 +204,10 @@ impl Value {
         value_type: &Type,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_function = storage_type.ttl_function(&quote! { key });
-        let custom_ttl_function = storage_type.default_ttl_function(&quote! { key });
+        let ttl_function = storage_type.ttl_function(
+            &quote! { key },
+        );
+        let default_ttl_function = storage_type.default_ttl_function(&quote! { key });
 
         quote! {
             pub fn #getter(#params) -> #value_type {
@@ -212,7 +216,7 @@ impl Value {
                     .get::<_, #value_type>(&key)
                     .unwrap();
 
-                #custom_ttl_function
+                #default_ttl_function
 
                 value
             }
@@ -222,7 +226,7 @@ impl Value {
                 let value = #storage_method.get::<_, #value_type>(&key);
 
                 if value.is_some() {
-                    #custom_ttl_function
+                    #default_ttl_function
                 }
 
                 value
@@ -232,7 +236,7 @@ impl Value {
                 let key = #storage_key;
                 #storage_method.set(&key, value);
 
-                #custom_ttl_function
+                #default_ttl_function
             }
 
             pub fn #remover(#params) {
