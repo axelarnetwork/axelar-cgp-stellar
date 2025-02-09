@@ -3,5 +3,5 @@ pub enum DataKey {
 
     #[instance]
     #[status]
-    Operators { account: Address },
+    Operator { account: Address },
 }
