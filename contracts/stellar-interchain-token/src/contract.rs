@@ -4,7 +4,7 @@ use soroban_token_sdk::event::Events as TokenEvents;
 use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::interfaces::OwnableInterface;
+use stellar_axelar_std::interfaces::{CustomMigratableInterface, OwnableInterface};
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Upgradable};
 
@@ -234,10 +234,11 @@ impl token::Interface for InterchainToken {
     }
 }
 
-impl InterchainToken {
-    // Modify this function to add migration logic
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
+impl CustomMigratableInterface for InterchainToken {
+    type MigrationData = ();
+}
 
+impl InterchainToken {
     fn validate_amount(env: &Env, amount: i128) {
         assert_with_error!(env, amount >= 0, ContractError::InvalidAmount);
     }
