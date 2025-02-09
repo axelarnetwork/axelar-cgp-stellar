@@ -36,6 +36,11 @@ pub fn remove_counter(env: &soroban_sdk::Env) {
     env.storage().instance().remove(&key);
 }
 
+pub fn extend_counter_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Counter;
+    env.storage().instance().extend_ttl(threshold, extend_to);
+}
+
 pub fn message(env: &soroban_sdk::Env, sender: Address) -> String {
     let key = DataKey::Message(sender);
     let value = env.storage().persistent().get::<_, String>(&key).unwrap();
@@ -63,6 +68,16 @@ pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
     env.storage().persistent().remove(&key);
 }
 
+pub fn extend_message_ttl(
+    env: &soroban_sdk::Env,
+    sender: Address,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::Message(sender);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
 pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Address {
     let key = DataKey::LastCaller(timestamp);
     let value = env.storage().temporary().get::<_, Address>(&key).unwrap();
@@ -84,6 +99,16 @@ pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) 
 pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
     let key = DataKey::LastCaller(timestamp);
     env.storage().temporary().remove(&key);
+}
+
+pub fn extend_last_caller_ttl(
+    env: &soroban_sdk::Env,
+    timestamp: u64,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::LastCaller(timestamp);
+    env.storage().temporary().extend_ttl(&key, threshold, extend_to);
 }
 
 pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
@@ -113,6 +138,17 @@ pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
     env.storage().persistent().remove(&key);
 }
 
+pub fn extend_flag_ttl(
+    env: &soroban_sdk::Env,
+    key: String,
+    owner: Address,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::Flag(key, owner);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
 pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<String> {
     let key = DataKey::OptionalMessage(id);
     let value = env.storage().persistent().get::<_, Option<String>>(&key).unwrap();
@@ -140,6 +176,16 @@ pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
     env.storage().persistent().remove(&key);
 }
 
+pub fn extend_optional_message_ttl(
+    env: &soroban_sdk::Env,
+    id: u32,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::OptionalMessage(id);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
 pub fn is_initialized(env: &soroban_sdk::Env) -> bool {
     let key = DataKey::Initialized;
     let value = env.storage().instance().has(&key);
@@ -158,6 +204,11 @@ pub fn remove_initialized_status(env: &soroban_sdk::Env) {
     env.storage().instance().remove(&key);
 }
 
+pub fn extend_initialized_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Initialized;
+    env.storage().instance().extend_ttl(threshold, extend_to);
+}
+
 pub fn is_paused(env: &soroban_sdk::Env) -> bool {
     let key = DataKey::Paused;
     let value = env.storage().persistent().has(&key);
@@ -174,6 +225,11 @@ pub fn set_paused_status(env: &soroban_sdk::Env) {
 pub fn remove_paused_status(env: &soroban_sdk::Env) {
     let key = DataKey::Paused;
     env.storage().persistent().remove(&key);
+}
+
+pub fn extend_paused_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Paused;
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
 }
 
 #[cfg(test)]

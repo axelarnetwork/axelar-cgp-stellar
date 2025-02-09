@@ -570,3 +570,87 @@ fn clawback_fails() {
 
     token.clawback(&token.owner(), &1);
 }
+
+#[test]
+fn allowance_returns_zero_when_expired() {
+    let env = Env::default();
+
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let amount = 1000;
+
+    let (token, _) = setup_token(&env);
+
+    // Set current ledger to 100
+    let current_ledger = 100;
+    env.ledger().set_sequence_number(current_ledger);
+
+    // Set allowance to expire at ledger 200
+    let expiration_ledger = 200;
+    assert_auth!(
+        user1,
+        token.approve(&user1, &user2, &amount, &expiration_ledger)
+    );
+    assert_eq!(token.allowance(&user1, &user2), amount);
+
+    // Move to ledger after expiration
+    env.ledger().set_sequence_number(expiration_ledger + 1);
+
+    // Allowance should be 0 after expiration
+    assert_eq!(token.allowance(&user1, &user2), 0);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #7)")] // InvalidExpirationLedger
+fn approve_fails_with_expired_ledger() {
+    let env = Env::default();
+
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let amount = 1000;
+
+    let (token, _) = setup_token(&env);
+
+    // Set current ledger to 100
+    let current_ledger = 100;
+    env.ledger().set_sequence_number(current_ledger);
+
+    // Try to set allowance with already expired ledger (before current)
+    let expired_ledger = current_ledger - 1;
+
+    token
+        .mock_all_auths()
+        .approve(&user1, &user2, &amount, &expired_ledger);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #7)")] // InvalidExpirationLedger
+fn allowance_preserves_expiration_when_expired() {
+    let env = Env::default();
+    let user1 = Address::generate(&env);
+    let user2 = Address::generate(&env);
+    let amount = 1000;
+    let (token, _) = setup_token(&env);
+
+    // Set current ledger to 100
+    let current_ledger = 100;
+    env.ledger().set_sequence_number(current_ledger);
+
+    // Set allowance to expire at ledger 200
+    let expiration_ledger = current_ledger + 100;
+    assert_auth!(
+        user1,
+        token.approve(&user1, &user2, &amount, &expiration_ledger)
+    );
+
+    // Move past expiration
+    env.ledger().set_sequence_number(expiration_ledger + 1);
+
+    // First check returns 0
+    assert_eq!(token.allowance(&user1, &user2), 0);
+
+    // Try to set new allowance with the same expired ledger - should fail
+    token
+        .mock_all_auths()
+        .approve(&user1, &user2, &amount, &expiration_ledger);
+}
