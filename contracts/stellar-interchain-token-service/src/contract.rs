@@ -10,7 +10,7 @@ use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
-use stellar_axelar_std::ttl::{extend_instance_ttl, extend_persistent_ttl};
+use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
     ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
@@ -24,7 +24,7 @@ use crate::event::{
 };
 use crate::flow_limit::FlowDirection;
 use crate::interface::InterchainTokenServiceInterface;
-use crate::storage_types::{DataKey, TokenIdConfigValue};
+use crate::storage::{self, TokenIdConfigValue};
 use crate::token_metadata::TokenMetadataExt;
 use crate::types::{
     DeployInterchainToken, HubMessage, InterchainTransfer, Message, TokenManagerType,
@@ -54,43 +54,24 @@ impl InterchainTokenService {
     ) {
         interfaces::set_owner(&env, &owner);
         interfaces::set_operator(&env, &operator);
-        env.storage().instance().set(&DataKey::Gateway, &gateway);
-        env.storage()
-            .instance()
-            .set(&DataKey::GasService, &gas_service);
-        env.storage()
-            .instance()
-            .set(&DataKey::ItsHubAddress, &its_hub_address);
-        env.storage()
-            .instance()
-            .set(&DataKey::ChainName, &chain_name);
-        env.storage()
-            .instance()
-            .set(&DataKey::NativeTokenAddress, &native_token_address);
-        env.storage().instance().set(
-            &DataKey::InterchainTokenWasmHash,
-            &interchain_token_wasm_hash,
-        );
-        env.storage()
-            .instance()
-            .set(&DataKey::TokenManagerWasmHash, &token_manager_wasm_hash);
+        storage::set_gateway(&env, &gateway);
+        storage::set_gas_service(&env, &gas_service);
+        storage::set_its_hub_address(&env, &its_hub_address);
+        storage::set_chain_name(&env, &chain_name);
+        storage::set_native_token_address(&env, &native_token_address);
+        storage::set_interchain_token_wasm_hash(&env, &interchain_token_wasm_hash);
+        storage::set_token_manager_wasm_hash(&env, &token_manager_wasm_hash);
     }
 }
 
 #[contractimpl]
 impl InterchainTokenServiceInterface for InterchainTokenService {
     fn gas_service(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::GasService)
-            .expect("gas service not found")
+        storage::gas_service(env)
     }
 
     fn chain_name(env: &Env) -> String {
-        env.storage()
-            .instance()
-            .get(&DataKey::ChainName)
-            .expect("chain name not found")
+        storage::chain_name(env)
     }
 
     fn its_hub_chain_name(env: &Env) -> String {
@@ -98,50 +79,34 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     }
 
     fn its_hub_address(env: &Env) -> String {
-        env.storage()
-            .instance()
-            .get(&DataKey::ItsHubAddress)
-            .expect("its hub address not found")
+        storage::its_hub_address(env)
     }
 
     fn native_token_address(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::NativeTokenAddress)
-            .expect("native token address not found")
+        storage::native_token_address(env)
     }
 
     fn interchain_token_wasm_hash(env: &Env) -> BytesN<32> {
-        env.storage()
-            .instance()
-            .get(&DataKey::InterchainTokenWasmHash)
-            .expect("interchain token wasm hash not found")
+        storage::interchain_token_wasm_hash(env)
     }
 
     fn token_manager_wasm_hash(env: &Env) -> BytesN<32> {
-        env.storage()
-            .instance()
-            .get(&DataKey::TokenManagerWasmHash)
-            .expect("token manager wasm hash not found")
+        storage::token_manager_wasm_hash(env)
     }
 
     fn is_trusted_chain(env: &Env, chain: String) -> bool {
-        env.storage()
-            .persistent()
-            .has(&DataKey::TrustedChain(chain))
+        storage::is_trusted_chain(env, chain)
     }
 
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
         Self::owner(env).require_auth();
 
-        let key = DataKey::TrustedChain(chain.clone());
-
         ensure!(
-            !env.storage().persistent().has(&key),
+            !storage::is_trusted_chain(env, chain.clone()),
             ContractError::TrustedChainAlreadySet
         );
 
-        env.storage().persistent().set(&key, &());
+        storage::set_trusted_chain_status(env, chain.clone());
 
         TrustedChainSetEvent { chain }.emit(env);
 
@@ -151,14 +116,12 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
         Self::owner(env).require_auth();
 
-        let key = DataKey::TrustedChain(chain.clone());
-
         ensure!(
-            env.storage().persistent().has(&key),
+            storage::is_trusted_chain(env, chain.clone()),
             ContractError::TrustedChainNotSet
         );
 
-        env.storage().persistent().remove(&key);
+        storage::remove_trusted_chain_status(env, chain.clone());
 
         TrustedChainRemovedEvent { chain }.emit(env);
 
@@ -362,10 +325,7 @@ impl AxelarExecutableInterface for InterchainTokenService {
     type Error = ContractError;
 
     fn gateway(env: &Env) -> Address {
-        env.storage()
-            .instance()
-            .get(&DataKey::Gateway)
-            .expect("gateway not found")
+        storage::gateway(env)
     }
 
     fn execute(
@@ -397,7 +357,6 @@ impl InterchainTokenService {
             Self::is_trusted_chain(env, destination_chain.clone()),
             ContractError::UntrustedChain
         );
-        extend_persistent_ttl(env, &DataKey::TrustedChain(destination_chain.clone()));
 
         let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
         let gas_service = AxelarGasServiceClient::new(env, &Self::gas_service(env));
@@ -451,7 +410,6 @@ impl InterchainTokenService {
             Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
         }?;
 
-        extend_persistent_ttl(env, &DataKey::TrustedChain(source_chain));
         extend_instance_ttl(env);
 
         Ok(())
@@ -481,18 +439,15 @@ impl InterchainTokenService {
             return Err(ContractError::InvalidMessageType);
         };
         ensure!(
-            Self::is_trusted_chain(env, original_source_chain.clone()),
+            storage::is_trusted_chain(env, original_source_chain.clone()),
             ContractError::UntrustedChain
         );
-        extend_persistent_ttl(env, &DataKey::TrustedChain(original_source_chain.clone()));
 
         Ok((original_source_chain, message))
     }
 
     fn set_token_id_config(env: &Env, token_id: BytesN<32>, token_data: TokenIdConfigValue) {
-        env.storage()
-            .persistent()
-            .set(&DataKey::TokenIdConfig(token_id), &token_data);
+        storage::set_token_id_config(env, token_id, &token_data);
     }
 
     /// Retrieves the configuration value for the specified token ID.
@@ -509,10 +464,7 @@ impl InterchainTokenService {
         env: &Env,
         token_id: BytesN<32>,
     ) -> Result<TokenIdConfigValue, ContractError> {
-        env.storage()
-            .persistent()
-            .get::<_, TokenIdConfigValue>(&DataKey::TokenIdConfig(token_id))
-            .ok_or(ContractError::InvalidTokenId)
+        storage::try_token_id_config(env, token_id).ok_or(ContractError::InvalidTokenId)
     }
 
     /// Retrieves the configuration value for the specified token ID and extends its TTL.
@@ -529,8 +481,8 @@ impl InterchainTokenService {
         env: &Env,
         token_id: BytesN<32>,
     ) -> Result<TokenIdConfigValue, ContractError> {
-        let config = Self::token_id_config(env, token_id.clone())?;
-        extend_persistent_ttl(env, &DataKey::TokenIdConfig(token_id));
+        let config = Self::token_id_config(env, token_id)?;
+
         Ok(config)
     }
 
@@ -766,9 +718,7 @@ impl InterchainTokenService {
 
     fn ensure_token_not_registered(env: &Env, token_id: BytesN<32>) -> Result<(), ContractError> {
         ensure!(
-            !env.storage()
-                .persistent()
-                .has(&DataKey::TokenIdConfig(token_id)),
+            storage::try_token_id_config(env, token_id).is_none(),
             ContractError::TokenAlreadyRegistered
         );
 

@@ -23,4 +23,8 @@ enum DataKey {
     #[temporary]
     #[status]
     TempStatus { id: u32 },
+
+    #[persistent]
+    #[status]
+    PersistentStatus { id: u32 },
 }
