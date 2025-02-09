@@ -155,9 +155,7 @@ impl Value {
         storage_key: &TokenStream,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_function = storage_type.ttl_function(
-            &quote! { key },
-        );
+        let ttl_function = storage_type.ttl_function(&quote! { key });
         let default_ttl_function = storage_type.default_ttl_function(&quote! { key });
 
         quote! {
@@ -204,9 +202,7 @@ impl Value {
         value_type: &Type,
     ) -> TokenStream {
         let storage_method = storage_type.storage_method();
-        let ttl_function = storage_type.ttl_function(
-            &quote! { key },
-        );
+        let ttl_function = storage_type.ttl_function(&quote! { key });
         let default_ttl_function = storage_type.default_ttl_function(&quote! { key });
 
         quote! {
