@@ -1,6 +1,9 @@
 # Workflow to fetch the latest commit hash on the main branch and upload artifacts to CF storage.
-name: Build and upload from main
+name: Build and upload pre-release
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
