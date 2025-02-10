@@ -1,0 +1,8 @@
+#[derive(Clone, Debug)]
+#[migratable]
+pub enum MigrationData {
+
+    #[instance]
+    #[status]
+    Operators { account: Address },
+}
