@@ -7,8 +7,7 @@ use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
-use crate::migrate;
-use crate::storage;
+use crate::{migrate, storage};
 
 #[contract]
 #[derive(Ownable, Upgradable)]
