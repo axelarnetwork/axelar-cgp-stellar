@@ -222,14 +222,14 @@ fn migrate_succeeds() {
 
     let operator = Address::generate(&env);
 
-    client.add_operator(&operator);
+    assert_auth!(owner, client.add_operator(&operator));
     assert!(client.is_operator(&operator));
 
     assert_auth!(owner, client.upgrade(&new_wasm_hash));
 
     let migration_data = vec![&env, operator.clone()];
 
-    client.migrate(&migration_data);
+    assert_auth!(owner, client.migrate(&migration_data));
 
     assert!(
         client.is_operator(&operator),
