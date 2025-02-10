@@ -351,7 +351,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
         .collect();
 
     let contract_storage = quote! {
-        #[contracttype]
+        #[soroban_sdk::contracttype]
         enum #r#enum {
             #(#transformed_variants,)*
         }

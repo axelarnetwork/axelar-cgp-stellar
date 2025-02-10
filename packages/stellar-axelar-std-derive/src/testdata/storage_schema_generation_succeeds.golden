@@ -1,4 +1,4 @@
-#[contracttype]
+#[soroban_sdk::contracttype]
 enum DataKey {
     Counter,
     Message(Address),
