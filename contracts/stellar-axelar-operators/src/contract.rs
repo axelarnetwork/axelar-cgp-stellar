@@ -23,17 +23,17 @@ impl AxelarOperators {
 #[contractimpl]
 impl AxelarOperatorsInterface for AxelarOperators {
     fn is_operator(env: Env, account: Address) -> bool {
-        storage::is_operators(&env, account)
+        storage::is_operator(&env, account)
     }
 
     #[only_owner]
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
         ensure!(
-            !storage::is_operators(&env, account.clone()),
+            !storage::is_operator(&env, account.clone()),
             ContractError::OperatorAlreadyAdded
         );
 
-        storage::set_operators_status(&env, account.clone());
+        storage::set_operator_status(&env, account.clone());
 
         extend_instance_ttl(&env);
 
@@ -45,11 +45,11 @@ impl AxelarOperatorsInterface for AxelarOperators {
     #[only_owner]
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
         ensure!(
-            storage::is_operators(&env, account.clone()),
+            storage::is_operator(&env, account.clone()),
             ContractError::NotAnOperator
         );
 
-        storage::remove_operators_status(&env, account.clone());
+        storage::remove_operator_status(&env, account.clone());
 
         OperatorRemovedEvent { operator: account }.emit(&env);
 
@@ -66,7 +66,7 @@ impl AxelarOperatorsInterface for AxelarOperators {
         operator.require_auth();
 
         ensure!(
-            storage::is_operators(&env, operator),
+            storage::is_operator(&env, operator),
             ContractError::NotAnOperator
         );
 

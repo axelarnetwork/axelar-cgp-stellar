@@ -6,5 +6,5 @@ use stellar_axelar_std::contractstorage;
 pub enum DataKey {
     #[instance]
     #[status]
-    Operators { account: Address },
+    Operator { account: Address },
 }

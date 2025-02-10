@@ -1,11 +1,10 @@
 use soroban_sdk::{BytesN, Env};
 use stellar_axelar_std::ensure;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::ttl::extend_persistent_ttl;
 
 use crate::error::ContractError;
 use crate::event::FlowLimitSetEvent;
-use crate::storage_types::{DataKey, FlowKey};
+use crate::storage::{self, FlowKey};
 
 const EPOCH_TIME: u64 = 6 * 60 * 60; // 6 hours in seconds = 21600
 
@@ -37,12 +36,10 @@ impl FlowDirection {
             epoch: current_epoch(env),
         };
 
-        let key = match self {
-            Self::In => DataKey::FlowIn(flow_key),
-            Self::Out => DataKey::FlowOut(flow_key),
+        match self {
+            Self::In => storage::set_flow_in(env, flow_key, &new_flow),
+            Self::Out => storage::set_flow_out(env, flow_key, &new_flow),
         };
-
-        env.storage().temporary().set(&key, &new_flow);
     }
 
     /// Adds flow amount in the specified direction (in/out) for a token.
@@ -77,9 +74,7 @@ impl FlowDirection {
         // Equivalent to flow_amount + flow - reverse_flow <= flow_limit
         ensure!(new_flow <= max_allowed, ContractError::FlowLimitExceeded);
 
-        self.update_flow(env, token_id.clone(), new_flow);
-
-        extend_persistent_ttl(env, &DataKey::FlowLimit(token_id));
+        self.update_flow(env, token_id, new_flow);
 
         Ok(())
     }
@@ -90,9 +85,7 @@ fn current_epoch(env: &Env) -> u64 {
 }
 
 pub fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
-    env.storage()
-        .persistent()
-        .get(&DataKey::FlowLimit(token_id))
+    storage::try_flow_limit(env, token_id)
 }
 
 pub fn set_flow_limit(
@@ -103,13 +96,9 @@ pub fn set_flow_limit(
     if let Some(flow_limit) = flow_limit {
         ensure!(flow_limit >= 0, ContractError::InvalidFlowLimit);
 
-        env.storage()
-            .persistent()
-            .set(&DataKey::FlowLimit(token_id.clone()), &flow_limit);
+        storage::set_flow_limit(env, token_id.clone(), &flow_limit);
     } else {
-        env.storage()
-            .persistent()
-            .remove(&DataKey::FlowLimit(token_id.clone()));
+        storage::remove_flow_limit(env, token_id.clone());
     }
 
     FlowLimitSetEvent {
@@ -122,21 +111,23 @@ pub fn set_flow_limit(
 }
 
 pub fn flow_out_amount(env: &Env, token_id: BytesN<32>) -> i128 {
-    env.storage()
-        .temporary()
-        .get(&DataKey::FlowOut(FlowKey {
+    storage::try_flow_out(
+        env,
+        FlowKey {
             token_id,
             epoch: current_epoch(env),
-        }))
-        .unwrap_or(0)
+        },
+    )
+    .unwrap_or(0)
 }
 
 pub fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128 {
-    env.storage()
-        .temporary()
-        .get(&DataKey::FlowIn(FlowKey {
+    storage::try_flow_in(
+        env,
+        FlowKey {
             token_id,
             epoch: current_epoch(env),
-        }))
-        .unwrap_or(0)
+        },
+    )
+    .unwrap_or(0)
 }

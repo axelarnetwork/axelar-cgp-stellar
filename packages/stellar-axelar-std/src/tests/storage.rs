@@ -36,6 +36,10 @@ mod storage {
         #[temporary]
         #[status]
         TempStatus { id: u32 },
+
+        #[persistent]
+        #[status]
+        PersistentStatus { id: u32 },
     }
 }
 
@@ -96,6 +100,14 @@ impl Contract {
 
     pub fn is_temp_status(env: &Env, id: u32) -> bool {
         storage::is_temp_status(env, id)
+    }
+
+    pub fn set_persistent_status(env: &Env, id: u32) {
+        storage::set_persistent_status_status(env, id);
+    }
+
+    pub fn is_persistent_status(env: &Env, id: u32) -> bool {
+        storage::is_persistent_status(env, id)
     }
 }
 
@@ -289,4 +301,21 @@ fn temporary_status_storage_succeeds() {
 
     client.set_temp_status(&id);
     assert!(client.is_temp_status(&id));
+}
+
+#[test]
+fn test_persistent_status() {
+    let env = Env::default();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let id = 42u32;
+
+    assert!(!client.is_persistent_status(&id));
+
+    client.set_persistent_status(&id);
+    assert!(client.is_persistent_status(&id));
+
+    let other_id = 43u32;
+    assert!(!client.is_persistent_status(&other_id));
 }
