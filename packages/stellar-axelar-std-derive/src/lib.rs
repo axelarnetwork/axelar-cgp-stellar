@@ -235,7 +235,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
     its_executable::its_executable(name).into()
 }
 
-/// Ensure that only the owner of the contract can execute the function.
+/// Ensures that only a contract's owner can execute the attributed function.
 ///
 /// The first argument to the function must be `env`
 ///
@@ -261,7 +261,7 @@ pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
     ownable::only_owner_impl(input_fn).into()
 }
 
-/// Ensure that only the operator of the contract can execute the function.
+/// Ensures that only a contract's operator can execute the attributed function.
 ///
 /// The first argument to the function must be `env`
 ///
