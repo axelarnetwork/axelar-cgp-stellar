@@ -1,9 +1,8 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Env};
 
-use crate::{AxelarOperators, AxelarOperatorsClient};
-
 use super::test::TestTarget;
+use crate::{AxelarOperators, AxelarOperatorsClient};
 
 pub struct TestConfig<'a> {
     pub env: Env,
