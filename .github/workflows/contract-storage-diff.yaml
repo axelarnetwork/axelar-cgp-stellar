@@ -1,0 +1,48 @@
+name: Contract Storage Schema Migration Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*ensure_*_storage_schema_is_unchanged.golden'
+
+jobs:
+  check-migration:
+    name: Check Migration File Exists
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for storage schema changes
+        shell: bash
+        run: |
+          # Get all changed files in the PR
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep "ensure_.*_storage_schema_is_unchanged.golden" || true)
+
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "Found changed storage schema files:"
+            echo "$CHANGED_FILES"
+
+            # Check each changed file
+            EXIT_CODE=0
+            while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                DIR=$(dirname "$file")
+                MIGRATE_FILE="$DIR/../../src/migrate.rs"
+
+                if [ ! -f "$MIGRATE_FILE" ]; then
+                  echo "Error: Storage schema change detected in $file but no migrate.rs found in $DIR/../../src/"
+                  echo "Please create a migration file at $MIGRATE_FILE to handle the schema changes"
+                  EXIT_CODE=1
+                else
+                  echo "✓ Found migration file for $file at $MIGRATE_FILE"
+                fi
+              fi
+            done <<< "$CHANGED_FILES"
+
+            exit $EXIT_CODE
+          else
+            echo "No storage schema changes detected"
+          fi
