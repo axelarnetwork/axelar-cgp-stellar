@@ -35,8 +35,8 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
 
 #[cfg(test)]
 mod tests {
-    use syn::{parse_quote, ItemFn};
     use goldie;
+    use syn::{parse_quote, ItemFn};
 
     use super::*;
 
@@ -50,7 +50,8 @@ mod tests {
             quote! {
                 Self::operator(&env).require_auth();
             },
-        ).to_string();
+        )
+        .to_string();
         goldie::assert!(generated_function);
     }
 
