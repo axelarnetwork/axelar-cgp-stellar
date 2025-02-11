@@ -7,7 +7,7 @@ on:
 
 jobs:
   check-migration:
-    name: Check Migration File Exists
+    name: Check Valid Migration File Exists
     runs-on: ubuntu-latest
 
     steps:
@@ -34,12 +34,17 @@ jobs:
 
                 if [ -n "$CONTRACT_DIR" ]; then
                   # Find any migrate.rs under the contract's src directory
-                  if ! find "$CONTRACT_DIR/src" -name "migrate.rs" | grep -q .; then
+                  MIGRATE_FILE=$(find "$CONTRACT_DIR/src" -name "migrate.rs" | head -n 1)
+                  if [ -z "$MIGRATE_FILE" ]; then
                     echo "Error: Storage schema change detected in $file but no migrate.rs found under $CONTRACT_DIR/src/"
                     echo "Please create a migration file at $CONTRACT_DIR/src/migrate.rs to handle the schema changes"
                     EXIT_CODE=1
+                  elif ! grep -q "mod legacy_storage" "$MIGRATE_FILE"; then
+                    echo "Error: migrate.rs found at $MIGRATE_FILE but missing required 'legacy_storage' module declaration"
+                    echo "Please add a 'legacy_storage' module to handle the schema migration"
+                    EXIT_CODE=1
                   else
-                    echo "✓ Found migration file for $file"
+                    echo "✓ Found valid migration file for $file"
                   fi
                 else
                   echo "Error: Could not determine contract directory for $file"
