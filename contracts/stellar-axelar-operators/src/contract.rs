@@ -84,7 +84,7 @@ impl AxelarOperatorsInterface for AxelarOperators {
 impl CustomMigratableInterface for AxelarOperators {
     type MigrationData = migrate::MigrationData;
 
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {
-        migrate::migrate(_env, _migration_data);
+    fn __migrate(env: &Env, migration_data: Self::MigrationData) {
+        migrate::migrate(env, migration_data).unwrap();
     }
 }
