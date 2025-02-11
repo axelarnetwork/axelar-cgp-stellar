@@ -35,7 +35,7 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
 
 #[cfg(test)]
 mod tests {
-    use goldie;
+    
     use syn::{parse_quote, ItemFn};
 
     use super::*;
