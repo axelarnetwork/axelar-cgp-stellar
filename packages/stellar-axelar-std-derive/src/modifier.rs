@@ -36,6 +36,7 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
 #[cfg(test)]
 mod tests {
     use syn::{parse_quote, ItemFn};
+    use goldie;
 
     use super::*;
 
@@ -44,12 +45,13 @@ mod tests {
         let input_fn: ItemFn = parse_quote! {
             fn test_fn(env: &Env, other: i32) {}
         };
-        let _ = modifier_impl(
+        let generated_function = modifier_impl(
             input_fn,
             quote! {
                 Self::operator(&env).require_auth();
             },
-        );
+        ).to_string();
+        goldie::assert!(generated_function);
     }
 
     #[test]
@@ -58,7 +60,7 @@ mod tests {
         let input_fn: ItemFn = parse_quote! {
             fn test_fn() {}
         };
-        let _ = modifier_impl(
+        modifier_impl(
             input_fn,
             quote! {
                 Self::operator(&env).require_auth();
@@ -72,7 +74,7 @@ mod tests {
         let input_fn: ItemFn = parse_quote! {
             fn test_fn((env, other): (&Env, i32)) {}
         };
-        let _ = modifier_impl(
+        modifier_impl(
             input_fn,
             quote! {
                 Self::operator(&env).require_auth();
@@ -86,7 +88,7 @@ mod tests {
         let input_fn: ItemFn = parse_quote! {
             fn test_fn(not_env: &Env, other: i32) {}
         };
-        let _ = modifier_impl(
+        modifier_impl(
             input_fn,
             quote! {
                 Self::operator(&env).require_auth();
