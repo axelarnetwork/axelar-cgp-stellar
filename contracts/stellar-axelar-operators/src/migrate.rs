@@ -1,7 +1,8 @@
 use soroban_sdk::{panic_with_error, Address, Env, Vec};
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
 
-use crate::{error::ContractError, storage, AxelarOperators};
+use crate::error::ContractError;
+use crate::{storage, AxelarOperators};
 
 pub type MigrationData = <AxelarOperators as CustomMigratableInterface>::MigrationData;
 
