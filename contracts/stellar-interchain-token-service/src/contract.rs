@@ -145,21 +145,15 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     }
 
     fn token_address(env: &Env, token_id: BytesN<32>) -> Address {
-        Self::token_id_config(env, token_id)
-            .expect("token id config not found")
-            .token_address
+        storage::token_id_config(env, token_id).token_address
     }
 
     fn token_manager(env: &Env, token_id: BytesN<32>) -> Address {
-        Self::token_id_config(env, token_id)
-            .expect("token id config not found")
-            .token_manager
+        storage::token_id_config(env, token_id).token_manager
     }
 
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType {
-        Self::token_id_config(env, token_id)
-            .expect("token id config not found")
-            .token_manager_type
+        storage::token_id_config(env, token_id).token_manager_type
     }
 
     fn flow_limit(env: &Env, token_id: BytesN<32>) -> Option<i128> {
