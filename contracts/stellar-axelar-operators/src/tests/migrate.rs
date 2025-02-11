@@ -45,7 +45,7 @@ fn migrate_fails_when_account_is_not_operator() {
 
     assert_auth!(owner, client.upgrade(&new_wasm_hash));
 
-    let migration_data = vec![&env, non_operator.clone()];
+    let migration_data = vec![&env, non_operator];
 
     env.as_contract(&client.address, || {
         <AxelarOperators as CustomMigratableInterface>::__migrate(&env, migration_data);
