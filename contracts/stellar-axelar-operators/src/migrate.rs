@@ -1,4 +1,8 @@
+use crate::AxelarOperators;
 use soroban_sdk::{Address, Env, Vec};
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
+
+pub type MigrationData = <AxelarOperators as CustomMigratableInterface>::MigrationData;
 
 mod storage {
     use soroban_sdk::Address;
@@ -13,13 +17,15 @@ mod storage {
     }
 }
 
-pub type MigrationData = Vec<Address>;
+impl CustomMigratableInterface for AxelarOperators {
+    type MigrationData = Vec<Address>;
 
-pub fn migrate(env: &Env, migration_data: MigrationData) {
-    for account in migration_data {
-        if storage::is_operators(env, account.clone()) {
-            super::storage::set_operator_status(env, account.clone());
-            storage::remove_operators_status(env, account);
+    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {
+        for account in _migration_data {
+            if storage::is_operators(_env, account.clone()) {
+                super::storage::set_operator_status(_env, account.clone());
+                storage::remove_operators_status(_env, account);
+            }
         }
     }
 }
