@@ -3,8 +3,8 @@ use soroban_sdk::{vec, Address};
 use stellar_axelar_std::assert_auth;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
 
-use crate::AxelarOperators;
 use crate::tests::testutils::{setup_env, TestConfig};
+use crate::AxelarOperators;
 
 const NEW_WASM: &[u8] = include_bytes!("testdata/stellar_axelar_operators.optimized.wasm");
 
