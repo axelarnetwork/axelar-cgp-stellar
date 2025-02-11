@@ -1,16 +1,16 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, Val, Vec};
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
-use crate::storage;
+use crate::{migrate, storage};
 
 #[contract]
 #[derive(Ownable, Upgradable)]
+#[migratable(with_type = migrate::MigrationData)]
 pub struct AxelarOperators;
 
 #[contractimpl]
@@ -78,8 +78,4 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
         Ok(res)
     }
-}
-
-impl CustomMigratableInterface for AxelarOperators {
-    type MigrationData = ();
 }

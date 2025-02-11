@@ -1,6 +1,6 @@
 //! Base for the dummy.wasm file. This is the dummy contract after upgrade.
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, BytesN, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, Address, BytesN, Env};
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
 use stellar_axelar_std::{contractstorage, interfaces};
 
