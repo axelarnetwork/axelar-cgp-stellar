@@ -29,15 +29,21 @@ jobs:
             EXIT_CODE=0
             while IFS= read -r file; do
               if [ -n "$file" ]; then
-                DIR=$(dirname "$file")
-                MIGRATE_FILE="$DIR/../../src/migrate.rs"
+                # Extract contract directory by matching contracts/stellar-* pattern
+                CONTRACT_DIR=$(echo "$file" | grep -o 'contracts/stellar-[^/]*')
 
-                if [ ! -f "$MIGRATE_FILE" ]; then
-                  echo "Error: Storage schema change detected in $file but no migrate.rs found in $DIR/../../src/"
-                  echo "Please create a migration file at $MIGRATE_FILE to handle the schema changes"
-                  EXIT_CODE=1
+                if [ -n "$CONTRACT_DIR" ]; then
+                  # Find any migrate.rs under the contract's src directory
+                  if ! find "$CONTRACT_DIR/src" -name "migrate.rs" | grep -q .; then
+                    echo "Error: Storage schema change detected in $file but no migrate.rs found under $CONTRACT_DIR/src/"
+                    echo "Please create a migration file at $CONTRACT_DIR/src/migrate.rs to handle the schema changes"
+                    EXIT_CODE=1
+                  else
+                    echo "✓ Found migration file for $file"
+                  fi
                 else
-                  echo "✓ Found migration file for $file at $MIGRATE_FILE"
+                  echo "Error: Could not determine contract directory for $file"
+                  EXIT_CODE=1
                 fi
               fi
             done <<< "$CHANGED_FILES"
