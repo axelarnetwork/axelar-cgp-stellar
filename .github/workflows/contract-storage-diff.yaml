@@ -33,8 +33,8 @@ jobs:
                 CONTRACT_DIR=$(echo "$file" | grep -o 'contracts/stellar-[^/]*')
 
                 if [ -n "$CONTRACT_DIR" ]; then
-                  # Find any migrate.rs under the contract's src directory
-                  MIGRATE_FILE=$(find "$CONTRACT_DIR/src" -name "migrate.rs" | head -n 1)
+                  # Find any migrate.rs under the contract's src directory, excluding test directories
+                  MIGRATE_FILE=$(find "$CONTRACT_DIR/src" -name "migrate.rs" -not -path "*/test*" | head -n 1)
                   if [ -z "$MIGRATE_FILE" ]; then
                     echo "Error: Storage schema change detected in $file but no migrate.rs found under $CONTRACT_DIR/src/"
                     echo "Please create a migration file at $CONTRACT_DIR/src/migrate.rs to handle the schema changes"
