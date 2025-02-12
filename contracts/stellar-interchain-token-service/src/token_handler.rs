@@ -3,7 +3,7 @@ use soroban_sdk::{Address, Env};
 use stellar_token_manager::TokenManagerClient;
 
 use crate::error::ContractError;
-use crate::storage_types::TokenIdConfigValue;
+use crate::storage::TokenIdConfigValue;
 use crate::token_manager::TokenManagerClientExt;
 use crate::types::TokenManagerType;
 

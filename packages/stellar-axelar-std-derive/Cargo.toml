@@ -13,11 +13,14 @@ proc-macro = true
 
 [dependencies]
 heck = "0.5"
+itertools = "0.14"
+prettyplease = { version = "0.2", default-features = false }
 proc-macro2 = { workspace = true }
-quote = "1.0"
-syn = { version = "2.0", features = ["full"] }
+quote = { version = "1.0", default-features = false }
+syn = { version = "2.0", default-features = false, features = ["derive", "extra-traits", "full", "parsing"] }
 
 [dev-dependencies]
+goldie = { workspace = true }
 
 [lints]
 workspace = true

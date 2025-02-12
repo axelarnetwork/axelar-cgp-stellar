@@ -6,10 +6,11 @@ use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
-use crate::storage_types::DataKey;
+use crate::{migrate, storage};
 
 #[contract]
 #[derive(Ownable, Upgradable)]
+#[migratable(with_type = migrate::MigrationData)]
 pub struct AxelarOperators;
 
 #[contractimpl]
@@ -22,22 +23,18 @@ impl AxelarOperators {
 #[contractimpl]
 impl AxelarOperatorsInterface for AxelarOperators {
     fn is_operator(env: Env, account: Address) -> bool {
-        let key = DataKey::Operators(account);
-
-        env.storage().instance().has(&key)
+        storage::is_operator(&env, account)
     }
 
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
 
-        let key = DataKey::Operators(account.clone());
-
         ensure!(
-            !env.storage().instance().has(&key),
+            !storage::is_operator(&env, account.clone()),
             ContractError::OperatorAlreadyAdded
         );
 
-        env.storage().instance().set(&key, &true);
+        storage::set_operator_status(&env, account.clone());
 
         extend_instance_ttl(&env);
 
@@ -49,14 +46,12 @@ impl AxelarOperatorsInterface for AxelarOperators {
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
         Self::owner(&env).require_auth();
 
-        let key = DataKey::Operators(account.clone());
-
         ensure!(
-            env.storage().instance().has(&key),
+            storage::is_operator(&env, account.clone()),
             ContractError::NotAnOperator
         );
 
-        env.storage().instance().remove(&key);
+        storage::remove_operator_status(&env, account.clone());
 
         OperatorRemovedEvent { operator: account }.emit(&env);
 
@@ -72,10 +67,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
     ) -> Result<Val, ContractError> {
         operator.require_auth();
 
-        let key = DataKey::Operators(operator);
-
         ensure!(
-            env.storage().instance().has(&key),
+            storage::is_operator(&env, operator),
             ContractError::NotAnOperator
         );
 
@@ -85,9 +78,4 @@ impl AxelarOperatorsInterface for AxelarOperators {
 
         Ok(res)
     }
-}
-
-impl AxelarOperators {
-    // Modify this function to add migration logic
-    const fn run_migration(_env: &Env, _migration_data: ()) {}
 }

@@ -1,0 +1,248 @@
+#[soroban_sdk::contracttype]
+enum DataKey {
+    Counter,
+    Message(Address),
+    LastCaller(u64),
+    Flag(String, Address),
+    OptionalMessage(u32),
+    Initialized,
+    Paused,
+}
+
+pub fn counter(env: &soroban_sdk::Env) -> u32 {
+    let key = DataKey::Counter;
+    let value = env.storage().instance().get::<_, u32>(&key).unwrap();
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
+    value
+}
+
+pub fn try_counter(env: &soroban_sdk::Env) -> Option<u32> {
+    let key = DataKey::Counter;
+    let value = env.storage().instance().get::<_, u32>(&key);
+    if value.is_some() {
+        stellar_axelar_std::ttl::extend_instance_ttl(env);
+    }
+    value
+}
+
+pub fn set_counter(env: &soroban_sdk::Env, value: &u32) {
+    let key = DataKey::Counter;
+    env.storage().instance().set(&key, value);
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
+}
+
+pub fn remove_counter(env: &soroban_sdk::Env) {
+    let key = DataKey::Counter;
+    env.storage().instance().remove(&key);
+}
+
+pub fn extend_counter_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Counter;
+    env.storage().instance().extend_ttl(threshold, extend_to);
+}
+
+pub fn message(env: &soroban_sdk::Env, sender: Address) -> String {
+    let key = DataKey::Message(sender);
+    let value = env.storage().persistent().get::<_, String>(&key).unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    value
+}
+
+pub fn try_message(env: &soroban_sdk::Env, sender: Address) -> Option<String> {
+    let key = DataKey::Message(sender);
+    let value = env.storage().persistent().get::<_, String>(&key);
+    if value.is_some() {
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    }
+    value
+}
+
+pub fn set_message(env: &soroban_sdk::Env, sender: Address, value: &String) {
+    let key = DataKey::Message(sender);
+    env.storage().persistent().set(&key, value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+}
+
+pub fn remove_message(env: &soroban_sdk::Env, sender: Address) {
+    let key = DataKey::Message(sender);
+    env.storage().persistent().remove(&key);
+}
+
+pub fn extend_message_ttl(
+    env: &soroban_sdk::Env,
+    sender: Address,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::Message(sender);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
+pub fn last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Address {
+    let key = DataKey::LastCaller(timestamp);
+    let value = env.storage().temporary().get::<_, Address>(&key).unwrap();
+    value
+}
+
+pub fn try_last_caller(env: &soroban_sdk::Env, timestamp: u64) -> Option<Address> {
+    let key = DataKey::LastCaller(timestamp);
+    let value = env.storage().temporary().get::<_, Address>(&key);
+    if value.is_some() {}
+    value
+}
+
+pub fn set_last_caller(env: &soroban_sdk::Env, timestamp: u64, value: &Address) {
+    let key = DataKey::LastCaller(timestamp);
+    env.storage().temporary().set(&key, value);
+}
+
+pub fn remove_last_caller(env: &soroban_sdk::Env, timestamp: u64) {
+    let key = DataKey::LastCaller(timestamp);
+    env.storage().temporary().remove(&key);
+}
+
+pub fn extend_last_caller_ttl(
+    env: &soroban_sdk::Env,
+    timestamp: u64,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::LastCaller(timestamp);
+    env.storage().temporary().extend_ttl(&key, threshold, extend_to);
+}
+
+pub fn flag(env: &soroban_sdk::Env, key: String, owner: Address) -> bool {
+    let key = DataKey::Flag(key, owner);
+    let value = env.storage().persistent().get::<_, bool>(&key).unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    value
+}
+
+pub fn try_flag(env: &soroban_sdk::Env, key: String, owner: Address) -> Option<bool> {
+    let key = DataKey::Flag(key, owner);
+    let value = env.storage().persistent().get::<_, bool>(&key);
+    if value.is_some() {
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    }
+    value
+}
+
+pub fn set_flag(env: &soroban_sdk::Env, key: String, owner: Address, value: &bool) {
+    let key = DataKey::Flag(key, owner);
+    env.storage().persistent().set(&key, value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+}
+
+pub fn remove_flag(env: &soroban_sdk::Env, key: String, owner: Address) {
+    let key = DataKey::Flag(key, owner);
+    env.storage().persistent().remove(&key);
+}
+
+pub fn extend_flag_ttl(
+    env: &soroban_sdk::Env,
+    key: String,
+    owner: Address,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::Flag(key, owner);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
+pub fn optional_message(env: &soroban_sdk::Env, id: u32) -> Option<String> {
+    let key = DataKey::OptionalMessage(id);
+    let value = env.storage().persistent().get::<_, Option<String>>(&key).unwrap();
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    value
+}
+
+pub fn try_optional_message(env: &soroban_sdk::Env, id: u32) -> Option<Option<String>> {
+    let key = DataKey::OptionalMessage(id);
+    let value = env.storage().persistent().get::<_, Option<String>>(&key);
+    if value.is_some() {
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    }
+    value
+}
+
+pub fn set_optional_message(env: &soroban_sdk::Env, id: u32, value: &Option<String>) {
+    let key = DataKey::OptionalMessage(id);
+    env.storage().persistent().set(&key, value);
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+}
+
+pub fn remove_optional_message(env: &soroban_sdk::Env, id: u32) {
+    let key = DataKey::OptionalMessage(id);
+    env.storage().persistent().remove(&key);
+}
+
+pub fn extend_optional_message_ttl(
+    env: &soroban_sdk::Env,
+    id: u32,
+    threshold: u32,
+    extend_to: u32,
+) {
+    let key = DataKey::OptionalMessage(id);
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
+pub fn is_initialized(env: &soroban_sdk::Env) -> bool {
+    let key = DataKey::Initialized;
+    let value = env.storage().instance().has(&key);
+    if value {
+        stellar_axelar_std::ttl::extend_instance_ttl(env);
+    }
+    value
+}
+
+pub fn set_initialized_status(env: &soroban_sdk::Env) {
+    let key = DataKey::Initialized;
+    env.storage().instance().set(&key, &());
+    stellar_axelar_std::ttl::extend_instance_ttl(env);
+}
+
+pub fn remove_initialized_status(env: &soroban_sdk::Env) {
+    let key = DataKey::Initialized;
+    env.storage().instance().remove(&key);
+}
+
+pub fn extend_initialized_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Initialized;
+    env.storage().instance().extend_ttl(threshold, extend_to);
+}
+
+pub fn is_paused(env: &soroban_sdk::Env) -> bool {
+    let key = DataKey::Paused;
+    let value = env.storage().persistent().has(&key);
+    if value {
+        stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+    }
+    value
+}
+
+pub fn set_paused_status(env: &soroban_sdk::Env) {
+    let key = DataKey::Paused;
+    env.storage().persistent().set(&key, &());
+    stellar_axelar_std::ttl::extend_persistent_ttl(env, &key);
+}
+
+pub fn remove_paused_status(env: &soroban_sdk::Env) {
+    let key = DataKey::Paused;
+    env.storage().persistent().remove(&key);
+}
+
+pub fn extend_paused_ttl(env: &soroban_sdk::Env, threshold: u32, extend_to: u32) {
+    let key = DataKey::Paused;
+    env.storage().persistent().extend_ttl(&key, threshold, extend_to);
+}
+
+#[cfg(test)]
+mod data_key_storage_layout_tests {
+    use goldie;
+    #[test]
+    fn ensure_data_key_storage_schema_is_unchanged() {
+        goldie::assert!(
+            "enum DataKey {\n\n    #[instance]\n    #[value(u32)]\n    Counter,\n\n    #[persistent]\n    #[value(String)]\n    Message { sender: Address },\n\n    #[temporary]\n    #[value(Address)]\n    LastCaller { timestamp: u64 },\n\n    #[persistent]\n    #[value(bool)]\n    Flag { key: String, owner: Address },\n\n    #[persistent]\n    #[value(Option<String>)]\n    OptionalMessage { id: u32 },\n\n    #[instance]\n    #[status]\n    Initialized,\n\n    #[persistent]\n    #[status]\n    Paused,\n}\n"
+        );
+    }
+}

@@ -1,0 +1,7 @@
+#[derive(Clone, Debug)]
+enum LegacyDataKey {
+
+    #[instance]
+    #[status]
+    Operators { account: Address },
+}

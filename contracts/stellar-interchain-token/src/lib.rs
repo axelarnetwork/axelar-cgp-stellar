@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
         pub use interface::{InterchainTokenClient, InterchainTokenInterface};
     } else {
         pub mod event;
-        mod storage_types;
+        mod storage;
         mod contract;
 
         pub use contract::{InterchainToken, InterchainTokenClient};

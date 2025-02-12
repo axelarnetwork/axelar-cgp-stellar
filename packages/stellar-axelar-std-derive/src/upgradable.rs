@@ -44,11 +44,10 @@ pub fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
 
         #[soroban_sdk::contractimpl]
         impl stellar_axelar_std::interfaces::MigratableInterface for #name {
-            type MigrationData = #migration_data;
             type Error = ContractError;
 
             fn migrate(env: &Env, migration_data: #migration_data) -> Result<(), ContractError> {
-                stellar_axelar_std::interfaces::migrate::<Self>(env, || Self::run_migration(env, migration_data))
+                stellar_axelar_std::interfaces::migrate::<Self>(env, migration_data)
                     .map_err(|_| ContractError::MigrationNotAllowed)
             }
         }

@@ -1,0 +1,69 @@
+# Workflow to fetch the latest commit hash on the main branch and upload artifacts to CF storage.
+name: Build and upload pre-release
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  stellar-contract-names:
+    name: Get all Stellar contracts
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    outputs:
+      releases: ${{ steps.prepare-release.outputs.releases }}
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install -y jq
+
+      - name: Get latest commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare JSON output for release
+        id: prepare-release
+        run: |
+          RELEASES_JSON=$(find contracts -maxdepth 1 -mindepth 1 -type d | sed 's|contracts/||' | jq -R . | jq -s --arg commit "${{ steps.get-commit-hash.outputs.hash }}" 'map({
+            package_name: .,
+            version: $commit,
+            package_git_tag: "\(.)_\($commit)"
+          })')
+          echo "releases=$(echo "$RELEASES_JSON" | jq -c)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: stellar-contract-names
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      commit-hash: ${{ needs.stellar-contract-names.outputs.commit_hash }}
+
+  upload:
+    needs: [stellar-contract-names, build]
+    strategy:
+      matrix:
+        releases: ${{ fromJson(needs.stellar-contract-names.outputs.releases) }}
+
+    uses: ./.github/workflows/reusable-upload.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      package-name: ${{ matrix.releases.package_name }}
+      package-version: ${{ matrix.releases.version }}
+      package-git-tag: ${{ matrix.releases.package_git_tag }}
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
+      cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
+      cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
+      github-release: false
+    secrets:
+      github-token: ${{ secrets.PAT_TOKEN }}
+      cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
+      cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
+      cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}

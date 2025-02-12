@@ -15,8 +15,9 @@ cfg_if::cfg_if! {
         pub use interface::{AxelarOperatorsClient, AxelarOperatorsInterface};
     } else {
         pub mod event;
-        mod storage_types;
+        mod storage;
         mod contract;
+        mod migrate;
 
         pub use contract::{AxelarOperators, AxelarOperatorsClient};
     }

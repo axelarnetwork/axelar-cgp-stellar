@@ -1,0 +1,30 @@
+enum DataKey {
+
+    #[instance]
+    #[value(u32)]
+    Counter,
+
+    #[persistent]
+    #[value(String)]
+    Message { sender: Address },
+
+    #[temporary]
+    #[value(Address)]
+    LastCaller { timestamp: u64 },
+
+    #[persistent]
+    #[value(bool)]
+    Flag { key: String, owner: Address },
+
+    #[persistent]
+    #[value(Option<String>)]
+    OptionalMessage { id: u32 },
+
+    #[temporary]
+    #[status]
+    TempStatus { id: u32 },
+
+    #[persistent]
+    #[status]
+    PersistentStatus { id: u32 },
+}

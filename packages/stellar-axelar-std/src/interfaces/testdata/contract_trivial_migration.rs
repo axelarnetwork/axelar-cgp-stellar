@@ -4,8 +4,8 @@ use soroban_sdk::{
 };
 
 use crate::interfaces::{
-    operatable, ownable, upgradable, MigratableInterface, OperatableInterface, OwnableInterface,
-    UpgradableInterface,
+    operatable, ownable, upgradable, CustomMigratableInterface, MigratableInterface,
+    OperatableInterface, OwnableInterface, UpgradableInterface,
 };
 
 #[contract]
@@ -26,22 +26,26 @@ impl Contract {
     pub fn migration_data(env: &Env) -> Option<String> {
         env.storage().instance().get(&DataKey::Data)
     }
-
-    fn run_migration(env: &Env, _migration_data: ()) {
-        env.storage()
-            .instance()
-            .set(&DataKey::Data, &String::from_str(env, "migrated"));
-    }
 }
 
+// this should normally not be implemented manually, but is done here for testing purposes
 #[contractimpl]
 impl MigratableInterface for Contract {
-    type MigrationData = ();
     type Error = TrivialContractError;
 
     fn migrate(env: &Env, migration_data: ()) -> Result<(), TrivialContractError> {
-        upgradable::migrate::<Self>(env, || Self::run_migration(env, migration_data))
+        upgradable::migrate::<Self>(env, migration_data)
             .map_err(|_| TrivialContractError::SomeFailure)
+    }
+}
+
+impl CustomMigratableInterface for Contract {
+    type MigrationData = ();
+
+    fn __migrate(env: &Env, _migration_data: Self::MigrationData) {
+        env.storage()
+            .instance()
+            .set(&DataKey::Data, &String::from_str(env, "migrated"));
     }
 }
 
@@ -67,6 +71,7 @@ impl OperatableInterface for Contract {
     }
 }
 
+// this should normally not be implemented manually, but is done here for testing purposes
 #[contractimpl]
 impl UpgradableInterface for Contract {
     fn version(env: &Env) -> String {

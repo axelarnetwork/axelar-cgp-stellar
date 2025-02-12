@@ -21,7 +21,7 @@ cfg_if::cfg_if! {
         mod abi;
         mod deployer;
         pub mod event;
-        mod storage_types;
+        mod storage;
         mod token_id;
         mod token_manager;
         mod token_metadata;

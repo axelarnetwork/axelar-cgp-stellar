@@ -5,6 +5,7 @@ use stellar_axelar_std_derive::{Ownable, Upgradable};
 
 use crate as stellar_axelar_std;
 use crate::events::Event;
+use crate::interfaces::CustomMigratableInterface;
 use crate::IntoEvent;
 
 #[contracterror]
@@ -29,8 +30,10 @@ impl Contract {
     }
 }
 
-impl Contract {
-    fn run_migration(env: &Env, _migration_data: ()) {
+impl CustomMigratableInterface for Contract {
+    type MigrationData = ();
+
+    fn __migrate(env: &Env, _migration_data: Self::MigrationData) {
         MigratedEvent {}.emit(env);
     }
 }
