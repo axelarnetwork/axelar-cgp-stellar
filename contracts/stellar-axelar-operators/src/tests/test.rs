@@ -10,7 +10,7 @@ use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, Into
 
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
-use crate::{AxelarOperators, AxelarOperatorsClient};
+use crate::tests::testutils::{setup_env, TestConfig};
 
 #[contract]
 pub struct TestTarget;
@@ -38,31 +38,16 @@ impl TestTarget {
     }
 }
 
-fn setup_env<'a>() -> (Env, AxelarOperatorsClient<'a>, Address) {
-    let env = Env::default();
-
-    let user = Address::generate(&env);
-    let contract_id = env.register(AxelarOperators, (&user,));
-    let client = AxelarOperatorsClient::new(&env, &contract_id);
-
-    let target_id = env.register(TestTarget, ());
-
-    (env, client, target_id)
-}
-
 #[test]
 fn register_operators() {
-    let env = Env::default();
-    let user = Address::generate(&env);
-    let contract_id = env.register(AxelarOperators, (&user,));
-    let client = AxelarOperatorsClient::new(&env, &contract_id);
+    let TestConfig { owner, client, .. } = setup_env();
 
-    assert_eq!(client.owner(), user);
+    assert_eq!(client.owner(), owner);
 }
 
 #[test]
 fn add_operator_succeeds() {
-    let (env, client, _) = setup_env();
+    let TestConfig { env, client, .. } = setup_env();
     let operator = Address::generate(&env);
 
     assert!(!client.is_operator(&operator));
@@ -76,7 +61,7 @@ fn add_operator_succeeds() {
 
 #[test]
 fn add_operator_fails_when_already_added() {
-    let (env, client, _) = setup_env();
+    let TestConfig { env, client, .. } = setup_env();
     let operator = Address::generate(&env);
 
     assert_auth!(&client.owner(), client.add_operator(&operator));
@@ -89,7 +74,7 @@ fn add_operator_fails_when_already_added() {
 
 #[test]
 fn remove_operator_succeeds() {
-    let (env, client, _) = setup_env();
+    let TestConfig { env, client, .. } = setup_env();
     let operator = Address::generate(&env);
 
     assert_auth!(client.owner(), client.add_operator(&operator));
@@ -105,7 +90,7 @@ fn remove_operator_succeeds() {
 
 #[test]
 fn remove_operator_fails_when_not_an_operator() {
-    let (env, client, _) = setup_env();
+    let TestConfig { env, client, .. } = setup_env();
     let operator = Address::generate(&env);
 
     assert_contract_err!(
@@ -116,7 +101,12 @@ fn remove_operator_fails_when_not_an_operator() {
 
 #[test]
 fn execute_succeeds() {
-    let (env, client, target) = setup_env();
+    let TestConfig {
+        env,
+        client,
+        target_id,
+        ..
+    } = setup_env();
     let operator = Address::generate(&env);
 
     assert_auth!(&client.owner(), client.add_operator(&operator));
@@ -125,7 +115,7 @@ fn execute_succeeds() {
         operator,
         client.execute(
             &operator,
-            &target,
+            &target_id,
             &symbol_short!("method"),
             &Vec::<Val>::new(&env),
         )
@@ -136,7 +126,7 @@ fn execute_succeeds() {
 
 #[test]
 fn execute_fails_when_not_an_operator() {
-    let (env, client, _) = setup_env();
+    let TestConfig { env, client, .. } = setup_env();
 
     assert_contract_err!(
         client.mock_all_auths().try_execute(
@@ -152,7 +142,12 @@ fn execute_fails_when_not_an_operator() {
 #[test]
 #[should_panic]
 fn execute_fails_when_target_panics() {
-    let (env, client, target) = setup_env();
+    let TestConfig {
+        env,
+        client,
+        target_id,
+        ..
+    } = setup_env();
     let operator = Address::generate(&env);
 
     assert_auth!(&client.owner(), client.add_operator(&operator));
@@ -161,7 +156,7 @@ fn execute_fails_when_target_panics() {
         operator,
         client.execute(
             &operator,
-            &target,
+            &target_id,
             &Symbol::new(&env, "failing"),
             &Vec::<Val>::new(&env),
         )
@@ -170,7 +165,12 @@ fn execute_fails_when_target_panics() {
 
 #[test]
 fn execute_fails_when_target_returns_error() {
-    let (env, client, target) = setup_env();
+    let TestConfig {
+        env,
+        client,
+        target_id,
+        ..
+    } = setup_env();
     let operator = Address::generate(&env);
 
     assert_auth!(&client.owner(), client.add_operator(&operator));
@@ -179,7 +179,7 @@ fn execute_fails_when_target_returns_error() {
         operator,
         client.execute(
             &operator,
-            &target,
+            &target_id,
             &Symbol::new(&env, "failing"),
             &Vec::<Val>::new(&env),
         )

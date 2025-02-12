@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address};
+use soroban_sdk::Address;
 use stellar_axelar_std::contractstorage;
 
 #[contractstorage]
