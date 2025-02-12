@@ -4,6 +4,7 @@
 
 mod into_event;
 mod its_executable;
+mod modifier;
 mod operatable;
 mod ownable;
 mod pausable;
@@ -232,6 +233,58 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     its_executable::its_executable(name).into()
+}
+
+/// Ensures that only a contract's owner can execute the attributed function.
+///
+/// The first argument to the function must be `env`
+///
+/// # Example
+/// ```rust,ignore
+/// # use soroban_sdk::{contract, contractimpl, Address, Env};
+/// use stellar_axelar_std::only_owner;
+///
+/// #[contract]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///     #[only_owner]
+///     pub fn transfer(env: &Env, to: Address, amount: String) {
+///         // ... transfer logic ...
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input_fn = parse_macro_input!(item as ItemFn);
+    ownable::only_owner_impl(input_fn).into()
+}
+
+/// Ensures that only a contract's operator can execute the attributed function.
+///
+/// The first argument to the function must be `env`
+///
+/// # Example
+/// ```rust,ignore
+/// # use soroban_sdk::{contract, contractimpl, Address, Env};
+/// use stellar_axelar_std::only_operator;
+///
+/// #[contract]
+/// pub struct Contract;
+///
+/// #[contractimpl]
+/// impl Contract {
+///     #[only_operator]
+///     pub fn transfer(env: &Env, to: Address, amount: String) {
+///         // ... transfer logic ...
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input_fn = parse_macro_input!(item as ItemFn);
+    operatable::only_operator_impl(input_fn).into()
 }
 
 /// Implements a storage interface for a Stellar contract storage enum.

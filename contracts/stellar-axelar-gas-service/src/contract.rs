@@ -3,7 +3,7 @@ use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{ensure, interfaces, Operatable, Ownable, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, only_operator, Operatable, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{GasAddedEvent, GasCollectedEvent, GasPaidEvent, GasRefundedEvent};
@@ -90,9 +90,8 @@ impl AxelarGasServiceInterface for AxelarGasService {
         Ok(())
     }
 
+    #[only_operator]
     fn collect_fees(env: Env, receiver: Address, token: Token) -> Result<(), ContractError> {
-        Self::operator(&env).require_auth();
-
         ensure!(token.amount > 0, ContractError::InvalidAmount);
 
         let token_client = token::Client::new(&env, &token.address);
@@ -112,9 +111,8 @@ impl AxelarGasServiceInterface for AxelarGasService {
         Ok(())
     }
 
+    #[only_operator]
     fn refund(env: Env, message_id: String, receiver: Address, token: Token) {
-        Self::operator(&env).require_auth();
-
         token::Client::new(&env, &token.address).transfer(
             &env.current_contract_address(),
             &receiver,

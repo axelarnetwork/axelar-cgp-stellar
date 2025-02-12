@@ -1,7 +1,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, Val, Vec};
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::ttl::extend_instance_ttl;
-use stellar_axelar_std::{ensure, interfaces, Ownable, Upgradable};
+use stellar_axelar_std::{ensure, interfaces, only_owner, Ownable, Upgradable};
 
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
@@ -26,9 +26,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
         storage::is_operator(&env, account)
     }
 
+    #[only_owner]
     fn add_operator(env: Env, account: Address) -> Result<(), ContractError> {
-        Self::owner(&env).require_auth();
-
         ensure!(
             !storage::is_operator(&env, account.clone()),
             ContractError::OperatorAlreadyAdded
@@ -43,9 +42,8 @@ impl AxelarOperatorsInterface for AxelarOperators {
         Ok(())
     }
 
+    #[only_owner]
     fn remove_operator(env: Env, account: Address) -> Result<(), ContractError> {
-        Self::owner(&env).require_auth();
-
         ensure!(
             storage::is_operator(&env, account.clone()),
             ContractError::NotAnOperator
