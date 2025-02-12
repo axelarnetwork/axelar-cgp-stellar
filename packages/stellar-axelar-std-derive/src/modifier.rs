@@ -36,6 +36,7 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
 #[cfg(test)]
 mod tests {
 
+    use prettyplease;
     use syn::{parse_quote, ItemFn};
 
     use super::*;
@@ -52,7 +53,14 @@ mod tests {
             },
         )
         .to_string();
-        goldie::assert!(generated_function);
+        let generated_function_file: syn::File = syn::parse_str(&generated_function).unwrap();
+        let formatted_generated_function = prettyplease::unparse(&generated_function_file)
+            .replace("{}", "")
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+        goldie::assert!(formatted_generated_function);
     }
 
     #[test]
