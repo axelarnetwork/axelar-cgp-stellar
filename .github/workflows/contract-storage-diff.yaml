@@ -1,9 +1,6 @@
 name: Contract Storage Schema Migration Check
 
-on:
-  pull_request:
-    paths:
-      - '**/*ensure_*_storage_schema_is_unchanged.golden'
+on: pull_request
 
 jobs:
   check-migration:
