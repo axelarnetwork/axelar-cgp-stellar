@@ -13,7 +13,8 @@ mod upgradable;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
-use upgradable::MigrationArgs;
+
+use crate::upgradable::MigrationKind;
 
 /// Implements the Operatable interface for a Soroban contract.
 ///
@@ -166,16 +167,13 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
-    let args = input
+    let migration_kind = input
         .attrs
         .iter()
         .find(|attr| attr.path().is_ident("migratable"))
-        .map(|attr| attr.parse_args::<MigrationArgs>())
-        .transpose()
-        .unwrap_or_else(|e| panic!("{}", e))
-        .unwrap_or_else(MigrationArgs::default);
+        .map_or(MigrationKind::Default, |_| MigrationKind::Custom);
 
-    upgradable::upgradable(name, args).into()
+    upgradable::upgradable(name, migration_kind).into()
 }
 
 /// Implements the Event trait for a Stellar contract event.

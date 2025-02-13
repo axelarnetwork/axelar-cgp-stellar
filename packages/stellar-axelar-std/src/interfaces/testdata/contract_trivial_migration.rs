@@ -1,3 +1,5 @@
+use core::convert::Infallible;
+
 use soroban_sdk::testutils::arbitrary::std;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, Address, BytesN, Env, String,
@@ -41,11 +43,14 @@ impl MigratableInterface for Contract {
 
 impl CustomMigratableInterface for Contract {
     type MigrationData = ();
+    type Error = Infallible;
 
-    fn __migrate(env: &Env, _migration_data: Self::MigrationData) {
+    fn __migrate(env: &Env, _migration_data: Self::MigrationData) -> Result<(), Self::Error> {
         env.storage()
             .instance()
             .set(&DataKey::Data, &String::from_str(env, "migrated"));
+
+        Ok(())
     }
 }
 

@@ -1,32 +1,11 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
-use syn::{Error, Token, Type};
 
-pub fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
-    syn::parse_str::<Type>("ContractError").unwrap_or_else(|_| {
-        panic!(
-            "{}",
-            Error::new(
-                name.span(),
-                "ContractError must be defined in scope.\n\
-                 Hint: Add this to your code:\n\
-                 #[contracterror]\n\
-                 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]\n\
-                 #[repr(u32)]\n\
-                 pub enum ContractError {\n    \
-                     MigrationNotAllowed = 1,\n\
-                     ...\n
-                 }",
-            )
-            .to_string()
-        )
-    });
-
-    let migration_data = args
-        .migration_data
-        .as_ref()
-        .map_or_else(|| quote! { () }, |ty| quote! { #ty });
+pub fn upgradable(name: &Ident, migration_kind: MigrationKind) -> TokenStream2 {
+    let custom_migration_impl = match migration_kind {
+        MigrationKind::Default => default_custom_migration(name),
+        MigrationKind::Custom => quote! {},
+    };
 
     quote! {
         use stellar_axelar_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
@@ -42,47 +21,44 @@ pub fn upgradable(name: &Ident, args: MigrationArgs) -> TokenStream2 {
             }
         }
 
+        type __MigrationData = <#name as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
+
         #[soroban_sdk::contractimpl]
         impl stellar_axelar_std::interfaces::MigratableInterface for #name {
             type Error = ContractError;
 
-            fn migrate(env: &Env, migration_data: #migration_data) -> Result<(), ContractError> {
+            fn migrate(env: &Env, migration_data: __MigrationData) -> Result<(), ContractError> {
                 stellar_axelar_std::interfaces::migrate::<Self>(env, migration_data)
-                    .map_err(|_| ContractError::MigrationNotAllowed)
+                    .map_err(|err| match err{
+                        stellar_axelar_std::interfaces::MigrationError::NotAllowed => ContractError::MigrationNotAllowed,
+                        stellar_axelar_std::interfaces::MigrationError::ExecutionFailed(err) => err.into(),
+                    }
+                )
+            }
+        }
+
+        #custom_migration_impl
+
+
+    }
+}
+
+fn default_custom_migration(name: &Ident) -> TokenStream2 {
+    quote! {
+        impl stellar_axelar_std::interfaces::CustomMigratableInterface for #name {
+            type MigrationData = ();
+            type Error = ContractError;
+
+            fn __migrate(_env: &Env, _migration_data: Self::MigrationData) -> Result<(), Self::Error> {
+                Ok(())
             }
         }
     }
 }
 
 #[derive(Default)]
-pub struct MigrationArgs {
-    migration_data: Option<Type>,
-}
-
-impl Parse for MigrationArgs {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.is_empty() {
-            return Ok(Self::default());
-        }
-
-        let migration_data = Some(Self::parse_migration_data(input)?);
-
-        if !input.is_empty() {
-            input.parse::<Token![,]>()?;
-        }
-
-        Ok(Self { migration_data })
-    }
-}
-
-impl MigrationArgs {
-    fn parse_migration_data(input: ParseStream) -> syn::Result<Type> {
-        let ident = input.parse::<Ident>()?;
-        if ident != "with_type" {
-            return Err(Error::new(ident.span(), "expected `with_type = ...`"));
-        }
-
-        input.parse::<Token![=]>()?;
-        input.parse::<Type>()
-    }
+pub enum MigrationKind {
+    #[default]
+    Default,
+    Custom,
 }
