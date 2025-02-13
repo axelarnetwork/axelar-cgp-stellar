@@ -9,13 +9,13 @@ impl stellar_axelar_std::interfaces::UpgradableInterface for Contract {
     }
 }
 #[allow(non_camel_case_types)]
-type __Contract_MigrationData = <Contract as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
+type __ContractMigrationData = <Contract as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
 #[soroban_sdk::contractimpl]
 impl stellar_axelar_std::interfaces::MigratableInterface for Contract {
     type Error = ContractError;
     fn migrate(
         env: &Env,
-        migration_data: __Contract_MigrationData,
+        migration_data: __ContractMigrationData,
     ) -> Result<(), ContractError> {
         stellar_axelar_std::interfaces::migrate::<Self>(env, migration_data)
             .map_err(|err| match err {

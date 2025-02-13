@@ -24,7 +24,7 @@ pub fn upgradable(input: &DeriveInput) -> TokenStream2 {
         MigrationKind::Custom => quote! {},
     };
 
-    let migration_data_alias = Ident::new(&format!("__{}_MigrationData", name), name.span());
+    let migration_data_alias = Ident::new(&format!("__{}MigrationData", name), name.span());
 
     quote! {
         use stellar_axelar_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
