@@ -11,11 +11,8 @@ mod pausable;
 mod storage;
 mod upgradable;
 
-use itertools::Itertools;
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, Path};
-
-use crate::upgradable::MigrationKind;
 
 /// Implements the Operatable interface for a Soroban contract.
 ///
@@ -175,20 +172,8 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_derive(Upgradable, attributes(migratable))]
 pub fn derive_upgradable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
 
-    let migration_kind = input
-        .attrs
-        .iter()
-        .filter(|attr| attr.path().is_ident("migratable"))
-        .at_most_one()
-        .expect("migratable attribute can only be applied once")
-        .map_transpose(ensure_no_args)
-        .expect("migratable attribute cannot have arguments")
-        .map(|_| MigrationKind::Custom)
-        .unwrap_or_default();
-
-    upgradable::upgradable(name, migration_kind).into()
+    upgradable::upgradable(&input).into()
 }
 
 fn ensure_no_args(attr: &Attribute) -> syn::Result<&Path> {
@@ -275,6 +260,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
+
     ownable::only_owner_impl(input_fn).into()
 }
 
@@ -301,6 +287,7 @@ pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
+
     operatable::only_operator_impl(input_fn).into()
 }
 
@@ -362,6 +349,7 @@ pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
+
     storage::contract_storage(&input).into()
 }
 

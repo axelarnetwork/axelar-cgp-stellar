@@ -9,7 +9,7 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
     let fn_generics = &fn_sig.generics;
     let fn_inputs = &fn_sig.inputs;
     let fn_output = &fn_sig.output;
-    let fn_body = &input_fn.block;
+    let fn_body = &input_fn.block.stmts;
     let fn_attrs = &input_fn.attrs;
 
     let Some(syn::FnArg::Typed(pat_type)) = fn_inputs.first() else {
@@ -28,7 +28,7 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
         #fn_vis fn #fn_name #fn_generics(#fn_inputs) #fn_output {
             #auth_statement
 
-            #fn_body
+            #(#fn_body)*
         }
     }
 }
@@ -36,41 +36,53 @@ pub fn modifier_impl(input_fn: ItemFn, auth_statement: TokenStream2) -> TokenStr
 #[cfg(test)]
 mod tests {
 
-    use syn::{parse_quote, ItemFn};
-
-    use super::*;
-
     #[test]
-    fn first_parameter_is_typed() {
-        let input_fn: ItemFn = parse_quote! {
-            fn test_fn(env: &Env, other: i32) {}
+    fn modifier_impl_generation_succeeds() {
+        let input_fn: syn::ItemFn = syn::parse_quote! {
+            fn test_fn(env: &Env, other: i32) {
+            let x = 42;
+            let y = vec![1, 2, 3];
+            let z = x + y[2];
+            }
         };
-        let generated_function = modifier_impl(
+
+        let generated_function = crate::modifier::modifier_impl(
             input_fn,
-            quote! {
+            quote::quote! {
                 Self::operator(&env).require_auth();
             },
-        )
-        .to_string();
-        let generated_function_file: syn::File = syn::parse_str(&generated_function).unwrap();
-        let formatted_generated_function = prettyplease::unparse(&generated_function_file)
-            .replace("{}", "")
-            .lines()
-            .filter(|line| !line.trim().is_empty())
-            .collect::<Vec<_>>()
-            .join("\n");
+        );
+        let generated_function_file: syn::File = syn::parse2(generated_function).unwrap();
+        let formatted_generated_function = prettyplease::unparse(&generated_function_file);
+        goldie::assert!(formatted_generated_function);
+    }
+
+    #[test]
+    fn modifier_impl_empty_body_generation_succeeds() {
+        let input_fn: syn::ItemFn = syn::parse_quote! {
+            fn test_fn(env: &Env, other: i32) {}
+        };
+
+        let generated_function = crate::modifier::modifier_impl(
+            input_fn,
+            quote::quote! {
+                Self::operator(&env).require_auth();
+            },
+        );
+        let generated_function_file: syn::File = syn::parse2(generated_function).unwrap();
+        let formatted_generated_function = prettyplease::unparse(&generated_function_file);
         goldie::assert!(formatted_generated_function);
     }
 
     #[test]
     #[should_panic(expected = "first parameter must be a typed parameter")]
     fn first_parameter_is_not_typed() {
-        let input_fn: ItemFn = parse_quote! {
+        let input_fn: syn::ItemFn = syn::parse_quote! {
             fn test_fn() {}
         };
-        modifier_impl(
+        crate::modifier::modifier_impl(
             input_fn,
-            quote! {
+            quote::quote! {
                 Self::operator(&env).require_auth();
             },
         );
@@ -79,12 +91,12 @@ mod tests {
     #[test]
     #[should_panic(expected = "first parameter must be a simple identifier")]
     fn first_parameter_is_not_simple_identifier() {
-        let input_fn: ItemFn = parse_quote! {
+        let input_fn: syn::ItemFn = syn::parse_quote! {
             fn test_fn((env, other): (&Env, i32)) {}
         };
-        modifier_impl(
+        crate::modifier::modifier_impl(
             input_fn,
-            quote! {
+            quote::quote! {
                 Self::operator(&env).require_auth();
             },
         );
@@ -93,12 +105,12 @@ mod tests {
     #[test]
     #[should_panic(expected = "first parameter must be named 'env'")]
     fn first_parameter_is_not_named_env() {
-        let input_fn: ItemFn = parse_quote! {
+        let input_fn: syn::ItemFn = syn::parse_quote! {
             fn test_fn(not_env: &Env, other: i32) {}
         };
-        modifier_impl(
+        crate::modifier::modifier_impl(
             input_fn,
-            quote! {
+            quote::quote! {
                 Self::operator(&env).require_auth();
             },
         );

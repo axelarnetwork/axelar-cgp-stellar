@@ -1,7 +1,24 @@
+use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::quote;
+use syn::DeriveInput;
 
-pub fn upgradable(name: &Ident, migration_kind: MigrationKind) -> TokenStream2 {
+use crate::{ensure_no_args, MapTranspose};
+
+pub fn upgradable(input: &DeriveInput) -> TokenStream2 {
+    let name = &input.ident;
+
+    let migration_kind = input
+        .attrs
+        .iter()
+        .filter(|attr| attr.path().is_ident("migratable"))
+        .at_most_one()
+        .expect("migratable attribute can only be applied once")
+        .map_transpose(ensure_no_args)
+        .expect("migratable attribute cannot have arguments")
+        .map(|_| MigrationKind::Custom)
+        .unwrap_or_default();
+
     let custom_migration_impl = match migration_kind {
         MigrationKind::Default => default_custom_migration(name),
         MigrationKind::Custom => quote! {},
@@ -62,4 +79,26 @@ pub enum MigrationKind {
     #[default]
     Default,
     Custom,
+}
+
+/// Tests the upgradable impl generation for a contract.
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn upgradable_impl_generation_succeeds() {
+        let contract_input: syn::DeriveInput = syn::parse_quote! {
+            #[contract]
+            #[derive(Ownable, Upgradable)]
+            #[migratable]
+            pub struct Contract;
+        };
+
+        let upgradable_impl: proc_macro2::TokenStream = crate::upgradable::upgradable(&contract_input);
+        let upgradable_impl_file: syn::File = syn::parse2(upgradable_impl).unwrap();
+        let formatted_upgradable_impl = prettyplease::unparse(&upgradable_impl_file)
+            .replace("pub fn ", "\npub fn ")
+            .replace("#[cfg(test)]", "\n#[cfg(test)]");
+        goldie::assert!(formatted_upgradable_impl);
+    }
 }
