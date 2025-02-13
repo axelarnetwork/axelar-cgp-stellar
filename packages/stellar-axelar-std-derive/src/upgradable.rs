@@ -94,7 +94,8 @@ mod tests {
             pub struct Contract;
         };
 
-        let upgradable_impl: proc_macro2::TokenStream = crate::upgradable::upgradable(&contract_input);
+        let upgradable_impl: proc_macro2::TokenStream =
+            crate::upgradable::upgradable(&contract_input);
         let upgradable_impl_file: syn::File = syn::parse2(upgradable_impl).unwrap();
         let formatted_upgradable_impl = prettyplease::unparse(&upgradable_impl_file)
             .replace("pub fn ", "\npub fn ")
