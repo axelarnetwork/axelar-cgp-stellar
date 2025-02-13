@@ -21,17 +21,24 @@ pub trait MigratableInterface: UpgradableInterface + CustomMigratableInterface {
     type Error: Into<soroban_sdk::Error>;
 
     /// Migrates contract state after upgrading the contract code.
-    fn migrate(env: &Env, migration_data: Self::MigrationData) -> Result<(), Self::Error>;
+    fn migrate(
+        env: &Env,
+        migration_data: Self::MigrationData,
+    ) -> Result<(), <Self as MigratableInterface>::Error>;
 }
 
+/// This trait is used to implement custom migration logic for a contract.
+/// It is automatically implemented for the contract if the `#[migratable]` attribute is applied to the contract struct.
 pub trait CustomMigratableInterface: UpgradableInterface {
     /// Data needed during the migration. Each contract can define its own data type.
-    /// Choose `()` if no migration is necessary
+    /// Choose `()` if none is necessary
     type MigrationData: FromVal<Env, Val>;
+    /// Error type returned if the migration fails.
+    /// It must implement the `Into<ContractError>` trait if migration is implemented with the `#[derive(Upgradable)]` macro.     
+    type Error;
 
     /// Migrates contract state after upgrading the contract code.
-    /// Custom implementation can be omitted if no migration is needed
-    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) {}
+    fn __migrate(_env: &Env, _migration_data: Self::MigrationData) -> Result<(), Self::Error>;
 }
 
 /// This function checks that the caller can authenticate as the owner of the contract,
@@ -52,12 +59,12 @@ pub fn upgrade<T: OwnableInterface>(env: &Env, new_wasm_hash: BytesN<32>) {
 pub fn migrate<T: CustomMigratableInterface>(
     env: &Env,
     migration_data: T::MigrationData,
-) -> Result<(), MigrationError> {
+) -> Result<(), MigrationError<T::Error>> {
     T::owner(env).require_auth();
 
-    ensure_is_migrating(env)?;
+    ensure_is_migrating::<T>(env)?;
 
-    T::__migrate(env, migration_data);
+    custom_migrate::<T>(env, migration_data)?;
     complete_migration(env);
 
     UpgradedEvent {
@@ -74,7 +81,9 @@ fn start_migration(env: &Env) {
         .set(&storage::migrating::DataKey::Interfaces_Migrating, &());
 }
 
-fn ensure_is_migrating(env: &Env) -> Result<(), MigrationError> {
+fn ensure_is_migrating<T: CustomMigratableInterface>(
+    env: &Env,
+) -> Result<(), MigrationError<T::Error>> {
     ensure!(
         env.storage()
             .instance()
@@ -83,6 +92,13 @@ fn ensure_is_migrating(env: &Env) -> Result<(), MigrationError> {
     );
 
     Ok(())
+}
+
+fn custom_migrate<T: CustomMigratableInterface>(
+    env: &Env,
+    migration_data: T::MigrationData,
+) -> Result<(), MigrationError<T::Error>> {
+    T::__migrate(env, migration_data).map_err(MigrationError::ExecutionFailed)
 }
 
 fn complete_migration(env: &Env) {
@@ -97,8 +113,9 @@ pub struct UpgradedEvent {
     version: String,
 }
 
-pub enum MigrationError {
+pub enum MigrationError<T> {
     NotAllowed,
+    ExecutionFailed(T),
 }
 
 #[cfg(test)]

@@ -6,11 +6,11 @@ use stellar_axelar_std::{ensure, interfaces, only_owner, Ownable, Upgradable};
 use crate::error::ContractError;
 use crate::event::{OperatorAddedEvent, OperatorRemovedEvent};
 use crate::interface::AxelarOperatorsInterface;
-use crate::{migrate, storage};
+use crate::storage;
 
 #[contract]
 #[derive(Ownable, Upgradable)]
-#[migratable(with_type = migrate::MigrationData)]
+#[migratable]
 pub struct AxelarOperators;
 
 #[contractimpl]

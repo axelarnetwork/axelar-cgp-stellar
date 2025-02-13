@@ -12,8 +12,7 @@ mod storage;
 mod upgradable;
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, ItemFn};
-use upgradable::MigrationArgs;
+use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, Path};
 
 /// Implements the Operatable interface for a Soroban contract.
 ///
@@ -129,6 +128,11 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Implements the Upgradable and Migratable interfaces for a Soroban contract.
 ///
 /// A `ContractError` error type must be defined in scope, and have a `MigrationNotAllowed` variant.
+/// A default migration implementation is automatically provided. If custom migration code is required,
+/// the `#[migratable]` attribute can be applied to the contract struct.
+/// In that case, the contract must implement the `CustomMigratableInterface` trait. The associated `Error` type
+/// must implement the `Into<ContractError>` trait. The `ContractError` type itself implements it implicitly,
+/// so that is an easy way to use it.
 ///
 /// # Example
 /// ```rust,ignore
@@ -144,7 +148,7 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[contract]
 /// #[derive(Ownable, Upgradable)]
-/// #[migratable(with_type = Address)]
+/// #[migratable]
 /// pub struct Contract;
 ///
 /// #[contractimpl]
@@ -154,9 +158,13 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// impl Contract {
-///     fn run_migration(env: &Env, new_owner: Address) {
+/// impl CustomMigratableInterface for Contract {
+///     type MigrationData = Address;
+///     type Error = ContractError;
+///
+///     fn __migrate(env: &Env, new_owner: Self::MigrationData) -> Result<(), Self::Error> {
 ///         Self::transfer_ownership(env, new_owner);
+///         Ok(())
 ///     }
 /// }
 /// # }
@@ -164,18 +172,12 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_derive(Upgradable, attributes(migratable))]
 pub fn derive_upgradable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
 
-    let args = input
-        .attrs
-        .iter()
-        .find(|attr| attr.path().is_ident("migratable"))
-        .map(|attr| attr.parse_args::<MigrationArgs>())
-        .transpose()
-        .unwrap_or_else(|e| panic!("{}", e))
-        .unwrap_or_else(MigrationArgs::default);
+    upgradable::upgradable(&input).into()
+}
 
-    upgradable::upgradable(name, args).into()
+fn ensure_no_args(attr: &Attribute) -> syn::Result<&Path> {
+    attr.meta.require_path_only()
 }
 
 /// Implements the Event trait for a Stellar contract event.
@@ -258,6 +260,7 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
+
     ownable::only_owner_impl(input_fn).into()
 }
 
@@ -284,6 +287,7 @@ pub fn only_owner(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
+
     operatable::only_operator_impl(input_fn).into()
 }
 
@@ -345,5 +349,16 @@ pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
+
     storage::contract_storage(&input).into()
+}
+
+trait MapTranspose<T> {
+    fn map_transpose<U, E, F: FnOnce(T) -> Result<U, E>>(self, f: F) -> Result<Option<U>, E>;
+}
+
+impl<T> MapTranspose<T> for Option<T> {
+    fn map_transpose<U, E, F: FnOnce(T) -> Result<U, E>>(self, f: F) -> Result<Option<U>, E> {
+        self.map(f).transpose()
+    }
 }

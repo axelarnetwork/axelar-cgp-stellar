@@ -1,10 +1,9 @@
-use soroban_sdk::{panic_with_error, Address, Env, Vec};
+use soroban_sdk::{Address, Env, Vec};
+use stellar_axelar_std::ensure;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
 
 use crate::error::ContractError;
 use crate::{storage, AxelarOperators};
-
-pub type MigrationData = <AxelarOperators as CustomMigratableInterface>::MigrationData;
 
 mod legacy_storage {
     use soroban_sdk::Address;
@@ -21,15 +20,19 @@ mod legacy_storage {
 
 impl CustomMigratableInterface for AxelarOperators {
     type MigrationData = Vec<Address>;
+    type Error = ContractError;
 
-    fn __migrate(env: &Env, migration_data: Self::MigrationData) {
+    fn __migrate(env: &Env, migration_data: Self::MigrationData) -> Result<(), Self::Error> {
         for account in migration_data {
-            if !legacy_storage::is_operators(env, account.clone()) {
-                panic_with_error!(env, ContractError::NotAnOperator);
-            }
+            ensure!(
+                legacy_storage::is_operators(env, account.clone()),
+                ContractError::NotAnOperator
+            );
 
             storage::set_operator_status(env, account.clone());
             legacy_storage::remove_operators_status(env, account);
         }
+
+        Ok(())
     }
 }

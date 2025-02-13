@@ -1,0 +1,6 @@
+fn test_fn(env: &Env, other: i32) {
+    Self::operator(&env).require_auth();
+    let x = 42;
+    let y = vec![1, 2, 3];
+    let z = x + y[2];
+}
