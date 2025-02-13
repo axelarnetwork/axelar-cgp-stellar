@@ -11,8 +11,9 @@ mod pausable;
 mod storage;
 mod upgradable;
 
+use itertools::Itertools;
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, ItemFn};
+use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, Path};
 
 use crate::upgradable::MigrationKind;
 
@@ -130,6 +131,11 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Implements the Upgradable and Migratable interfaces for a Soroban contract.
 ///
 /// A `ContractError` error type must be defined in scope, and have a `MigrationNotAllowed` variant.
+/// A default migration implementation is automatically provided. If custom migration code is required,
+/// the `#[migratable]` attribute can be applied to the contract struct.
+/// In that case, the contract must implement the `CustomMigratableInterface` trait. The associated `Error` type
+/// must implement the `Into<ContractError>` trait. The `ContractError` type itself implements it implicitly,
+/// so that is an easy way to use it.
 ///
 /// # Example
 /// ```rust,ignore
@@ -145,7 +151,7 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[contract]
 /// #[derive(Ownable, Upgradable)]
-/// #[migratable(with_type = Address)]
+/// #[migratable]
 /// pub struct Contract;
 ///
 /// #[contractimpl]
@@ -155,9 +161,13 @@ pub fn when_not_paused(_attr: TokenStream, item: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// impl Contract {
-///     fn run_migration(env: &Env, new_owner: Address) {
+/// impl CustomMigratableInterface for Contract {
+///     type MigrationData = Address;
+///     type Error = ContractError;
+///
+///     fn __migrate(env: &Env, new_owner: Self::MigrationData) -> Result<(), Self::Error> {
 ///         Self::transfer_ownership(env, new_owner);
+///         Ok(())
 ///     }
 /// }
 /// # }
@@ -170,10 +180,19 @@ pub fn derive_upgradable(input: TokenStream) -> TokenStream {
     let migration_kind = input
         .attrs
         .iter()
-        .find(|attr| attr.path().is_ident("migratable"))
-        .map_or(MigrationKind::Default, |_| MigrationKind::Custom);
+        .filter(|attr| attr.path().is_ident("migratable"))
+        .at_most_one()
+        .expect("migratable attribute can only be applied once")
+        .map_transpose(ensure_no_args)
+        .expect("migratable attribute cannot have arguments")
+        .map(|_| MigrationKind::Custom)
+        .unwrap_or_default();
 
     upgradable::upgradable(name, migration_kind).into()
+}
+
+fn ensure_no_args(attr: &Attribute) -> syn::Result<&Path> {
+    attr.meta.require_path_only()
 }
 
 /// Implements the Event trait for a Stellar contract event.
@@ -344,4 +363,14 @@ pub fn only_operator(_attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn contractstorage(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     storage::contract_storage(&input).into()
+}
+
+trait MapTranspose<T> {
+    fn map_transpose<U, E, F: FnOnce(T) -> Result<U, E>>(self, f: F) -> Result<Option<U>, E>;
+}
+
+impl<T> MapTranspose<T> for Option<T> {
+    fn map_transpose<U, E, F: FnOnce(T) -> Result<U, E>>(self, f: F) -> Result<Option<U>, E> {
+        self.map(f).transpose()
+    }
 }

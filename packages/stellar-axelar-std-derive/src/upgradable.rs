@@ -7,6 +7,8 @@ pub fn upgradable(name: &Ident, migration_kind: MigrationKind) -> TokenStream2 {
         MigrationKind::Custom => quote! {},
     };
 
+    let migration_data_alias = Ident::new(&format!("__{}_MigrationData", name), name.span());
+
     quote! {
         use stellar_axelar_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
 
@@ -21,15 +23,16 @@ pub fn upgradable(name: &Ident, migration_kind: MigrationKind) -> TokenStream2 {
             }
         }
 
-        type __MigrationData = <#name as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
+        #[allow(non_camel_case_types)]
+        type #migration_data_alias = <#name as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
 
         #[soroban_sdk::contractimpl]
         impl stellar_axelar_std::interfaces::MigratableInterface for #name {
             type Error = ContractError;
 
-            fn migrate(env: &Env, migration_data: __MigrationData) -> Result<(), ContractError> {
+            fn migrate(env: &Env, migration_data: #migration_data_alias) -> Result<(), ContractError> {
                 stellar_axelar_std::interfaces::migrate::<Self>(env, migration_data)
-                    .map_err(|err| match err{
+                    .map_err(|err| match err {
                         stellar_axelar_std::interfaces::MigrationError::NotAllowed => ContractError::MigrationNotAllowed,
                         stellar_axelar_std::interfaces::MigrationError::ExecutionFailed(err) => err.into(),
                     }
@@ -38,8 +41,6 @@ pub fn upgradable(name: &Ident, migration_kind: MigrationKind) -> TokenStream2 {
         }
 
         #custom_migration_impl
-
-
     }
 }
 

@@ -27,14 +27,17 @@ pub trait MigratableInterface: UpgradableInterface + CustomMigratableInterface {
     ) -> Result<(), <Self as MigratableInterface>::Error>;
 }
 
+/// This trait is used to implement custom migration logic for a contract.
+/// It is automatically implemented for the contract if the `#[migratable]` attribute is applied to the contract struct.
 pub trait CustomMigratableInterface: UpgradableInterface {
     /// Data needed during the migration. Each contract can define its own data type.
-    /// Choose `()` if no migration is necessary
+    /// Choose `()` if none is necessary
     type MigrationData: FromVal<Env, Val>;
+    /// Error type returned if the migration fails.
+    /// It must implement the `Into<ContractError>` trait if migration is implemented with the `#[derive(Upgradable)]` macro.     
     type Error;
 
     /// Migrates contract state after upgrading the contract code.
-    /// Custom implementation can be omitted if no migration is needed
     fn __migrate(_env: &Env, _migration_data: Self::MigrationData) -> Result<(), Self::Error>;
 }
 
