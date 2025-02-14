@@ -1,5 +1,8 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::quote;
+use syn::ItemFn;
+
+use crate::modifier::modifier_impl;
 
 pub fn operatable(name: &Ident) -> TokenStream2 {
     quote! {
@@ -16,4 +19,12 @@ pub fn operatable(name: &Ident) -> TokenStream2 {
             }
         }
     }
+}
+pub fn only_operator_impl(input_fn: ItemFn) -> TokenStream2 {
+    modifier_impl(
+        input_fn,
+        quote! {
+            Self::operator(&env).require_auth();
+        },
+    )
 }

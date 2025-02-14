@@ -9,7 +9,7 @@ pub trait TokenManagerClientExt {
     fn mint(&self, env: &Env, token_address: &Address, recipient: &Address, amount: i128);
 }
 
-impl<'a> TokenManagerClientExt for TokenManagerClient<'a> {
+impl TokenManagerClientExt for TokenManagerClient<'_> {
     fn transfer(&self, env: &Env, token_address: &Address, recipient: &Address, amount: i128) {
         let _: Val = self.execute(
             token_address,

@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contracterror, contractimpl, Address, BytesN, Env};
 use stellar_axelar_std::interfaces::{OwnableInterface, UpgradableInterface};
-use stellar_axelar_std::{contractstorage, interfaces};
+use stellar_axelar_std::{contractstorage, interfaces, only_owner};
 
 #[contract]
 pub struct DummyContract;
@@ -13,9 +13,8 @@ impl UpgradableInterface for DummyContract {
         soroban_sdk::String::from_str(env, "0.1.0")
     }
 
+    #[only_owner]
     fn upgrade(env: &Env, new_wasm_hash: BytesN<32>) {
-        Self::owner(env).require_auth();
-
         env.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 }

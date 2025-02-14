@@ -1,0 +1,3 @@
+fn test_fn(env: &Env, other: i32) {
+    Self::operator(&env).require_auth();
+}
