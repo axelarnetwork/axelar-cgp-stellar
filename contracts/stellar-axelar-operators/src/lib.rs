@@ -20,5 +20,6 @@ cfg_if::cfg_if! {
         mod migrate;
 
         pub use contract::{AxelarOperators, AxelarOperatorsClient};
+        pub use interface::AxelarOperatorsInterface;
     }
 }
