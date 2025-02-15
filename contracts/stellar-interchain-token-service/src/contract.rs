@@ -9,7 +9,6 @@ use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
     ensure, interfaces, only_operator, only_owner, when_not_paused, Operatable, Ownable, Pausable,
@@ -374,8 +373,6 @@ impl InterchainTokenService {
             &payload,
         );
 
-        extend_instance_ttl(env);
-
         Ok(())
     }
 
@@ -396,8 +393,6 @@ impl InterchainTokenService {
             }
             Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
         }?;
-
-        extend_instance_ttl(env);
 
         Ok(())
     }
