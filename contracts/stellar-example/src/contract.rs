@@ -19,7 +19,7 @@ use crate::storage;
 pub struct Example;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[repr(u32)]
 pub enum ExampleError {
     NotApproved = 1,

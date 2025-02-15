@@ -1,8 +1,8 @@
 use soroban_sdk::{contracttype, Address, BytesN};
 use stellar_axelar_std::contractstorage;
 
-#[derive(Clone)]
 #[contracttype]
+#[derive(Clone)]
 pub struct AllowanceDataKey {
     pub from: Address,
     pub spender: Address,
@@ -16,7 +16,6 @@ pub struct AllowanceValue {
 
 /// Do not use the symbol `METADATA` as a key as it is reserved for token metadata.
 #[contractstorage]
-#[derive(Clone)]
 pub enum DataKey {
     #[temporary]
     #[value(AllowanceValue)]

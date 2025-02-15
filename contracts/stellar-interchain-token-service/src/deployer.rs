@@ -73,7 +73,7 @@ pub fn deploy_token_manager(
     token_manager_wasm_hash: BytesN<32>,
     token_id: BytesN<32>,
     token_address: Address,
-    token_manager_type: TokenManagerType,
+    token_manager_type: &TokenManagerType,
 ) -> Address {
     let deployed_address = env
         .deployer()
@@ -84,7 +84,7 @@ pub fn deploy_token_manager(
         token_id,
         token_address,
         token_manager: deployed_address.clone(),
-        token_manager_type,
+        token_manager_type: token_manager_type.clone(),
     }
     .emit(env);
 

@@ -2,14 +2,14 @@ use soroban_sdk::{contracttype, BytesN, String};
 use stellar_axelar_std::contractstorage;
 
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct MessageApprovalKey {
     pub source_chain: String,
     pub message_id: String,
 }
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(PartialEq)]
 pub enum MessageApprovalValue {
     NotApproved,
     Approved(BytesN<32>),
@@ -17,7 +17,6 @@ pub enum MessageApprovalValue {
 }
 
 #[contractstorage]
-#[derive(Clone, Debug)]
 pub enum DataKey {
     #[persistent]
     #[value(MessageApprovalValue)]

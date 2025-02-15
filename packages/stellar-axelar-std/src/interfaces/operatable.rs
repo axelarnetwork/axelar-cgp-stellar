@@ -46,7 +46,7 @@ pub fn set_operator(env: &Env, operator: &Address) {
         .set(&storage::operator::DataKey::Interfaces_Operator, operator);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct OperatorshipTransferredEvent {
     pub previous_operator: Address,
     pub new_operator: Address,

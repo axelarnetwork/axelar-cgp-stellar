@@ -12,7 +12,7 @@ use crate::interfaces::{operatable, ownable, CustomMigratableInterface, Migratab
 pub struct ContractNonTrivial;
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone)]
 pub struct MigrationData {
     pub data1: String,
     pub data2: bool,
@@ -50,7 +50,7 @@ impl CustomMigratableInterface for ContractNonTrivial {
 }
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug)]
 #[repr(u32)]
 pub enum ContractError {
     MigrationNotAllowed = 1,

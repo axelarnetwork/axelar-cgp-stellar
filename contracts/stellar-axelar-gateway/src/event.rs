@@ -5,7 +5,7 @@ use stellar_axelar_std::IntoEvent;
 
 use crate::types::{Message, WeightedSigners};
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct ContractCalledEvent {
     pub caller: Address,
     pub destination_chain: String,
@@ -15,17 +15,17 @@ pub struct ContractCalledEvent {
     pub payload: Bytes,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct MessageApprovedEvent {
     pub message: Message,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct MessageExecutedEvent {
     pub message: Message,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct SignersRotatedEvent {
     pub epoch: u64,
     pub signers_hash: BytesN<32>,

@@ -10,7 +10,6 @@ use crate::types::{self, HubMessage, Message};
 extern crate alloc;
 
 sol! {
-    #[derive(PartialEq, Eq)]
     enum MessageType {
         InterchainTransfer,
         DeployInterchainToken,

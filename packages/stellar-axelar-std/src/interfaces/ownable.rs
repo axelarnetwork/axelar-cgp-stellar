@@ -46,7 +46,7 @@ pub fn set_owner(env: &Env, owner: &Address) {
         .set(&storage::owner::DataKey::Interfaces_Owner, owner);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct OwnershipTransferredEvent {
     pub previous_owner: Address,
     pub new_owner: Address,

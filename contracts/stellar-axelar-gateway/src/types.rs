@@ -2,14 +2,14 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contracttype, Address, BytesN, Env, String, Vec};
 
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct WeightedSigner {
     pub signer: BytesN<32>, // Ed25519 public key
     pub weight: u128,
 }
 
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct WeightedSigners {
     pub signers: Vec<WeightedSigner>,
     pub threshold: u128,
@@ -20,7 +20,7 @@ pub struct WeightedSigners {
 /// Since Soroban doesn't support use of `Option` in it's contract interfaces,
 /// we use this enum instead.
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub enum ProofSignature {
     Signed(BytesN<64>), // Ed25519 signature
     Unsigned,
@@ -31,7 +31,7 @@ pub enum ProofSignature {
 /// If the signer submitted a signature, and if it is being included in the proof to meet the threshold,
 /// then a signature is attached. Otherwise, the `ProofSignature` is `Unsigned`.
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct ProofSigner {
     pub signer: WeightedSigner,
     pub signature: ProofSignature,
@@ -41,7 +41,7 @@ pub struct ProofSigner {
 /// All weighted signers are included in the along with a signature, if they have signed the message,
 /// until threshold is met.
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct Proof {
     pub signers: Vec<ProofSigner>,
     pub threshold: u128,
@@ -49,14 +49,13 @@ pub struct Proof {
 }
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CommandType {
     ApproveMessages,
     RotateSigners,
 }
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Message {
     pub source_chain: String,
     pub message_id: String,

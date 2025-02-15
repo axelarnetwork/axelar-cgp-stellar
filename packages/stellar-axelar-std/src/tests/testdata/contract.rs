@@ -9,7 +9,7 @@ use crate::interfaces::CustomMigratableInterface;
 use crate::IntoEvent;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug)]
 #[repr(u32)]
 pub enum ContractError {
     MigrationNotAllowed = 1,
@@ -20,7 +20,7 @@ pub enum ContractError {
 #[migratable]
 pub struct Contract;
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct MigratedEvent {}
 
 #[contractimpl]
