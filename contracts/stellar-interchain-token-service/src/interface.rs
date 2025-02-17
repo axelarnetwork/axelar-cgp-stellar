@@ -9,7 +9,6 @@ use stellar_axelar_std::types::Token;
 use crate::error::ContractError;
 use crate::types::TokenManagerType;
 
-#[allow(dead_code)]
 #[contractclient(name = "InterchainTokenServiceClient")]
 pub trait InterchainTokenServiceInterface:
     AxelarExecutableInterface
