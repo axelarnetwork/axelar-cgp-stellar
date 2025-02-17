@@ -646,7 +646,7 @@ impl InterchainTokenService {
             Self::token_manager_wasm_hash(env),
             token_id.clone(),
             token_address.clone(),
-            token_manager_type,
+            token_manager_type.clone(),
         );
 
         Self::set_token_id_config(

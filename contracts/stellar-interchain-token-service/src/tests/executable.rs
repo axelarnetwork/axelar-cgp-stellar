@@ -27,13 +27,12 @@ mod test {
     pub struct ExecutableContract;
 
     #[contracttype]
-    #[derive(Clone, Debug)]
     pub enum DataKey {
         InterchainTokenService,
         Message,
     }
 
-    #[derive(Debug, PartialEq, Eq, IntoEvent)]
+    #[derive(Debug, PartialEq, IntoEvent)]
     pub struct ExecutedEvent {
         pub source_chain: String,
         pub message_id: String,

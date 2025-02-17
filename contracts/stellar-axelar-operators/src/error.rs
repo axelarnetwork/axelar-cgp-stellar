@@ -1,7 +1,7 @@
 use soroban_sdk::contracterror;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq)]
 #[repr(u32)]
 pub enum ContractError {
     MigrationNotAllowed = 1,

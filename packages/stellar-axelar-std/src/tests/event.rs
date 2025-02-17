@@ -8,10 +8,10 @@ use crate::IntoEvent;
 #[contract]
 pub struct Contract;
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 struct EmptyEvent;
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 struct SingleDataEvent {
     topic1: Address,
     topic2: Address,
@@ -19,7 +19,7 @@ struct SingleDataEvent {
     data: String,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 #[event_name("custom_name")]
 struct NamedEvent {
     topic: Address,
@@ -27,7 +27,7 @@ struct NamedEvent {
     data: String,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 struct MultiDataEvent {
     topic1: String,
     topic2: Address,
@@ -37,13 +37,13 @@ struct MultiDataEvent {
     data2: String,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 struct NoDataEvent {
     topic1: String,
     topic2: Address,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 struct NoTopicEvent {
     #[data]
     data1: String,

@@ -271,7 +271,6 @@ impl Value {
     }
 }
 
-#[derive(Debug)]
 enum StorageType {
     Instance,
     Persistent,

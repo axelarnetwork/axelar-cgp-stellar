@@ -11,7 +11,6 @@ mod operatable {
     use super::*;
 
     #[contracterror]
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     #[repr(u32)]
     enum ContractError {
         MigrationNotAllowed = 1,
@@ -74,7 +73,6 @@ mod ownable {
     use super::*;
 
     #[contracterror]
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     #[repr(u32)]
     enum ContractError {
         MigrationNotAllowed = 1,
@@ -172,7 +170,6 @@ mod upgradable {
     use crate::tests::testdata;
 
     #[contracterror]
-    #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
     #[repr(u32)]
     pub enum ContractError {
         MigrationNotAllowed = 1,

@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Bytes, BytesN, String};
 use stellar_axelar_std::IntoEvent;
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct ExecutedEvent {
     pub source_chain: String,
     pub message_id: String,
@@ -10,7 +10,7 @@ pub struct ExecutedEvent {
     pub payload: Bytes,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct TokenReceivedEvent {
     pub source_chain: String,
     pub message_id: String,
@@ -22,7 +22,7 @@ pub struct TokenReceivedEvent {
     pub payload: Bytes,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct TokenSentEvent {
     pub sender: Address,
     pub token_id: BytesN<32>,

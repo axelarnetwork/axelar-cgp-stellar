@@ -57,7 +57,7 @@ mod test {
     use crate as stellar_axelar_std;
     use crate::events::fmt_last_emitted_event;
 
-    #[derive(Debug, PartialEq, Eq, IntoEvent)]
+    #[derive(Debug, PartialEq, IntoEvent)]
     struct TestEvent {
         topic1: Symbol,
         topic2: String,

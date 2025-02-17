@@ -10,7 +10,6 @@ mod legacy_storage {
     use stellar_axelar_std::contractstorage;
 
     #[contractstorage]
-    #[derive(Clone, Debug)]
     enum LegacyDataKey {
         #[instance]
         #[status]

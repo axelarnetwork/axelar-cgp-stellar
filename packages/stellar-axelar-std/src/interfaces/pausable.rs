@@ -48,10 +48,10 @@ pub fn unpause<T: PausableInterface>(env: &Env) {
     UnpausedEvent {}.emit(env);
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct PausedEvent {}
 
-#[derive(Clone, Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct UnpausedEvent {}
 
 #[cfg(test)]
@@ -65,7 +65,7 @@ mod test {
     use crate::{assert_auth, assert_auth_err, assert_contract_err, events, when_not_paused};
 
     #[contracterror]
-    #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+    #[derive(Debug, PartialEq)]
     #[repr(u32)]
     pub enum ContractError {
         ContractPaused = 1,

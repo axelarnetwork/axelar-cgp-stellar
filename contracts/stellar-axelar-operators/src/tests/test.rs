@@ -20,7 +20,7 @@ pub enum TestTargetError {
     TestError = 1,
 }
 
-#[derive(Debug, PartialEq, Eq, IntoEvent)]
+#[derive(Debug, PartialEq, IntoEvent)]
 pub struct ExecutedEvent;
 
 #[contractimpl]

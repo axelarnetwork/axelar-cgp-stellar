@@ -13,7 +13,7 @@ use crate::types::{
 };
 use crate::{AxelarGateway, AxelarGatewayClient};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct TestSignerSet {
     pub signer_keys: std::vec::Vec<SigningKey>,
     pub signers: WeightedSigners,

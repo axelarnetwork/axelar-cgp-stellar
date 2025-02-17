@@ -1,7 +1,7 @@
 use soroban_sdk::contracterror;
 
 #[contracterror]
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[repr(u32)]
 pub enum ContractError {
     SameVersion = 1,

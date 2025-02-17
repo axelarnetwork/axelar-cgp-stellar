@@ -3,7 +3,7 @@ use stellar_axelar_gateway::executable::NotApprovedError;
 use stellar_axelar_gateway::impl_not_approved_error;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 #[repr(u32)]
 pub enum ContractError {
     MigrationNotAllowed = 1,

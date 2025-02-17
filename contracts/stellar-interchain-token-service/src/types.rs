@@ -1,12 +1,12 @@
 use soroban_sdk::{contracttype, Bytes, BytesN, String};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Message {
     InterchainTransfer(InterchainTransfer),
     DeployInterchainToken(DeployInterchainToken),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InterchainTransfer {
     pub token_id: BytesN<32>,
     pub source_address: Bytes,
@@ -15,7 +15,7 @@ pub struct InterchainTransfer {
     pub data: Option<Bytes>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DeployInterchainToken {
     pub token_id: BytesN<32>,
     pub name: String,
@@ -24,7 +24,7 @@ pub struct DeployInterchainToken {
     pub minter: Option<Bytes>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HubMessage {
     SendToHub {
         destination_chain: String,
@@ -41,7 +41,7 @@ pub enum HubMessage {
 /// Only the variants supported by Stellar ITS are defined here.
 /// The variant values need to match the [ITS spec](https://github.com/axelarnetwork/interchain-token-service/blob/v2.0.0/contracts/interfaces/ITokenManagerType.sol#L9).
 #[contracttype]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 #[repr(u32)]
 pub enum TokenManagerType {
     NativeInterchainToken = 0,
