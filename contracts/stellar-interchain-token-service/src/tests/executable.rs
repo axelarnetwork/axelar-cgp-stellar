@@ -27,7 +27,7 @@ mod test {
     pub struct ExecutableContract;
 
     #[contracttype]
-    pub enum DataKey {
+    enum DataKey {
         InterchainTokenService,
         Message,
     }

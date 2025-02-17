@@ -16,7 +16,7 @@ pub struct AllowanceValue {
 
 /// Do not use the symbol `METADATA` as a key as it is reserved for token metadata.
 #[contractstorage]
-pub enum DataKey {
+enum DataKey {
     #[temporary]
     #[value(AllowanceValue)]
     Allowance { key: AllowanceDataKey },

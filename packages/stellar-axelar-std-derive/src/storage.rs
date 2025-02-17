@@ -388,7 +388,7 @@ pub fn contract_storage(input: &DeriveInput) -> TokenStream {
 ///
 /// /* Generated */
 /// #[contracttype]
-/// pub enum DataKey {
+/// enum DataKey {
 ///     Gateway, // Unit variant (storage key)
 ///     Users(Address), // Tuple variant (storage key map)
 /// }
