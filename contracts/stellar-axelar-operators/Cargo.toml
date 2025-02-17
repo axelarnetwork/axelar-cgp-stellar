@@ -11,7 +11,6 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 library = [] # Only export the contract interface
-testutils = ["stellar-axelar-std/testutils"]
 
 [dependencies]
 cfg-if = { workspace = true }
