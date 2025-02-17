@@ -1,4 +1,4 @@
-enum DataKey {
+pub enum DataKey {
 
     #[persistent]
     #[value(MessageApprovalValue)]

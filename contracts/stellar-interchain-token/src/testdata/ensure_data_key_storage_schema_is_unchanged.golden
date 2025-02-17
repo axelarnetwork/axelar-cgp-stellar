@@ -1,5 +1,5 @@
 /// Do not use the symbol `METADATA` as a key as it is reserved for token metadata.
-enum DataKey {
+pub enum DataKey {
 
     #[temporary]
     #[value(AllowanceValue)]

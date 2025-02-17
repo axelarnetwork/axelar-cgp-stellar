@@ -17,7 +17,7 @@ pub enum MessageApprovalValue {
 }
 
 #[contractstorage]
-enum DataKey {
+pub enum DataKey {
     #[persistent]
     #[value(MessageApprovalValue)]
     MessageApproval {

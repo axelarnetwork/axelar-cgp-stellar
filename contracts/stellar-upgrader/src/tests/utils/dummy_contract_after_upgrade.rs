@@ -53,7 +53,7 @@ mod storage {
     use super::*;
 
     #[contractstorage]
-    enum DataKey {
+    pub enum DataKey {
         #[instance]
         #[value(soroban_sdk::String)]
         Data,

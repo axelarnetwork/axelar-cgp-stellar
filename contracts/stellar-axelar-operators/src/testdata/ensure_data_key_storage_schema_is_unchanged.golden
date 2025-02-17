@@ -1,4 +1,4 @@
-enum DataKey {
+pub enum DataKey {
 
     #[instance]
     #[status]
