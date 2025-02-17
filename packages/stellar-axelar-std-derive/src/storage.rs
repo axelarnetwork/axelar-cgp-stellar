@@ -443,13 +443,10 @@ fn contract_storage_tests(r#enum: &Ident, enum_input: &DeriveInput) -> TokenStre
 /// Tests the storage schema generation for a storage enum.
 #[cfg(test)]
 mod tests {
-    use syn::{DeriveInput, Fields};
-
-    use crate::storage::contract_storage;
 
     #[test]
     fn storage_schema_generation_succeeds() {
-        let enum_input: DeriveInput = syn::parse_quote! {
+        let enum_input: syn::DeriveInput = syn::parse_quote! {
             enum DataKey {
                 #[instance]
                 #[value(u32)]
@@ -481,7 +478,7 @@ mod tests {
             }
         };
 
-        let storage_module = contract_storage(&enum_input);
+        let storage_module = crate::storage::contract_storage(&enum_input);
         let storage_module_file: syn::File = syn::parse2(storage_module).unwrap();
         let formatted_storage_module = prettyplease::unparse(&storage_module_file)
             .replace("pub fn ", "\npub fn ")
@@ -492,19 +489,19 @@ mod tests {
     #[test]
     #[should_panic(expected = "contractstorage can only be used on enums")]
     fn non_enum_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             struct NotAnEnum {
                 field: u32,
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
     #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn tuple_variant_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 #[value(u32)]
@@ -512,7 +509,7 @@ mod tests {
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
@@ -520,34 +517,34 @@ mod tests {
         expected = "storage type must be specified exactly once as 'instance', 'persistent', or 'temporary'"
     )]
     fn missing_storage_type_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[value(u32)]
                 Counter,
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
     #[should_panic(expected = "exactly one of #[status] and #[value(Type)] must be provided")]
     fn missing_value_and_status_attribute_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 Counter,
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
     #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn fields_names_tuple_variant_fails() {
         use super::FieldsExt;
-        let fields = Fields::Unnamed(syn::parse_quote! {
+        let fields = syn::Fields::Unnamed(syn::parse_quote! {
             (String, u32)
         });
 
@@ -558,7 +555,7 @@ mod tests {
     #[should_panic(expected = "only unit variants or named fields are supported in storage enums")]
     fn fields_types_tuple_variant_fails() {
         use super::FieldsExt;
-        let fields = Fields::Unnamed(syn::parse_quote! {
+        let fields = syn::Fields::Unnamed(syn::parse_quote! {
             (String, u32)
         });
 
@@ -568,7 +565,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "exactly one of #[status] and #[value(Type)] must be provided")]
     fn status_and_value_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 #[value(bool)]
@@ -577,13 +574,13 @@ mod tests {
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
     #[should_panic(expected = "failed to parse value type")]
     fn invalid_value_type_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 #[value(!@$Type)]
@@ -591,13 +588,13 @@ mod tests {
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 
     #[test]
     #[should_panic(expected = "value attribute must contain a type parameter: #[value(Type)]")]
     fn value_without_type_fails() {
-        let input: DeriveInput = syn::parse_quote! {
+        let input: syn::DeriveInput = syn::parse_quote! {
             enum InvalidEnum {
                 #[instance]
                 #[value]
@@ -605,6 +602,6 @@ mod tests {
             }
         };
 
-        contract_storage(&input);
+        crate::storage::contract_storage(&input);
     }
 }

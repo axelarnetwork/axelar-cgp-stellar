@@ -9,7 +9,6 @@ use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::interfaces::CustomMigratableInterface;
 use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
@@ -331,10 +330,6 @@ impl AxelarExecutableInterface for InterchainTokenService {
 
         Self::execute_message(&env, source_chain, message_id, source_address, payload)
     }
-}
-
-impl CustomMigratableInterface for InterchainTokenService {
-    type MigrationData = ();
 }
 
 impl InterchainTokenService {

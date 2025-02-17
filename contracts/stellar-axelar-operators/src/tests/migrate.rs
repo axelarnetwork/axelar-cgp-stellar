@@ -1,8 +1,9 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address};
-use stellar_axelar_std::assert_auth;
 use stellar_axelar_std::interfaces::CustomMigratableInterface;
+use stellar_axelar_std::{assert_auth, assert_err};
 
+use crate::error::ContractError;
 use crate::tests::testutils::{setup_env, TestConfig};
 use crate::AxelarOperators;
 
@@ -34,7 +35,6 @@ fn migrate_succeeds() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #3)")] // ContractError::NotAnOperator
 fn migrate_fails_when_account_is_not_operator() {
     let TestConfig {
         env, owner, client, ..
@@ -47,9 +47,12 @@ fn migrate_fails_when_account_is_not_operator() {
 
     let migration_data = vec![&env, non_operator];
 
-    env.as_contract(&client.address, || {
-        <AxelarOperators as CustomMigratableInterface>::__migrate(&env, migration_data);
-    });
+    assert_err!(
+        env.as_contract(&client.address, || {
+            <AxelarOperators as CustomMigratableInterface>::__migrate(&env, migration_data)
+        }),
+        ContractError::NotAnOperator
+    );
 }
 
 #[test]

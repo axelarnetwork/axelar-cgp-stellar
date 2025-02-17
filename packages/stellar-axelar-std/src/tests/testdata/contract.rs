@@ -17,7 +17,7 @@ pub enum ContractError {
 
 #[contract]
 #[derive(Ownable, Upgradable)]
-#[migratable(with_type = ())]
+#[migratable]
 pub struct Contract;
 
 #[derive(Debug, PartialEq, Eq, IntoEvent)]
@@ -32,8 +32,11 @@ impl Contract {
 
 impl CustomMigratableInterface for Contract {
     type MigrationData = ();
+    type Error = ContractError;
 
-    fn __migrate(env: &Env, _migration_data: Self::MigrationData) {
+    fn __migrate(env: &Env, _migration_data: Self::MigrationData) -> Result<(), Self::Error> {
         MigratedEvent {}.emit(env);
+
+        Ok(())
     }
 }
