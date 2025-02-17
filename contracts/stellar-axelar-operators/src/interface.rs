@@ -3,7 +3,6 @@ use stellar_axelar_std::interfaces::OwnableInterface;
 
 use crate::error::ContractError;
 
-#[allow(dead_code)]
 #[contractclient(name = "AxelarOperatorsClient")]
 pub trait AxelarOperatorsInterface: OwnableInterface {
     /// Return whether specified account is an operator.
