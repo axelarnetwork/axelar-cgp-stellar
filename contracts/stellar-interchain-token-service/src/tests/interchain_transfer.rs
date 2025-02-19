@@ -24,7 +24,7 @@ fn setup_sender(
     env: &Env,
     client: &InterchainTokenServiceClient,
     amount: i128,
-) -> (Address, Option<Token>, BytesN<32>) {
+) -> (Address, Token, BytesN<32>) {
     let sender: Address = Address::generate(env);
     let gas_token = setup_gas_token(env, &sender);
     let (token_id, _) = setup_its_token(env, client, &sender, amount);
@@ -51,7 +51,7 @@ fn interchain_transfer_send_succeeds() {
         &destination_address,
         &amount,
         &data,
-        &gas_token,
+        &Some(gas_token),
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
@@ -97,7 +97,7 @@ fn interchain_transfer_canonical_token_send_succeeds() {
         &destination_address,
         &amount,
         &data,
-        &gas_token,
+        &Some(gas_token),
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
@@ -205,7 +205,7 @@ fn interchain_transfer_send_fails_when_paused() {
             &Bytes::from_hex(&env, ""),
             &1,
             &Some(Bytes::from_hex(&env, "")),
-            &setup_gas_token(&env, &Address::generate(&env))
+            &Some(setup_gas_token(&env, &Address::generate(&env)))
         ),
         ContractError::ContractPaused
     );
@@ -230,7 +230,7 @@ fn interchain_transfer_send_fails_on_insufficient_balance() {
         &destination_address,
         &(amount + 1),
         &data,
-        &gas_token,
+        &Some(gas_token),
     );
 }
 
@@ -254,7 +254,7 @@ fn interchain_transfer_fails_on_zero_amount() {
             &destination_address,
             &transfer_amount,
             &data,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidAmount
     );
@@ -280,7 +280,7 @@ fn interchain_transfer_fails_on_empty_destination_address() {
             &empty_address,
             &amount,
             &data,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidDestinationAddress
     );
@@ -306,7 +306,7 @@ fn interchain_transfer_fails_on_empty_data() {
             &destination_address,
             &amount,
             &empty_data,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidData
     );
@@ -333,7 +333,7 @@ fn interchain_transfer_fails_with_invalid_token() {
             &destination_address,
             &amount,
             &data,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidTokenId
     );

@@ -41,7 +41,7 @@ fn deploy_remote_interchain_token_succeeds() {
         &sender,
         &salt,
         &destination_chain,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
 
     assert_eq!(token_id, deployed_token_id);
@@ -63,12 +63,10 @@ fn deploy_remote_interchain_token_succeeds() {
     }
     .abi_encode(&env);
 
-    let _gas_token = gas_token.as_ref().unwrap();
-
     let transfer_auth = auth_invocation!(
         &env,
         sender,
-        _gas_token.transfer(&sender, gas_service.address.clone(), _gas_token.amount)
+        gas_token.transfer(&sender, gas_service.address.clone(), gas_token.amount)
     );
 
     let pay_gas_auth = auth_invocation!(
@@ -80,7 +78,7 @@ fn deploy_remote_interchain_token_succeeds() {
             its_hub_address,
             payload,
             &sender,
-            _gas_token.clone(),
+            gas_token.clone(),
             &Bytes::new(&env)
         ),
         transfer_auth
@@ -89,7 +87,7 @@ fn deploy_remote_interchain_token_succeeds() {
     let deploy_remote_interchain_token_auth = auth_invocation!(
         &env,
         sender,
-        client.deploy_remote_interchain_token(&sender, salt, destination_chain, gas_token),
+        client.deploy_remote_interchain_token(&sender, salt, destination_chain, Some(gas_token)),
         pay_gas_auth
     );
 
@@ -154,7 +152,7 @@ fn deploy_remote_interchain_token_fails_when_paused() {
             &Address::generate(&env),
             &BytesN::from_array(&env, &[1; 32]),
             &String::from_str(&env, "ethereum"),
-            &setup_gas_token(&env, &Address::generate(&env))
+            &Some(setup_gas_token(&env, &Address::generate(&env)))
         ),
         ContractError::ContractPaused
     );
@@ -186,7 +184,7 @@ fn deploy_remote_interchain_token_fails_untrusted_chain() {
             &sender,
             &salt,
             &destination_chain,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::UntrustedChain
     );
@@ -207,7 +205,7 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
             &spender,
             &salt,
             &destination_chain,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidTokenId
     );
@@ -227,7 +225,7 @@ fn deploy_remote_token_fails_local_deployment() {
             &spender,
             &salt,
             &destination_chain,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidDestinationChain
     );

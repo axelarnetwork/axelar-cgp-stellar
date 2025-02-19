@@ -57,7 +57,7 @@ fn deploy_remote_canonical_token_succeeds() {
         &token_address,
         &destination_chain,
         &spender,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
     assert_eq!(expected_id, deployed_token_id);
 
@@ -65,15 +65,13 @@ fn deploy_remote_canonical_token_succeeds() {
         InterchainTokenDeploymentStartedEvent,
     >(&env, -4));
 
-    let _gas_token = gas_token.as_ref().unwrap();
-
     let transfer_auth = auth_invocation!(
         &env,
         spender,
-        _gas_token.transfer(
+        gas_token.transfer(
             spender.clone(),
             gas_service.address.clone(),
-            _gas_token.amount
+            gas_token.amount
         )
     );
 
@@ -86,7 +84,7 @@ fn deploy_remote_canonical_token_succeeds() {
             its_hub_address,
             payload,
             spender.clone(),
-            _gas_token.clone(),
+            gas_token.clone(),
             Bytes::new(&env)
         ),
         transfer_auth
@@ -95,7 +93,12 @@ fn deploy_remote_canonical_token_succeeds() {
     let deploy_remote_canonical_token_auth = auth_invocation!(
         &env,
         spender,
-        client.deploy_remote_canonical_token(token_address, destination_chain, spender, gas_token),
+        client.deploy_remote_canonical_token(
+            token_address,
+            destination_chain,
+            spender,
+            Some(gas_token)
+        ),
         gas_service_auth
     );
 
@@ -153,7 +156,7 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
         &token_address,
         &destination_chain,
         &spender,
-        &gas_token,
+        &Some(gas_token),
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
@@ -190,7 +193,7 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
         &token_address,
         &destination_chain,
         &spender,
-        &gas_token,
+        &Some(gas_token),
     );
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
@@ -225,6 +228,6 @@ fn deploy_remote_canonical_token_fail_no_actual_token() {
         &token_address,
         &destination_chain,
         &spender,
-        &gas_token,
+        &Some(gas_token),
     );
 }
