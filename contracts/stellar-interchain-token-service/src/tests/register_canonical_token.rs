@@ -14,13 +14,13 @@ use crate::types::TokenManagerType;
 fn register_canonical_token_succeeds() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let registered_token = &env.register_stellar_asset_contract_v2(token_address);
-    let expected_id = client.canonical_interchain_token_id(&registered_token.address());
+    let token = &env.register_stellar_asset_contract_v2(token_address.clone());
+    let expected_id = client.canonical_interchain_token_id(&token.address());
 
     assert_eq!(
         client
             .mock_all_auths()
-            .register_canonical_token(&registered_token.address()),
+            .register_canonical_token(&token.address()),
         expected_id
     );
     let token_manager_deployed_event =
@@ -28,7 +28,7 @@ fn register_canonical_token_succeeds() {
 
     assert_eq!(
         client.token_address(&expected_id),
-        registered_token.address()
+        token.address()
     );
     assert_eq!(
         client.token_manager_type(&expected_id),
@@ -53,12 +53,12 @@ fn register_canonical_token_fails_when_paused() {
 fn register_canonical_token_fails_if_already_registered() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let registered_token = &env.register_stellar_asset_contract_v2(token_address);
+    let token = &env.register_stellar_asset_contract_v2(token_address.clone());
 
-    client.register_canonical_token(&registered_token.address());
+    client.register_canonical_token(&token.address());
 
     assert_contract_err!(
-        client.try_register_canonical_token(&registered_token.address()),
+        client.try_register_canonical_token(&token.address()),
         ContractError::TokenAlreadyRegistered
     );
 }
