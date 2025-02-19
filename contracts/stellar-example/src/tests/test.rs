@@ -105,10 +105,10 @@ fn gmp_example() {
     let asset = &env.register_stellar_asset_contract_v2(user.clone());
     let asset_client = StellarAssetClient::new(&env, &asset.address());
     let gas_amount: i128 = 100;
-    let gas_token = Some(Token {
+    let gas_token = Token {
         address: asset.address(),
         amount: gas_amount,
-    });
+    };
 
     asset_client.mock_all_auths().mint(&user, &gas_amount);
 
@@ -117,15 +117,13 @@ fn gmp_example() {
         &destination_chain,
         &destination_address,
         &payload,
-        &gas_token.clone(),
+        &Some(gas_token.clone()),
     );
-
-    let _gas_token = gas_token.as_ref().unwrap();
 
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(&user, &source_gas_service.address, _gas_token.amount)
+        asset_client.transfer(&user, &source_gas_service.address, gas_token.amount)
     );
 
     let source_gas_service_client = source_gas_service;
@@ -139,7 +137,7 @@ fn gmp_example() {
             destination_address.clone(),
             payload.clone(),
             &user,
-            _gas_token.clone(),
+            gas_token.clone(),
             &Bytes::new(&env)
         ),
         transfer_auth
@@ -155,7 +153,7 @@ fn gmp_example() {
             destination_chain,
             destination_address,
             payload.clone(),
-            gas_token.unwrap().clone()
+            gas_token
         ),
         pay_gas_auth
     );
@@ -297,7 +295,7 @@ fn its_example() {
         &destination_app.address.to_string_bytes(),
         &transfer_amount,
         &Some(recipient.to_string_bytes()),
-        &gas_token.clone(),
+        &gas_token,
     );
 
     let token_sent_event = events::fmt_last_emitted_event::<TokenSentEvent>(&env);
