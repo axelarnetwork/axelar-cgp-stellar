@@ -225,7 +225,8 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         token_address: Address,
     ) -> Result<BytesN<32>, ContractError> {
         // Validates the token address and it's associated token metadata
-        let _ = token_metadata::token_metadata(env, &token_address, &Self::native_token_address(env))?;
+        let _ =
+            token_metadata::token_metadata(env, &token_address, &Self::native_token_address(env))?;
 
         let token_id = Self::canonical_interchain_token_id(env, token_address.clone());
 

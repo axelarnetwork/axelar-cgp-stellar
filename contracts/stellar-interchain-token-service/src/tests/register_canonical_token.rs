@@ -14,7 +14,7 @@ use crate::types::TokenManagerType;
 fn register_canonical_token_succeeds() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let token = &env.register_stellar_asset_contract_v2(token_address.clone());
+    let token = &env.register_stellar_asset_contract_v2(token_address);
     let expected_id = client.canonical_interchain_token_id(&token.address());
 
     assert_eq!(
@@ -26,10 +26,7 @@ fn register_canonical_token_succeeds() {
     let token_manager_deployed_event =
         events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -1);
 
-    assert_eq!(
-        client.token_address(&expected_id),
-        token.address()
-    );
+    assert_eq!(client.token_address(&expected_id), token.address());
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
@@ -53,7 +50,7 @@ fn register_canonical_token_fails_when_paused() {
 fn register_canonical_token_fails_if_already_registered() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let token = &env.register_stellar_asset_contract_v2(token_address.clone());
+    let token = &env.register_stellar_asset_contract_v2(token_address);
 
     client.register_canonical_token(&token.address());
 
