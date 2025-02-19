@@ -24,7 +24,7 @@ fn setup_sender(
     env: &Env,
     client: &InterchainTokenServiceClient,
     amount: i128,
-) -> (Address, Token, BytesN<32>) {
+) -> (Address, Option<Token>, BytesN<32>) {
     let sender: Address = Address::generate(env);
     let gas_token = setup_gas_token(env, &sender);
     let (token_id, _) = setup_its_token(env, client, &sender, amount);
@@ -103,6 +103,86 @@ fn interchain_transfer_canonical_token_send_succeeds() {
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTransferSentEvent,
     >(&env, -4));
+
+    // Check that the tokens were escrowed in the token manager
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&token_manager),
+        amount
+    );
+}
+
+#[test]
+fn interchain_transfer_send_succeeds_without_gas_token() {
+    let (env, client, _, _, _) = setup_env();
+
+    let amount = 1000;
+    let (sender, _, token_id) = setup_sender(&env, &client, amount);
+    let gas_token: Option<Token> = None;
+    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    client.mock_all_auths().interchain_transfer(
+        &sender,
+        &token_id,
+        &destination_chain,
+        &destination_address,
+        &amount,
+        &data,
+        &gas_token,
+    );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTransferSentEvent,
+    >(&env, -2));
+}
+
+#[test]
+fn interchain_transfer_canonical_token_send_succeeds_without_gas_token() {
+    let (env, client, _, _, _) = setup_env();
+
+    let amount = 1000;
+    let sender: Address = Address::generate(&env);
+    let gas_token: Option<Token> = None;
+    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+
+    let token_address = env
+        .register_stellar_asset_contract_v2(sender.clone())
+        .address();
+
+    let token_id = client
+        .mock_all_auths()
+        .register_canonical_token(&token_address);
+    let token_manager = client.token_manager(&token_id);
+
+    assert_eq!(
+        TokenClient::new(&env, &token_address).balance(&token_manager),
+        0
+    );
+
+    StellarAssetClient::new(&env, &token_address)
+        .mock_all_auths()
+        .mint(&sender, &amount);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    client.mock_all_auths().interchain_transfer(
+        &sender,
+        &token_id,
+        &destination_chain,
+        &destination_address,
+        &amount,
+        &data,
+        &gas_token,
+    );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTransferSentEvent,
+    >(&env, -2));
 
     // Check that the tokens were escrowed in the token manager
     assert_eq!(

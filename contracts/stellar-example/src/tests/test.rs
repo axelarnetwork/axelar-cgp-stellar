@@ -52,16 +52,22 @@ fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
     }
 }
 
-fn setup_tokens<'a>(env: &Env, user: &Address, amount: i128) -> (StellarAssetContract, Token) {
+fn setup_tokens<'a>(
+    env: &Env,
+    user: &Address,
+    amount: i128,
+) -> (StellarAssetContract, Option<Token>) {
     let token = env.register_stellar_asset_contract_v2(user.clone());
     StellarAssetClient::new(env, &token.address())
         .mock_all_auths()
         .mint(user, &amount);
 
     let gas_token = setup_gas_token(env, user);
-    StellarAssetClient::new(env, &gas_token.address)
-        .mock_all_auths()
-        .mint(user, &1);
+    if let Some(ref gas_token) = gas_token {
+        StellarAssetClient::new(env, &gas_token.address)
+            .mock_all_auths()
+            .mint(user, &1);
+    }
 
     (token, gas_token)
 }
@@ -99,10 +105,10 @@ fn gmp_example() {
     let asset = &env.register_stellar_asset_contract_v2(user.clone());
     let asset_client = StellarAssetClient::new(&env, &asset.address());
     let gas_amount: i128 = 100;
-    let gas_token = Token {
+    let gas_token = Some(Token {
         address: asset.address(),
         amount: gas_amount,
-    };
+    });
 
     asset_client.mock_all_auths().mint(&user, &gas_amount);
 
@@ -111,13 +117,15 @@ fn gmp_example() {
         &destination_chain,
         &destination_address,
         &payload,
-        &gas_token,
+        &gas_token.clone(),
     );
+
+    let _gas_token = gas_token.as_ref().unwrap();
 
     let transfer_auth = auth_invocation!(
         &env,
         user,
-        asset_client.transfer(&user, &source_gas_service.address, gas_token.amount)
+        asset_client.transfer(&user, &source_gas_service.address, _gas_token.amount)
     );
 
     let source_gas_service_client = source_gas_service;
@@ -131,7 +139,7 @@ fn gmp_example() {
             destination_address.clone(),
             payload.clone(),
             &user,
-            gas_token.clone(),
+            _gas_token.clone(),
             &Bytes::new(&env)
         ),
         transfer_auth
@@ -147,7 +155,7 @@ fn gmp_example() {
             destination_chain,
             destination_address,
             payload.clone(),
-            gas_token
+            gas_token.unwrap().clone()
         ),
         pay_gas_auth
     );
@@ -289,7 +297,7 @@ fn its_example() {
         &destination_app.address.to_string_bytes(),
         &transfer_amount,
         &Some(recipient.to_string_bytes()),
-        &gas_token,
+        &gas_token.clone(),
     );
 
     let token_sent_event = events::fmt_last_emitted_event::<TokenSentEvent>(&env);

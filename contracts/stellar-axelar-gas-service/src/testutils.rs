@@ -14,7 +14,7 @@ pub fn setup_gas_service<'a>(env: &Env) -> AxelarGasServiceClient<'a> {
     gas_service_client
 }
 
-pub fn setup_gas_token(env: &Env, sender: &Address) -> Token {
+pub fn setup_gas_token(env: &Env, sender: &Address) -> Option<Token> {
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(env));
     let gas_amount: i128 = 1;
     let gas_token = Token {
@@ -26,5 +26,5 @@ pub fn setup_gas_token(env: &Env, sender: &Address) -> Token {
         .mock_all_auths()
         .mint(sender, &gas_amount);
 
-    gas_token
+    Some(gas_token)
 }
