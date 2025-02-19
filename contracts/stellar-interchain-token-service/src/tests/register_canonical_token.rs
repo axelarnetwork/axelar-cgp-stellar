@@ -14,18 +14,19 @@ use crate::types::TokenManagerType;
 fn register_canonical_token_succeeds() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
-    let expected_id = client.canonical_interchain_token_id(&token_address);
+    let registered_token = &env.register_stellar_asset_contract_v2(token_address);
+    let expected_id = client.canonical_interchain_token_id(&registered_token.address());
 
     assert_eq!(
         client
             .mock_all_auths()
-            .register_canonical_token(&token_address),
+            .register_canonical_token(&registered_token.address()),
         expected_id
     );
     let token_manager_deployed_event =
         events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -1);
 
-    assert_eq!(client.token_address(&expected_id), token_address);
+    assert_eq!(client.token_address(&expected_id), registered_token.address());
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
@@ -49,11 +50,12 @@ fn register_canonical_token_fails_when_paused() {
 fn register_canonical_token_fails_if_already_registered() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
+    let registered_token = &env.register_stellar_asset_contract_v2(token_address);
 
-    client.register_canonical_token(&token_address);
+    client.register_canonical_token(&registered_token.address());
 
     assert_contract_err!(
-        client.try_register_canonical_token(&token_address),
+        client.try_register_canonical_token(&registered_token.address()),
         ContractError::TokenAlreadyRegistered
     );
 }
@@ -71,4 +73,13 @@ fn canonical_token_id_derivation() {
         hex::encode(chain_name_hash.to_array()),
         hex::encode(token_id.to_array())
     ]);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
+fn register_canonical_token_fails_if_invalid_token_address(){
+    let (env, client, _, _, _) = setup_env();    
+    let token_address = Address::generate(&env);
+
+    client.register_canonical_token(&token_address);
 }
