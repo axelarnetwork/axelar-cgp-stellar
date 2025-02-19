@@ -26,7 +26,10 @@ fn register_canonical_token_succeeds() {
     let token_manager_deployed_event =
         events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -1);
 
-    assert_eq!(client.token_address(&expected_id), registered_token.address());
+    assert_eq!(
+        client.token_address(&expected_id),
+        registered_token.address()
+    );
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
@@ -77,8 +80,8 @@ fn canonical_token_id_derivation() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
-fn register_canonical_token_fails_if_invalid_token_address(){
-    let (env, client, _, _, _) = setup_env();    
+fn register_canonical_token_fails_if_invalid_token_address() {
+    let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
 
     client.register_canonical_token(&token_address);
