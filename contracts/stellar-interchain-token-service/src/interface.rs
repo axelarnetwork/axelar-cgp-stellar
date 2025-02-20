@@ -1,4 +1,4 @@
-use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
+use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String, Vec};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_std::interfaces::{
@@ -50,6 +50,16 @@ pub trait InterchainTokenServiceInterface:
     /// # Authorization
     /// - [`OwnableInterface::owner`] must authorize.
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError>;
+
+    /// Sets the list of specified chains as trusted for cross-chain messaging.
+    /// # Authorization
+    /// - [`OwnableInterface::owner`] must authorize.
+    fn set_trusted_chains(env: &Env, chains: Vec<String>) -> Result<(), ContractError>;
+
+    /// Removes the list of specified chains from trusted chains.
+    /// # Authorization
+    /// - [`OwnableInterface::owner`] must authorize.
+    fn remove_trusted_chains(env: &Env, chains: Vec<String>) -> Result<(), ContractError>;
 
     /// Computes the unique identifier for an interchain token.
     ///

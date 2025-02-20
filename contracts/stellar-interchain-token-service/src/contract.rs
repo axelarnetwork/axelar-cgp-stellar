@@ -1,7 +1,7 @@
 use soroban_sdk::token::StellarAssetClient;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{
-    contract, contractimpl, vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
+    contract, contractimpl, vec, Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Vec,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
@@ -61,6 +61,32 @@ impl InterchainTokenService {
         storage::set_interchain_token_wasm_hash(&env, &interchain_token_wasm_hash);
         storage::set_token_manager_wasm_hash(&env, &token_manager_wasm_hash);
     }
+
+    fn __set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
+        ensure!(
+            !storage::is_trusted_chain(env, chain.clone()),
+            ContractError::TrustedChainAlreadySet
+        );
+
+        storage::set_trusted_chain_status(env, chain.clone());
+
+        TrustedChainSetEvent { chain }.emit(env);
+
+        Ok(())
+    }
+
+    fn __remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
+        ensure!(
+            storage::is_trusted_chain(env, chain.clone()),
+            ContractError::TrustedChainNotSet
+        );
+
+        storage::remove_trusted_chain_status(env, chain.clone());
+
+        TrustedChainRemovedEvent { chain }.emit(env);
+
+        Ok(())
+    }
 }
 
 #[contractimpl]
@@ -99,30 +125,26 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
 
     #[only_owner]
     fn set_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
-        ensure!(
-            !storage::is_trusted_chain(env, chain.clone()),
-            ContractError::TrustedChainAlreadySet
-        );
-
-        storage::set_trusted_chain_status(env, chain.clone());
-
-        TrustedChainSetEvent { chain }.emit(env);
-
-        Ok(())
+        Self::__set_trusted_chain(env, chain)
     }
 
     #[only_owner]
     fn remove_trusted_chain(env: &Env, chain: String) -> Result<(), ContractError> {
-        ensure!(
-            storage::is_trusted_chain(env, chain.clone()),
-            ContractError::TrustedChainNotSet
-        );
+        Self::__remove_trusted_chain(env, chain)
+    }
 
-        storage::remove_trusted_chain_status(env, chain.clone());
+    #[only_owner]
+    fn set_trusted_chains(env: &Env, chains: Vec<String>) -> Result<(), ContractError> {
+        chains
+            .iter()
+            .try_for_each(|chain| Self::__set_trusted_chain(env, chain))
+    }
 
-        TrustedChainRemovedEvent { chain }.emit(env);
-
-        Ok(())
+    #[only_owner]
+    fn remove_trusted_chains(env: &Env, chains: Vec<String>) -> Result<(), ContractError> {
+        chains
+            .iter()
+            .try_for_each(|chain| Self::__remove_trusted_chain(env, chain))
     }
 
     fn interchain_token_id(env: &Env, deployer: Address, salt: BytesN<32>) -> BytesN<32> {
