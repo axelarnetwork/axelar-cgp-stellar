@@ -122,10 +122,7 @@ mod tests {
         let decimals = 18;
 
         let result = TokenMetadata::new(name, symbol, decimals);
-        match result {
-            Ok(_) => panic!("Expected error ContractError::InvalidTokenName, got Ok instead"),
-            Err(e) => assert_eq!(e, ContractError::InvalidTokenName),
-        }
+        assert!(matches!(result, Err(ContractError::InvalidTokenName)));
     }
 
     #[test]
@@ -137,9 +134,6 @@ mod tests {
         let decimals = 18;
 
         let result = TokenMetadata::new(name, symbol, decimals);
-        match result {
-            Ok(_) => panic!("Expected error ContractError::InvalidTokenSymbol, got Ok instead"),
-            Err(e) => assert_eq!(e, ContractError::InvalidTokenSymbol),
-        }
+        assert!(matches!(result, Err(ContractError::InvalidTokenSymbol)));
     }
 }
