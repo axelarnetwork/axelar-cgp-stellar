@@ -1,4 +1,6 @@
-use std::vec::Vec;
+extern crate alloc;
+
+use alloc::vec::Vec;
 
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
