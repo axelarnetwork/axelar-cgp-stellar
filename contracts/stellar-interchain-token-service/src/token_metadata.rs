@@ -1,3 +1,5 @@
+use std::vec::Vec;
+
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::ensure;
@@ -42,9 +44,29 @@ impl TokenMetadataExt for TokenMetadata {
             !self.symbol.is_empty() && self.symbol.len() <= MAX_SYMBOL_LENGTH,
             ContractError::InvalidTokenSymbol
         );
+        ensure!(is_ascii_string(&self.name), ContractError::InvalidTokenName);
+        ensure!(
+            is_ascii_string(&self.symbol),
+            ContractError::InvalidTokenSymbol
+        );
 
         Ok(())
     }
+}
+
+fn is_ascii_string(input: &String) -> bool {
+    let mut bytes: Vec<u8> = Vec::new();
+    bytes.resize(input.len() as usize, 0);
+    input.copy_into_slice(&mut bytes);
+
+    for &byte in bytes.iter() {
+        let character = byte as char;
+        let is_ascii_char = character.is_ascii();
+        if !is_ascii_char {
+            return false;
+        }
+    }
+    true
 }
 
 pub fn token_metadata(
@@ -71,4 +93,51 @@ pub fn token_metadata(
     };
 
     TokenMetadata::new(name, symbol, decimals)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn token_metadata_valid_ascii() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test");
+        let symbol = String::from_str(&env, "Test");
+        let decimals = 18;
+
+        let result = TokenMetadata::new(name, symbol, decimals);
+        let _ = result.unwrap();
+    }
+
+    #[test]
+    fn token_metadata_invalid_ascii_name() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test世界！");
+        let symbol = String::from_str(&env, "Test");
+        let decimals = 18;
+
+        let result = TokenMetadata::new(name, symbol, decimals);
+        match result {
+            Ok(_) => panic!("Expected error ContractError::InvalidTokenName, got Ok instead"),
+            Err(e) => assert_eq!(e, ContractError::InvalidTokenName),
+        }
+    }
+
+    #[test]
+    fn token_metadata_invalid_ascii_symbol() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test");
+        let symbol = String::from_str(&env, "Test世界！");
+        let decimals = 18;
+
+        let result = TokenMetadata::new(name, symbol, decimals);
+        match result {
+            Ok(_) => panic!("Expected error ContractError::InvalidTokenSymbol, got Ok instead"),
+            Err(e) => assert_eq!(e, ContractError::InvalidTokenSymbol),
+        }
+    }
 }
