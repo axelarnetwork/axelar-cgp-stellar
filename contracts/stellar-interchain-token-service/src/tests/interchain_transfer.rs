@@ -60,6 +60,34 @@ fn interchain_transfer_send_succeeds() {
 }
 
 #[test]
+fn interchain_transfer_send_succeeds_without_gas_token() {
+    let (env, client, _, _, _) = setup_env();
+
+    let amount = 1000;
+    let (sender, _, token_id) = setup_sender(&env, &client, amount);
+    let gas_token: Option<Token> = None;
+    let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    client.mock_all_auths().interchain_transfer(
+        &sender,
+        &token_id,
+        &destination_chain,
+        &destination_address,
+        &amount,
+        &data,
+        &gas_token,
+    );
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTransferSentEvent,
+    >(&env, -2));
+}
+
+#[test]
 fn interchain_transfer_canonical_token_send_succeeds() {
     let (env, client, _, _, _) = setup_env();
 
