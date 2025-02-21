@@ -1,10 +1,10 @@
 extern crate alloc;
 
-use alloc::vec::Vec;
 
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::ensure;
+use stellar_axelar_std::traits::StringExt;
 
 use crate::error::ContractError;
 
@@ -46,29 +46,11 @@ impl TokenMetadataExt for TokenMetadata {
             !self.symbol.is_empty() && self.symbol.len() <= MAX_SYMBOL_LENGTH,
             ContractError::InvalidTokenSymbol
         );
-        ensure!(is_ascii_string(&self.name), ContractError::InvalidTokenName);
-        ensure!(
-            is_ascii_string(&self.symbol),
-            ContractError::InvalidTokenSymbol
-        );
+        ensure!(&self.name.is_ascii(), ContractError::InvalidTokenName);
+        ensure!(&self.symbol.is_ascii(), ContractError::InvalidTokenSymbol);
 
         Ok(())
     }
-}
-
-fn is_ascii_string(input: &String) -> bool {
-    let mut bytes: Vec<u8> = Vec::new();
-    bytes.resize(input.len() as usize, 0);
-    input.copy_into_slice(&mut bytes);
-
-    for &byte in bytes.iter() {
-        let character = byte as char;
-        let is_ascii_char = character.is_ascii();
-        if !is_ascii_char {
-            return false;
-        }
-    }
-    true
 }
 
 pub fn token_metadata(
@@ -99,6 +81,8 @@ pub fn token_metadata(
 
 #[cfg(test)]
 mod tests {
+    use stellar_axelar_std::assert_ok;
+
     use super::*;
 
     #[test]
@@ -110,7 +94,7 @@ mod tests {
         let decimals = 18;
 
         let result = TokenMetadata::new(name, symbol, decimals);
-        let _ = result.unwrap();
+        let _ = assert_ok!(result);
     }
 
     #[test]
