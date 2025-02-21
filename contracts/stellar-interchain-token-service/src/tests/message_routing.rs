@@ -26,7 +26,7 @@ fn send_directly_to_hub_chain_fails() {
             &Bytes::from_hex(&env, "1234"),
             &amount,
             &None,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::UntrustedChain
     );
@@ -52,7 +52,7 @@ fn send_to_untrusted_chain_fails() {
             &Address::generate(&env).to_string_bytes(),
             &amount,
             &None,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::UntrustedChain
     );

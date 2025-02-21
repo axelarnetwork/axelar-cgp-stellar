@@ -2,6 +2,7 @@ use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocat
 use soroban_sdk::{Address, Bytes, BytesN, IntoVal, String, Symbol};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::testutils::setup_gas_token;
+use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_contract_err, auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
@@ -40,7 +41,7 @@ fn deploy_remote_interchain_token_succeeds() {
         &sender,
         &salt,
         &destination_chain,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
 
     assert_eq!(token_id, deployed_token_id);
@@ -86,8 +87,55 @@ fn deploy_remote_interchain_token_succeeds() {
     let deploy_remote_interchain_token_auth = auth_invocation!(
         &env,
         sender,
-        client.deploy_remote_interchain_token(&sender, salt, destination_chain, gas_token),
+        client.deploy_remote_interchain_token(&sender, salt, destination_chain, Some(gas_token)),
         pay_gas_auth
+    );
+
+    assert_eq!(env.auths(), deploy_remote_interchain_token_auth);
+}
+
+#[test]
+fn deploy_remote_interchain_token_succeeds_without_gas_token() {
+    let (env, client, _, _, _) = setup_env();
+
+    let sender = Address::generate(&env);
+    let gas_token: Option<Token> = None;
+    let minter: Option<Address> = None;
+    let salt = BytesN::<32>::from_array(&env, &[1; 32]);
+    let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
+    let initial_supply = 1;
+
+    let token_id = client.mock_all_auths().deploy_interchain_token(
+        &sender,
+        &salt,
+        &token_metadata,
+        &initial_supply,
+        &minter,
+    );
+
+    let destination_chain = String::from_str(&env, "ethereum");
+
+    client
+        .mock_all_auths()
+        .set_trusted_chain(&destination_chain);
+
+    let deployed_token_id = client.mock_all_auths().deploy_remote_interchain_token(
+        &sender,
+        &salt,
+        &destination_chain,
+        &gas_token,
+    );
+
+    assert_eq!(token_id, deployed_token_id);
+
+    goldie::assert!(events::fmt_emitted_event_at_idx::<
+        InterchainTokenDeploymentStartedEvent,
+    >(&env, -2));
+
+    let deploy_remote_interchain_token_auth = auth_invocation!(
+        &env,
+        sender,
+        client.deploy_remote_interchain_token(&sender, salt, destination_chain, gas_token)
     );
 
     assert_eq!(env.auths(), deploy_remote_interchain_token_auth);
@@ -104,7 +152,7 @@ fn deploy_remote_interchain_token_fails_when_paused() {
             &Address::generate(&env),
             &BytesN::from_array(&env, &[1; 32]),
             &String::from_str(&env, "ethereum"),
-            &setup_gas_token(&env, &Address::generate(&env))
+            &Some(setup_gas_token(&env, &Address::generate(&env)))
         ),
         ContractError::ContractPaused
     );
@@ -136,7 +184,7 @@ fn deploy_remote_interchain_token_fails_untrusted_chain() {
             &sender,
             &salt,
             &destination_chain,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::UntrustedChain
     );
@@ -157,7 +205,7 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
             &spender,
             &salt,
             &destination_chain,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidTokenId
     );
@@ -177,7 +225,7 @@ fn deploy_remote_token_fails_local_deployment() {
             &spender,
             &salt,
             &destination_chain,
-            &gas_token
+            &Some(gas_token)
         ),
         ContractError::InvalidDestinationChain
     );

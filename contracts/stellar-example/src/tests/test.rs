@@ -59,6 +59,7 @@ fn setup_tokens<'a>(env: &Env, user: &Address, amount: i128) -> (StellarAssetCon
         .mint(user, &amount);
 
     let gas_token = setup_gas_token(env, user);
+
     StellarAssetClient::new(env, &gas_token.address)
         .mock_all_auths()
         .mint(user, &1);
@@ -111,7 +112,7 @@ fn gmp_example() {
         &destination_chain,
         &destination_address,
         &payload,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
 
     let transfer_auth = auth_invocation!(
@@ -238,7 +239,7 @@ fn its_example() {
         &token.address(),
         &destination_chain,
         &user,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
 
     // Execute DeployInterchainToken message on destination
@@ -289,7 +290,7 @@ fn its_example() {
         &destination_app.address.to_string_bytes(),
         &transfer_amount,
         &Some(recipient.to_string_bytes()),
-        &gas_token,
+        &Some(gas_token),
     );
 
     let token_sent_event = events::fmt_last_emitted_event::<TokenSentEvent>(&env);

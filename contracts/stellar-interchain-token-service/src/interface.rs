@@ -168,7 +168,7 @@ pub trait InterchainTokenServiceInterface:
     /// - `caller`: Address of the caller initiating the deployment.
     /// - `salt`: A 32-byte unique salt used for token deployment.
     /// - `destination_chain`: The name of the destination chain where the token will be deployed.
-    /// - `gas_token`: The token used to pay for the gas cost of the cross-chain call.
+    /// - `gas_token`: An optional gas token used to pay for the gas cost of the cross-chain call.
     ///
     /// # Returns
     /// - `Ok(BytesN<32>)`: Returns the token ID.
@@ -184,7 +184,7 @@ pub trait InterchainTokenServiceInterface:
         caller: Address,
         salt: BytesN<32>,
         destination_chain: String,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<BytesN<32>, ContractError>;
 
     /// Registers a canonical token as an interchain token.
@@ -212,7 +212,7 @@ pub trait InterchainTokenServiceInterface:
     /// * `token_address` - The address of the token to be deployed.
     /// * `destination_chain` - The name of the destination chain where the token will be deployed.
     /// * `spender` - The spender of the cross-chain gas.
-    /// * `gas_token` - The token used to pay for gas during the deployment.
+    /// * `gas_token` - An optional gas token used to pay for gas during the deployment.
     ///
     /// # Returns
     /// - `Ok(BytesN<32>)`: Returns the token ID.
@@ -228,7 +228,7 @@ pub trait InterchainTokenServiceInterface:
         token_address: Address,
         destination_chain: String,
         spender: Address,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<BytesN<32>, ContractError>;
 
     /// Initiates a cross-chain token transfer.
@@ -247,7 +247,7 @@ pub trait InterchainTokenServiceInterface:
     /// - `destination_address`: The recipient address on the destination chain.
     /// - `amount`: The amount of tokens to transfer. Must be greater than 0.
     /// - `data`: Optional data to be handled by the destination address if it's a contract.
-    /// - `gas_token`: The token used to pay for cross-chain message execution.
+    /// - `gas_token`: An optional gas token used to pay for cross-chain message execution.
     ///
     /// # Errors
     /// - [`ContractError::InvalidAmount`]: If amount is not greater than 0.
@@ -264,6 +264,6 @@ pub trait InterchainTokenServiceInterface:
         destination_address: Bytes,
         amount: i128,
         metadata: Option<Bytes>,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ContractError>;
 }
