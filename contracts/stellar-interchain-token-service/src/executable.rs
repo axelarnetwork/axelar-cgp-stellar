@@ -6,6 +6,7 @@
 //! This is similar to the [`AxelarExecutableInterface`](stellar_axelar_gateway::executable::AxelarExecutableInterface) but meant for messages sent with an ITS token.
 
 use soroban_sdk::{contractclient, Address, Bytes, BytesN, Env, String};
+use stellar_axelar_std::derive_only;
 pub use stellar_axelar_std::InterchainTokenExecutable;
 
 /// This trait must be implemented by a contract to be compatible with the [`InterchainTokenExecutableInterface`].
@@ -40,9 +41,7 @@ pub trait CustomInterchainTokenExecutable {
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
 #[contractclient(name = "InterchainTokenExecutableClient")]
-pub trait InterchainTokenExecutableInterface:
-    CustomInterchainTokenExecutable + stellar_axelar_std::interfaces::DeriveOnly
-{
+pub trait InterchainTokenExecutableInterface: CustomInterchainTokenExecutable + DeriveOnly {
     /// Returns the address of the interchain token service contract that is authorized to execute arbitrary payloads on this contract
     fn interchain_token_service(env: &Env) -> Address;
 
@@ -60,3 +59,5 @@ pub trait InterchainTokenExecutableInterface:
         amount: i128,
     ) -> Result<(), soroban_sdk::Error>;
 }
+
+derive_only!();

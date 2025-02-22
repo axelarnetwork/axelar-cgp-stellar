@@ -2,6 +2,7 @@
 //!
 //! This ensures compatibility and prevents cyclic dependency issues during testing and release.
 
+mod axelar_executable;
 mod into_event;
 mod its_executable;
 mod modifier;
@@ -235,6 +236,14 @@ pub fn derive_its_executable(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     its_executable::its_executable(name).into()
+}
+
+#[proc_macro_derive(AxelarExecutable)]
+pub fn derive_axelar_executable(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    axelar_executable::axelar_executable(name).into()
 }
 
 /// Ensures that only a contract's owner can execute the attributed function.

@@ -5,7 +5,7 @@ pub fn its_executable(name: &Ident) -> TokenStream2 {
     quote! {
         use stellar_interchain_token_service::executable::InterchainTokenExecutableInterface as _;
 
-        impl stellar_axelar_std::interfaces::DeriveOnly for #name {}
+        impl stellar_interchain_token_service::executable::DeriveOnly for #name {}
 
         #[contractimpl]
         impl stellar_interchain_token_service::executable::InterchainTokenExecutableInterface for #name {

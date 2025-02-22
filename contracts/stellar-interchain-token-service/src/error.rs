@@ -1,6 +1,4 @@
 use soroban_sdk::contracterror;
-use stellar_axelar_gateway::executable::NotApprovedError;
-use stellar_axelar_gateway::impl_not_approved_error;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -36,5 +34,3 @@ pub enum ContractError {
     ContractPaused = 28,
     InvalidInitialSupply = 29,
 }
-
-impl_not_approved_error!(ContractError);
