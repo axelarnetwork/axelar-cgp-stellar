@@ -10,11 +10,16 @@ pub use ownable::*;
 pub use pausable::*;
 pub use upgradable::*;
 
-/// Marker trait for interfaces that should not be implemented by using `contractimpl`.
-///
-/// **DO NOT IMPLEMENT THIS MANUALLY!**
-#[doc(hidden)]
-pub trait DeriveOnly {}
+#[macro_export]
+macro_rules! derive_only {
+    () => {
+        /// Marker trait for interfaces that should not be implemented by using `contractimpl`.
+        ///
+        /// **DO NOT IMPLEMENT THIS MANUALLY!**
+        #[doc(hidden)]
+        pub trait DeriveOnly {}
+    };
+}
 
 /// This submodule encapsulates data keys for the separate interfaces. These keys break naming conventions on purpose.
 /// If a contract implements a contract type that would result in a collision with a key defined here,
