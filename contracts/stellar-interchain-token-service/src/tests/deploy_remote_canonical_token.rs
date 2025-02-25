@@ -162,7 +162,7 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
+#[should_panic(expected = "HostError: Error(Contract, #16)")] // InvalidTokenAddress
 fn deploy_remote_canonical_token_fail_no_actual_token() {
     let (env, client, _, _, _) = setup_env();
 

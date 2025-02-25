@@ -13,8 +13,8 @@ use crate::types::TokenManagerType;
 #[test]
 fn register_canonical_token_succeeds() {
     let (env, client, _, _, _) = setup_env();
-    let token_address = Address::generate(&env);
-    let token = &env.register_stellar_asset_contract_v2(token_address);
+    let owner = Address::generate(&env);
+    let token = &env.register_stellar_asset_contract_v2(owner);
     let expected_id = client.canonical_interchain_token_id(&token.address());
 
     assert_eq!(
@@ -49,8 +49,8 @@ fn register_canonical_token_fails_when_paused() {
 #[test]
 fn register_canonical_token_fails_if_already_registered() {
     let (env, client, _, _, _) = setup_env();
-    let token_address = Address::generate(&env);
-    let token = &env.register_stellar_asset_contract_v2(token_address);
+    let owner = Address::generate(&env);
+    let token = &env.register_stellar_asset_contract_v2(owner);
 
     client.register_canonical_token(&token.address());
 
@@ -76,10 +76,12 @@ fn canonical_token_id_derivation() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
 fn register_canonical_token_fails_if_invalid_token_address() {
     let (env, client, _, _, _) = setup_env();
     let token_address = Address::generate(&env);
 
-    client.register_canonical_token(&token_address);
+    assert_contract_err!(
+        client.try_register_canonical_token(&token_address),
+        ContractError::InvalidTokenAddress
+    );
 }
