@@ -56,15 +56,15 @@ pub fn token_metadata(
     let decimals = token
         .try_decimals()
         .map_err(|_| ContractError::InvalidTokenAddress)?
-        .map_err(|_| ContractError::InvalidTokenAddress)?;
+        .map_err(|_| ContractError::ConversionError)?;
     let name = token
         .try_name()
         .map_err(|_| ContractError::InvalidTokenAddress)?
-        .map_err(|_| ContractError::InvalidTokenAddress)?;
+        .map_err(|_| ContractError::ConversionError)?;
     let symbol = token
         .try_symbol()
         .map_err(|_| ContractError::InvalidTokenAddress)?
-        .map_err(|_| ContractError::InvalidTokenAddress)?;
+        .map_err(|_| ContractError::ConversionError)?;
 
     // Stellar's native token sets the name and symbol to 'native'. Override it to make it more readable
     let (name, symbol) = if token_address == native_token_address {
