@@ -3,7 +3,7 @@ extern crate alloc;
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::ensure;
-use stellar_axelar_std::traits::StringExt;
+use stellar_axelar_std::string::StringExt;
 
 use crate::error::ContractError;
 
@@ -85,7 +85,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn token_metadata_valid_ascii() {
+    fn token_metadata_new_succeeds() {
         let env = Env::default();
 
         let name = String::from_str(&env, "Test");
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn token_metadata_invalid_ascii_name() {
+    fn token_metadata_new_fails_with_invalid_ascii_name() {
         let env = Env::default();
 
         let name = String::from_str(&env, "Test世界！");
@@ -109,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn token_metadata_invalid_ascii_symbol() {
+    fn token_metadata_new_fails_with_invalid_ascii_symbol() {
         let env = Env::default();
 
         let name = String::from_str(&env, "Test");

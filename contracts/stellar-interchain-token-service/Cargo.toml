@@ -28,7 +28,7 @@ paste = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
 stellar-axelar-gas-service = { workspace = true, features = ["testutils"] }
 stellar-axelar-gateway = { workspace = true, features = ["testutils"] }
-stellar-axelar-std = { workspace = true, features = ["testutils"] }
+stellar-axelar-std = { workspace = true, features = ["testutils", "alloc"] }
 stellar-interchain-token = { workspace = true, features = ["testutils"] }
 
 [features]

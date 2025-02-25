@@ -1,28 +1,3 @@
-extern crate alloc;
-
-use alloc::vec::Vec;
-
-pub trait StringExt {
-    fn is_ascii(&self) -> bool;
-}
-
-impl StringExt for soroban_sdk::String {
-    fn is_ascii(&self) -> bool {
-        let mut bytes: Vec<u8> = Vec::new();
-        bytes.resize(self.len() as usize, 0);
-        self.copy_into_slice(&mut bytes);
-
-        for &byte in bytes.iter() {
-            let character = byte as char;
-            let is_ascii_char = character.is_ascii();
-            if !is_ascii_char {
-                return false;
-            }
-        }
-        true
-    }
-}
-
 #[cfg(any(test, feature = "testutils"))]
 pub use testutils::*;
 
