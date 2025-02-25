@@ -17,7 +17,7 @@ soroban-sdk = { workspace = true, features = ["alloc"] }
 soroban-token-sdk = { workspace = true }
 stellar-axelar-gas-service = { workspace = true, features = ["library"] }
 stellar-axelar-gateway = { workspace = true, features = ["library"] }
-stellar-axelar-std = { workspace = true }
+stellar-axelar-std = { workspace = true, features = ["alloc"] }
 stellar-interchain-token = { workspace = true, features = ["library"] }
 stellar-token-manager = { workspace = true, features = ["library"] }
 
