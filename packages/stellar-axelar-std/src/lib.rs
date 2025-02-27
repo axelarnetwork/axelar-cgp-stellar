@@ -4,9 +4,6 @@
 #[cfg(any(test, feature = "testutils"))]
 extern crate std;
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
-
 #[cfg(any(test, feature = "testutils"))]
 pub mod testutils;
 

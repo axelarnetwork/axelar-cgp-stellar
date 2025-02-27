@@ -90,8 +90,7 @@ mod tests {
         let symbol = String::from_str(&env, "Test");
         let decimals = 18;
 
-        let result = TokenMetadata::new(name, symbol, decimals);
-        let _ = assert_ok!(result);
+        assert_ok!(TokenMetadata::new(name, symbol, decimals));
     }
 
     #[test]
