@@ -1,9 +1,9 @@
 use soroban_sdk::{Env, IntoVal, Val};
 
 pub const LEDGERS_PER_DAY: u32 = (24 * 3600) / 5;
-pub const INSTANCE_TTL_THRESHOLD: u32 = 14 * LEDGERS_PER_DAY;
+pub const INSTANCE_TTL_THRESHOLD: u32 = 30 * LEDGERS_PER_DAY;
 pub const INSTANCE_TTL_EXTEND_TO: u32 = 60 * LEDGERS_PER_DAY;
-pub const PERSISTENT_TTL_THRESHOLD: u32 = 14 * LEDGERS_PER_DAY;
+pub const PERSISTENT_TTL_THRESHOLD: u32 = 30 * LEDGERS_PER_DAY;
 pub const PERSISTENT_TTL_EXTEND_TO: u32 = 60 * LEDGERS_PER_DAY;
 
 /// Extends the TTL of the contract instance if it falls below the threshold.
