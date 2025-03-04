@@ -5,7 +5,6 @@ use soroban_token_sdk::metadata::TokenMetadata;
 use soroban_token_sdk::TokenUtils;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::interfaces::OwnableInterface;
-use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{ensure, interfaces, only_owner, Upgradable};
 
 use crate::error::ContractError;
@@ -81,8 +80,6 @@ impl StellarAssetInterface for InterchainToken {
 
         Self::receive_balance(&env, to.clone(), amount);
 
-        extend_instance_ttl(&env);
-
         TokenUtils::new(&env).events().mint(owner, to, amount);
     }
 
@@ -118,8 +115,6 @@ impl InterchainTokenInterface for InterchainToken {
 
         Self::receive_balance(env, to.clone(), amount);
 
-        extend_instance_ttl(env);
-
         TokenUtils::new(env).events().mint(minter, to, amount);
 
         Ok(())
@@ -143,7 +138,6 @@ impl InterchainTokenInterface for InterchainToken {
 #[contractimpl]
 impl token::Interface for InterchainToken {
     fn allowance(env: Env, from: Address, spender: Address) -> i128 {
-        extend_instance_ttl(&env);
         Self::read_allowance(&env, from, spender).amount
     }
 
@@ -159,8 +153,6 @@ impl token::Interface for InterchainToken {
             amount,
             expiration_ledger,
         );
-
-        extend_instance_ttl(&env);
 
         TokenUtils::new(&env)
             .events()
@@ -178,8 +170,6 @@ impl token::Interface for InterchainToken {
         Self::spend_balance(&env, from.clone(), amount);
         Self::receive_balance(&env, to.clone(), amount);
 
-        extend_instance_ttl(&env);
-
         TokenUtils::new(&env).events().transfer(from, to, amount);
     }
 
@@ -191,8 +181,6 @@ impl token::Interface for InterchainToken {
         Self::spend_balance(&env, from.clone(), amount);
         Self::receive_balance(&env, to.clone(), amount);
 
-        extend_instance_ttl(&env);
-
         TokenUtils::new(&env).events().transfer(from, to, amount)
     }
 
@@ -201,8 +189,6 @@ impl token::Interface for InterchainToken {
 
         Self::validate_amount(&env, amount);
         Self::spend_balance(&env, from.clone(), amount);
-
-        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().burn(from, amount);
     }
@@ -213,8 +199,6 @@ impl token::Interface for InterchainToken {
         Self::validate_amount(&env, amount);
         Self::spend_allowance(&env, from.clone(), spender, amount);
         Self::spend_balance(&env, from.clone(), amount);
-
-        extend_instance_ttl(&env);
 
         TokenUtils::new(&env).events().burn(from, amount)
     }

@@ -1,5 +1,4 @@
-#[derive(Clone, Debug)]
-pub enum DataKey {
+enum DataKey {
 
     #[instance]
     #[status]

@@ -22,7 +22,7 @@ pub fn setup_its<'a>(
     let owner = Address::generate(env);
     let operator = Address::generate(env);
     let its_hub_address = String::from_str(env, "its_hub_address");
-    let chain_name = chain_name.unwrap_or(String::from_str(env, "chain_name"));
+    let chain_name = chain_name.unwrap_or_else(|| String::from_str(env, "chain_name"));
 
     let interchain_token_wasm_hash = env.deployer().upload_contract_wasm(INTERCHAIN_TOKEN_WASM);
 
