@@ -334,6 +334,10 @@ impl StorageType {
 pub fn contract_storage(input: &DeriveInput) -> TokenStream {
     let r#enum = &input.ident;
 
+    if matches!(input.vis, syn::Visibility::Public(_)) {
+        panic!("contractstorage can only be used on private enums (remove 'pub' keyword)");
+    }
+
     let Data::Enum(DataEnum { variants, .. }) = &input.data else {
         panic!("contractstorage can only be used on enums");
     };
@@ -599,6 +603,22 @@ mod tests {
                 #[instance]
                 #[value]
                 InvalidKey,
+            }
+        };
+
+        crate::storage::contract_storage(&input);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "contractstorage can only be used on private enums (remove 'pub' keyword)"
+    )]
+    fn public_enum_fails() {
+        let input: syn::DeriveInput = syn::parse_quote! {
+            pub enum PublicEnum {
+                #[instance]
+                #[value(u32)]
+                Counter,
             }
         };
 
