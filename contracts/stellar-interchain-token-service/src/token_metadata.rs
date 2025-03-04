@@ -102,6 +102,7 @@ mod tests {
         let decimals = 18;
 
         let result = TokenMetadata::new(name, symbol, decimals);
+        // TODO: use assert_err! once TokenMetadata implements Debug trait in new release
         assert!(matches!(result, Err(ContractError::InvalidTokenName)));
     }
 
@@ -114,6 +115,7 @@ mod tests {
         let decimals = 18;
 
         let result = TokenMetadata::new(name, symbol, decimals);
+        // TODO: use assert_err! once TokenMetadata implements Debug trait in new release
         assert!(matches!(result, Err(ContractError::InvalidTokenSymbol)));
     }
 }
