@@ -7,11 +7,11 @@ use stellar_interchain_token::InterchainTokenClient;
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::error::ContractError;
 use crate::event::{InterchainTokenDeployedEvent, TokenManagerDeployedEvent};
+use crate::tests::utils::{
+    INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX, INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX,
+    TOKEN_MANAGER_DEPLOYED_EVENT_IDX,
+};
 use crate::types::TokenManagerType;
-
-const INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX: i32 = -4;
-const INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX: i32 = INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX + 1;
-const TOKEN_MANAGER_DEPLOYED_EVENT_IDX: i32 = INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX + 1;
 
 fn dummy_token_params(env: &Env) -> (Address, BytesN<32>, TokenMetadata) {
     let sender = Address::generate(env);

@@ -127,22 +127,24 @@ impl ExampleInterface for Example {
         destination_chain: String,
         destination_address: String,
         message: Bytes,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) {
         let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
         let gas_service = AxelarGasServiceClient::new(env, &Self::gas_service(env));
 
         caller.require_auth();
 
-        gas_service.pay_gas(
-            &env.current_contract_address(),
-            &destination_chain,
-            &destination_address,
-            &message,
-            &caller,
-            &gas_token,
-            &Bytes::new(env),
-        );
+        if let Some(gas_token) = gas_token {
+            gas_service.pay_gas(
+                &env.current_contract_address(),
+                &destination_chain,
+                &destination_address,
+                &message,
+                &caller,
+                &gas_token,
+                &Bytes::new(env),
+            );
+        }
 
         gateway.call_contract(
             &env.current_contract_address(),
@@ -160,7 +162,7 @@ impl ExampleInterface for Example {
         destination_app_contract: Bytes,
         amount: i128,
         recipient: Option<Bytes>,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ExampleError> {
         caller.require_auth();
 
