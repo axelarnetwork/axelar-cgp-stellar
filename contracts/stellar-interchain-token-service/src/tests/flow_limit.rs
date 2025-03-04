@@ -210,7 +210,7 @@ fn zero_flow_limit_effectively_freezes_token() {
             &destination_address,
             &amount,
             &data,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::FlowLimitExceeded
     );
@@ -306,7 +306,7 @@ fn add_flow_out_succeeds() {
         &destination_address,
         &amount,
         &data,
-        &gas_token,
+        &Some(gas_token),
     );
 
     assert_eq!(client.flow_out_amount(&token.id), amount);
@@ -332,7 +332,7 @@ fn add_flow_out_fails_on_exceeding_flow_limit() {
         &destination_address,
         &amount,
         &data,
-        &gas_token,
+        &Some(gas_token.clone()),
     );
 
     assert_eq!(client.flow_out_amount(&token.id), amount);
@@ -347,7 +347,7 @@ fn add_flow_out_fails_on_exceeding_flow_limit() {
             &destination_address,
             &second_amount,
             &data,
-            &gas_token,
+            &Some(gas_token),
         ),
         ContractError::FlowLimitExceeded
     );
@@ -384,7 +384,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
                 &destination_address,
                 flow_out,
                 &data,
-                &gas_token
+                &Some(gas_token)
             ),
             ContractError::FlowAmountOverflow
         );
@@ -410,7 +410,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
             &destination_address,
             &flow_out,
             &data,
-            &gas_token,
+            &Some(gas_token),
         );
 
         let msg = approve_its_transfer(&env, &client, &gateway, &token.id, flow_in);
