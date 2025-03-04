@@ -53,9 +53,18 @@ pub fn token_metadata(
     native_token_address: &Address,
 ) -> Result<TokenMetadata, ContractError> {
     let token = token::Client::new(env, token_address);
-    let decimals = token.decimals();
-    let name = token.name();
-    let symbol = token.symbol();
+    let decimals = token
+        .try_decimals()
+        .map_err(|_| ContractError::InvalidTokenAddress)?
+        .map_err(|_| ContractError::TokenInvocationError)?;
+    let name = token
+        .try_name()
+        .map_err(|_| ContractError::InvalidTokenAddress)?
+        .map_err(|_| ContractError::TokenInvocationError)?;
+    let symbol = token
+        .try_symbol()
+        .map_err(|_| ContractError::InvalidTokenAddress)?
+        .map_err(|_| ContractError::TokenInvocationError)?;
 
     // Stellar's native token sets the name and symbol to 'native'. Override it to make it more readable
     let (name, symbol) = if token_address == native_token_address {
