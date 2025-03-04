@@ -11,42 +11,12 @@ main() {
     echo "Found changed storage schema files:"
     echo "$CHANGED_FILES"
 
-    local base_sha="$1"
-    local head_sha="$2"
-
-    # Check if changes are only visibility modifiers
-    local has_significant_changes=false
+    # Check each changed storage schema file
     while IFS= read -r file; do
         [ -z "$file" ] && continue
-        if ! is_only_visibility_change "$base_sha" "$head_sha" "$file"; then
-            has_significant_changes=true
-            check_migration_file "$file"
-        else
-            echo "✓ Only visibility changes detected in $file (ignoring)"
-        fi
+        check_migration_file "$file"
     done <<< "$CHANGED_FILES"
 
-    if [ "$has_significant_changes" = false ]; then
-        echo "All changes are visibility modifiers only, no migration needed"
-        exit 0
-    fi
-}
-
-is_only_visibility_change() {
-    local base_sha="$1"
-    local head_sha="$2"
-    local file="$3"
-
-    # Get diff and check if it only contains pub/private visibility changes
-    local diff_output
-    diff_output=$(git diff "$base_sha" "$head_sha" -- "$file")
-
-    # Check if diff only contains visibility modifier changes (pub to nothing or nothing to pub)
-    if echo "$diff_output" | grep -q -E '[-+][^-+]' | grep -v -E '[-+]\s*(pub\s+)?enum' | grep -v -E '[-+]\s*(pub\s+)?struct'; then
-        return 1  # Contains significant changes
-    fi
-
-    return 0  # Only visibility changes
 }
 
 check_migration_file() {
