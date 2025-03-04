@@ -1,0 +1,30 @@
+use stellar_axelar_std::interfaces::{UpgradableInterface as _, MigratableInterface as _};
+#[soroban_sdk::contractimpl]
+impl stellar_axelar_std::interfaces::UpgradableInterface for Contract {
+    fn version(env: &Env) -> soroban_sdk::String {
+        soroban_sdk::String::from_str(env, env!("CARGO_PKG_VERSION"))
+    }
+    fn upgrade(env: &Env, new_wasm_hash: soroban_sdk::BytesN<32>) {
+        stellar_axelar_std::interfaces::upgrade::<Self>(env, new_wasm_hash);
+    }
+}
+#[allow(non_camel_case_types)]
+type __ContractMigrationData = <Contract as stellar_axelar_std::interfaces::CustomMigratableInterface>::MigrationData;
+#[soroban_sdk::contractimpl]
+impl stellar_axelar_std::interfaces::MigratableInterface for Contract {
+    type Error = ContractError;
+    fn migrate(
+        env: &Env,
+        migration_data: __ContractMigrationData,
+    ) -> Result<(), ContractError> {
+        stellar_axelar_std::interfaces::migrate::<Self>(env, migration_data)
+            .map_err(|err| match err {
+                stellar_axelar_std::interfaces::MigrationError::NotAllowed => {
+                    ContractError::MigrationNotAllowed
+                }
+                stellar_axelar_std::interfaces::MigrationError::ExecutionFailed(err) => {
+                    err.into()
+                }
+            })
+    }
+}

@@ -6,7 +6,7 @@ This repo implements Axelar's [cross-chain gateway protocol](https://github.com/
 
 ## Docs
 
-Rustdocs for this workspace can be found [here](https://axelarnetwork.github.io/axelar-cgp-soroban/).
+Rustdocs for this workspace can be found [here](https://axelarnetwork.github.io/axelar-cgp-stellar/).
 
 ## Install
 
@@ -47,10 +47,12 @@ cargo llvm-cov --html # Generate coverage report
 cargo llvm-cov --open # Generate coverage and open report
 ```
 
-## Optimize and Deploy contract:
+## Optimize contracts
 
 ```bash
 ./optimize.sh
-
-stellar contract deploy --wasm target/wasm32-unknown-unknown/release/[contract].optimized.wasm --source wallet --network testnet
 ```
+
+## Deployment
+
+Deployment scripts can be found in this [repo](https://github.com/axelarnetwork/axelar-contract-deployments).

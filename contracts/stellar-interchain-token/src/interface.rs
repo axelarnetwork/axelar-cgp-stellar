@@ -4,7 +4,6 @@ use stellar_axelar_std::interfaces::OwnableInterface;
 
 use crate::error::ContractError;
 
-#[allow(dead_code)]
 #[contractclient(name = "InterchainTokenClient")]
 pub trait InterchainTokenInterface:
     token::Interface + StellarAssetInterface + OwnableInterface

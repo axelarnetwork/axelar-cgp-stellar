@@ -13,44 +13,6 @@ jobs:
           fetch-depth: 0
 
       - name: Check for storage schema changes
-        shell: bash
         run: |
-          # Get all changed files in the PR
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep "ensure_.*_storage_schema_is_unchanged.golden" || true)
-
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "Found changed storage schema files:"
-            echo "$CHANGED_FILES"
-
-            # Check each changed file
-            EXIT_CODE=0
-            while IFS= read -r file; do
-              if [ -n "$file" ]; then
-                # Extract contract directory by matching contracts/stellar-* pattern
-                CONTRACT_DIR=$(echo "$file" | grep -o 'contracts/stellar-[^/]*')
-
-                if [ -n "$CONTRACT_DIR" ]; then
-                  # Find any migrate.rs under the contract's src directory, excluding test directories
-                  MIGRATE_FILE=$(find "$CONTRACT_DIR/src" -name "migrate.rs" -not -path "*/test*" | head -n 1)
-                  if [ -z "$MIGRATE_FILE" ]; then
-                    echo "Error: Storage schema change detected in $file but no migrate.rs found under $CONTRACT_DIR/src/"
-                    echo "Please create a migration file at $CONTRACT_DIR/src/migrate.rs to handle the schema changes"
-                    EXIT_CODE=1
-                  elif ! grep -q "mod legacy_storage" "$MIGRATE_FILE"; then
-                    echo "Error: migrate.rs found at $MIGRATE_FILE but missing required 'legacy_storage' module declaration"
-                    echo "Please add a 'legacy_storage' module to handle the schema migration"
-                    EXIT_CODE=1
-                  else
-                    echo "✓ Found valid migration file for $file"
-                  fi
-                else
-                  echo "Error: Could not determine contract directory for $file"
-                  EXIT_CODE=1
-                fi
-              fi
-            done <<< "$CHANGED_FILES"
-
-            exit $EXIT_CODE
-          else
-            echo "No storage schema changes detected"
-          fi
+          chmod +x .github/scripts/check-migration.sh
+          .github/scripts/check-migration.sh ${{ github.event.pull_request.base.sha }} ${{ github.sha }}

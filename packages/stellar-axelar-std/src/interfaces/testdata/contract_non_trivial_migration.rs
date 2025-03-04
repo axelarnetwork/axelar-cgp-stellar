@@ -7,7 +7,7 @@ use crate::interfaces::testdata::contract_trivial_migration::DataKey;
 use crate::interfaces::{operatable, ownable, CustomMigratableInterface, MigratableInterface};
 
 #[derive(Upgradable, Ownable)]
-#[migratable(with_type = MigrationData)]
+#[migratable]
 #[contract]
 pub struct ContractNonTrivial;
 
@@ -38,11 +38,14 @@ impl ContractNonTrivial {
 
 impl CustomMigratableInterface for ContractNonTrivial {
     type MigrationData = MigrationData;
+    type Error = ContractError;
 
-    fn __migrate(env: &Env, migration_data: Self::MigrationData) {
+    fn __migrate(env: &Env, migration_data: MigrationData) -> Result<(), Self::Error> {
         env.storage()
             .instance()
             .set(&DataKey::Data, &migration_data.data1);
+
+        Ok(())
     }
 }
 

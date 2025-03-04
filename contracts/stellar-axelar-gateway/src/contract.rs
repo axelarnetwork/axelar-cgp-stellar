@@ -1,8 +1,6 @@
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, Vec};
 use stellar_axelar_std::events::Event;
-use stellar_axelar_std::interfaces::CustomMigratableInterface;
-use stellar_axelar_std::ttl::extend_instance_ttl;
 use stellar_axelar_std::{
     ensure, interfaces, when_not_paused, Operatable, Ownable, Pausable, Upgradable,
 };
@@ -184,8 +182,6 @@ impl AxelarGatewayInterface for AxelarGateway {
             MessageApprovedEvent { message }.emit(env);
         }
 
-        extend_instance_ttl(env);
-
         Ok(())
     }
 
@@ -208,8 +204,6 @@ impl AxelarGatewayInterface for AxelarGateway {
         );
 
         auth::rotate_signers(env, signers, !bypass_rotation_delay)?;
-
-        extend_instance_ttl(env);
 
         Ok(())
     }
@@ -234,10 +228,6 @@ impl AxelarGatewayInterface for AxelarGateway {
     ) -> Result<bool, ContractError> {
         auth::validate_proof(env, &data_hash, proof)
     }
-}
-
-impl CustomMigratableInterface for AxelarGateway {
-    type MigrationData = ();
 }
 
 impl AxelarGateway {
