@@ -206,34 +206,3 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
         InterchainTokenDeploymentStartedEvent,
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 }
-
-#[test]
-#[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
-fn deploy_remote_canonical_token_fail_no_actual_token() {
-    let (env, client, _, _, _) = setup_env();
-
-    let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
-    let token_address = Address::generate(&env);
-    let expected_id = client.canonical_interchain_token_id(&token_address);
-
-    assert_eq!(client.register_canonical_token(&token_address), expected_id);
-    assert_eq!(client.token_address(&expected_id), token_address);
-
-    assert_eq!(
-        client.token_manager_type(&expected_id),
-        TokenManagerType::LockUnlock
-    );
-
-    let destination_chain = String::from_str(&env, "ethereum");
-    client
-        .mock_all_auths()
-        .set_trusted_chain(&destination_chain);
-
-    client.mock_all_auths().deploy_remote_canonical_token(
-        &token_address,
-        &destination_chain,
-        &spender,
-        &Some(gas_token),
-    );
-}

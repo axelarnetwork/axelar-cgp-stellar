@@ -1,8 +1,8 @@
 use soroban_sdk::{contracttype, Address, BytesN};
 use stellar_axelar_std::contractstorage;
 
-#[derive(Clone)]
 #[contracttype]
+#[derive(Clone)]
 pub struct AllowanceDataKey {
     pub from: Address,
     pub spender: Address,
