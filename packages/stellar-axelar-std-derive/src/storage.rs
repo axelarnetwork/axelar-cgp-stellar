@@ -610,7 +610,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "contractstorage can only be used on private enums (remove 'pub' keyword)")]
+    #[should_panic(
+        expected = "contractstorage can only be used on private enums (remove 'pub' keyword)"
+    )]
     fn public_enum_fails() {
         let input: syn::DeriveInput = syn::parse_quote! {
             pub enum PublicEnum {
