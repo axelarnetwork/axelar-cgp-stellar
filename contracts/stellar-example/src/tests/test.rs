@@ -52,7 +52,7 @@ fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
     }
 }
 
-fn setup_tokens<'a>(env: &Env, user: &Address, amount: i128) -> (StellarAssetContract, Token) {
+fn setup_tokens(env: &Env, user: &Address, amount: i128) -> (StellarAssetContract, Token) {
     let token = env.register_stellar_asset_contract_v2(user.clone());
     StellarAssetClient::new(env, &token.address())
         .mock_all_auths()
