@@ -25,6 +25,7 @@ stellar-axelar-std-derive = { workspace = true }
 [features]
 testutils = ["soroban-sdk/testutils", "dep:hex"]
 derive = ["dep:stellar-axelar-std-derive"]
+alloc = ["soroban-sdk/alloc"]
 
 [lints]
 workspace = true

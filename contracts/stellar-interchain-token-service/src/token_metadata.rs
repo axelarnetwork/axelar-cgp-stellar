@@ -1,6 +1,7 @@
 use soroban_sdk::{token, Address, Env, String};
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_std::ensure;
+use stellar_axelar_std::string::StringExt;
 
 use crate::error::ContractError;
 
@@ -42,6 +43,8 @@ impl TokenMetadataExt for TokenMetadata {
             !self.symbol.is_empty() && self.symbol.len() <= MAX_SYMBOL_LENGTH,
             ContractError::InvalidTokenSymbol
         );
+        ensure!(&self.name.is_ascii(), ContractError::InvalidTokenName);
+        ensure!(&self.symbol.is_ascii(), ContractError::InvalidTokenSymbol);
 
         Ok(())
     }
@@ -80,4 +83,48 @@ pub fn token_metadata(
     };
 
     TokenMetadata::new(name, symbol, decimals)
+}
+
+#[cfg(test)]
+mod tests {
+    use stellar_axelar_std::assert_ok;
+
+    use super::*;
+
+    #[test]
+    fn token_metadata_new_succeeds() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test");
+        let symbol = String::from_str(&env, "Test");
+        let decimals = 18;
+
+        assert_ok!(TokenMetadata::new(name, symbol, decimals));
+    }
+
+    #[test]
+    fn token_metadata_new_fails_with_invalid_ascii_name() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test世界！");
+        let symbol = String::from_str(&env, "Test");
+        let decimals = 18;
+
+        let result = TokenMetadata::new(name, symbol, decimals);
+        // TODO: use assert_err! once TokenMetadata implements Debug trait in new release
+        assert!(matches!(result, Err(ContractError::InvalidTokenName)));
+    }
+
+    #[test]
+    fn token_metadata_new_fails_with_invalid_ascii_symbol() {
+        let env = Env::default();
+
+        let name = String::from_str(&env, "Test");
+        let symbol = String::from_str(&env, "Test世界！");
+        let decimals = 18;
+
+        let result = TokenMetadata::new(name, symbol, decimals);
+        // TODO: use assert_err! once TokenMetadata implements Debug trait in new release
+        assert!(matches!(result, Err(ContractError::InvalidTokenSymbol)));
+    }
 }
