@@ -17,7 +17,7 @@ pub trait ExampleInterface: AxelarExecutableInterface {
     /// * `destination_chain` - The name of the destination chain where the message will be sent.
     /// * `destination_address` - The address on the destination chain where the message will be sent.
     /// * `message` - The message to be sent.
-    /// * `gas_token` - The token used to pay for gas during the transaction.
+    /// * `gas_token` - An optional gas token used to pay for gas during the transaction.
     ///
     /// # Authorization
     /// - The `caller` must authorize.
@@ -27,7 +27,7 @@ pub trait ExampleInterface: AxelarExecutableInterface {
         destination_chain: String,
         destination_address: String,
         message: Bytes,
-        gas_token: Token,
+        gas_token: Option<Token>,
     );
 
     /// Sends a token to a specified destination chain.
@@ -41,7 +41,7 @@ pub trait ExampleInterface: AxelarExecutableInterface {
     /// * `destination_app_contract` - The address of the application contract on the destination chain.
     /// * `amount` - The amount of the token to be transferred.
     /// * `recipient` - An optional recipient address on the destination chain.
-    /// * `gas_token` - The token used to pay for gas during the transaction.
+    /// * `gas_token` - An optional gas token used to pay for gas during the transaction.
     ///
     /// # Authorization
     /// - The `caller` must authorize.
@@ -53,6 +53,6 @@ pub trait ExampleInterface: AxelarExecutableInterface {
         destination_app_contract: Bytes,
         amount: i128,
         recipient: Option<Bytes>,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ExampleError>;
 }
