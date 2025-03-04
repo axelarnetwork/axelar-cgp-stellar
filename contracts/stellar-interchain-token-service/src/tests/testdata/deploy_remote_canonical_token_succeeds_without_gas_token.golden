@@ -1,0 +1,21 @@
+InterchainTokenDeploymentStartedEvent {
+    token_id: BytesN<32>(112, 235, 39, 66, 82, 16, 99, 2, 198, 174, 69, 174, 17, 11, 97, 52, 125, 86, 193, 214, 97, 52, 22, 151, 30, 226, 238, 227, 114, 120, 173, 103),
+    token_address: Contract(CCFPZOCU33AWX2NKX47XD6W5JNYFP7MU57DTQFB5XOOQSJLSSC4PMX25),
+    destination_chain: String(ethereum),
+    name: String(Stellar),
+    symbol: String(XLM),
+    decimals: 7,
+    minter: None,
+}
+
+Contract(CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5)
+
+token_deployment_started {
+    #[topic] token_id: BytesN < 32 >,
+    #[topic] token_address: Address,
+    #[topic] destination_chain: String,
+    #[topic] name: String,
+    #[topic] symbol: String,
+    #[topic] decimals: u32,
+    #[topic] minter: Option < Address >,
+}
