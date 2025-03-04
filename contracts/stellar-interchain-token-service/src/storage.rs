@@ -4,8 +4,7 @@ use stellar_axelar_std::contractstorage;
 use crate::types::TokenManagerType;
 
 #[contractstorage]
-#[derive(Clone, Debug)]
-pub enum DataKey {
+enum DataKey {
     #[instance]
     #[value(Address)]
     Gateway,
