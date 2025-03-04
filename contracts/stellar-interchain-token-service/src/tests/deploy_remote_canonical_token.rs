@@ -8,6 +8,9 @@ use stellar_axelar_std::{auth_invocation, events};
 
 use super::utils::{setup_env, TokenMetadataExt};
 use crate::event::InterchainTokenDeploymentStartedEvent;
+use crate::tests::utils::{
+    INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX, INTERCHAIN_TOKEN_DEPLOYED_WITHOUT_GAS_TOKEN_EVENT_IDX,
+};
 use crate::types::{DeployInterchainToken, HubMessage, Message, TokenManagerType};
 
 #[test]
@@ -63,7 +66,7 @@ fn deploy_remote_canonical_token_succeeds() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
-    >(&env, -4));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
     let transfer_auth = auth_invocation!(
         &env,
@@ -128,7 +131,10 @@ fn deploy_remote_canonical_token_succeeds_without_gas_token() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
-    >(&env, -2));
+    >(
+        &env,
+        INTERCHAIN_TOKEN_DEPLOYED_WITHOUT_GAS_TOKEN_EVENT_IDX
+    ));
 
     let deploy_remote_canonical_token_auth = auth_invocation!(
         &env,
@@ -161,7 +167,7 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
-    >(&env, -4));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 }
 
 #[test]
@@ -198,7 +204,7 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
 
     goldie::assert!(events::fmt_emitted_event_at_idx::<
         InterchainTokenDeploymentStartedEvent,
-    >(&env, -4));
+    >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 }
 
 #[test]
