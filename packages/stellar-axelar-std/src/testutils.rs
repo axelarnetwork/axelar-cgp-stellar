@@ -8,9 +8,8 @@ extern crate std;
 ///
 /// # Example
 /// ```rust,ignore
-/// // Create authorization for a token transfer
+/// // Create authorization
 /// let transfer_auth = auth_invocation!(
-///     &env,
 ///     user,
 ///     asset_client.transfer(
 ///         &user,
@@ -21,7 +20,6 @@ extern crate std;
 ///
 /// // Create nested authorization chain for gas payment
 /// let pay_gas_auth = auth_invocation!(
-///     &env,
 ///     user,
 ///     source_gas_service_client.pay_gas(
 ///         source_app.address,
@@ -35,12 +33,52 @@ extern crate std;
 ///     transfer_auth
 /// );
 ///
+/// // Create authorization for a Token
+/// let transfer_auth = auth_invocation!(
+///     &env,
+///     user,
+///     token.transfer(
+///         &user,
+///         gas_token.amount
+///     )
+/// );
+///
 /// // Verify authorizations
 /// assert_eq!(env.auths(), pay_gas_auth);
 /// ```
 #[macro_export]
 macro_rules! auth_invocation {
     // Basic case without sub-invocations
+    ($caller:expr, $client:ident.$method:ident($($arg:expr),* $(,)?)) => {{
+        std::vec![(
+            $caller.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    $client.address.clone(),
+                    Symbol::new(&$client.env, stringify!($method)),
+                    ($($arg),*).into_val(&$client.env),
+                )),
+                sub_invocations: std::vec![],
+            }
+        )]
+    }};
+
+    // Case with sub-invocations (handles both regular and user auth cases)
+    ($caller:expr, $client:ident.$method:ident($($arg:expr),* $(,)?), $subs:expr $(, $user:ident)?) => {{
+        std::vec![(
+            $caller.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    $client.address.clone(),
+                    Symbol::new(&$client.env, stringify!($method)),
+                    ($($arg),*).into_val(&$client.env),
+                )),
+                sub_invocations: $subs.into_iter().map(|(_, inv)| inv).collect(),
+            }
+        )]
+    }};
+
+    // Case with &env required (i.e. Token)
     ($env:expr, $caller:expr, $client:ident.$method:ident($($arg:expr),* $(,)?)) => {{
         std::vec![(
             $caller.clone(),
@@ -51,21 +89,6 @@ macro_rules! auth_invocation {
                     ($($arg),*).into_val($env),
                 )),
                 sub_invocations: std::vec![],
-            }
-        )]
-    }};
-
-    // Case with sub-invocations (handles both regular and user auth cases)
-    ($env:expr, $caller:expr, $client:ident.$method:ident($($arg:expr),* $(,)?), $subs:expr $(, $user:ident)?) => {{
-        std::vec![(
-            $caller.clone(),
-            AuthorizedInvocation {
-                function: AuthorizedFunction::Contract((
-                    $client.address.clone(),
-                    Symbol::new($env, stringify!($method)),
-                    ($($arg),*).into_val($env),
-                )),
-                sub_invocations: $subs.into_iter().map(|(_, inv)| inv).collect(),
             }
         )]
     }};

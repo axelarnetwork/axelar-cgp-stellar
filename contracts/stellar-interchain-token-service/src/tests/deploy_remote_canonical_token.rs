@@ -79,7 +79,6 @@ fn deploy_remote_canonical_token_succeeds() {
     );
 
     let gas_service_auth = auth_invocation!(
-        &env,
         spender,
         gas_service.pay_gas(
             client.address.clone(),
@@ -94,7 +93,6 @@ fn deploy_remote_canonical_token_succeeds() {
     );
 
     let deploy_remote_canonical_token_auth = auth_invocation!(
-        &env,
         spender,
         client.deploy_remote_canonical_token(
             token_address,
