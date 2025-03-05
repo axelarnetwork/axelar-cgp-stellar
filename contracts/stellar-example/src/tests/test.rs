@@ -116,7 +116,6 @@ fn gmp_example() {
     );
 
     let transfer_auth = auth_invocation!(
-        &env,
         user,
         asset_client.transfer(&user, &source_gas_service.address, gas_token.amount)
     );
@@ -124,7 +123,6 @@ fn gmp_example() {
     let source_gas_service_client = source_gas_service;
 
     let pay_gas_auth = auth_invocation!(
-        &env,
         user,
         source_gas_service_client.pay_gas(
             source_app.address.clone(),
@@ -141,7 +139,6 @@ fn gmp_example() {
     let source_app = source_app;
 
     let send_auth = auth_invocation!(
-        &env,
         user,
         source_app.send(
             &user,

@@ -73,7 +73,6 @@ fn deploy_remote_interchain_token_succeeds() {
     );
 
     let pay_gas_auth = auth_invocation!(
-        &env,
         sender,
         gas_service.pay_gas(
             client.address.clone(),
@@ -88,7 +87,6 @@ fn deploy_remote_interchain_token_succeeds() {
     );
 
     let deploy_remote_interchain_token_auth = auth_invocation!(
-        &env,
         sender,
         client.deploy_remote_interchain_token(&sender, salt, destination_chain, Some(gas_token)),
         pay_gas_auth
@@ -139,7 +137,6 @@ fn deploy_remote_interchain_token_succeeds_without_gas_token() {
     ));
 
     let deploy_remote_interchain_token_auth = auth_invocation!(
-        &env,
         sender,
         client.deploy_remote_interchain_token(&sender, salt, destination_chain, gas_token)
     );
