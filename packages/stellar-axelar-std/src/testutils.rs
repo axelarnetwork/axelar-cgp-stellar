@@ -37,8 +37,9 @@ extern crate std;
 /// let transfer_auth = auth_invocation!(
 ///     &env,
 ///     user,
-///     token.transfer(
-///         &user,
+///     gas_token.transfer(
+///         spender,
+///         gas_service.address
 ///         gas_token.amount
 ///     )
 /// );
