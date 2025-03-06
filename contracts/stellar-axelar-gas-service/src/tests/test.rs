@@ -120,7 +120,6 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     );
 
     let pay_gas_auth = mock_auth!(
-        env,
         spender,
         client.pay_gas(
             sender,
@@ -165,7 +164,6 @@ fn pay_gas() {
     );
 
     let pay_gas_auth = mock_auth!(
-        env,
         spender,
         client.pay_gas(
             sender,
@@ -343,7 +341,6 @@ fn collect_fees_succeeds() {
     );
 
     let collect_fees_auth = mock_auth!(
-        env,
         operator,
         client.collect_fees(&operator, &token),
         &[(transfer_token_auth.invoke).clone()]
@@ -408,7 +405,6 @@ fn refund_fails_with_insufficient_balance() {
     );
 
     let refund_auth = mock_auth!(
-        env,
         operator,
         client.refund(&message_id, &receiver, &token),
         &[(transfer_token_auth.invoke).clone()]
