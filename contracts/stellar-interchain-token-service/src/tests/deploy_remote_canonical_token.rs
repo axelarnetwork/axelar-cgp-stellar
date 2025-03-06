@@ -17,7 +17,7 @@ use crate::types::{DeployInterchainToken, HubMessage, Message, TokenManagerType}
 fn deploy_remote_canonical_token_succeeds() {
     let (env, client, _, gas_service, _) = setup_env();
     let spender = Address::generate(&env);
-    let (gas_token, gas_token_with_env) = setup_gas_token(&env, &spender);
+    let (gas_token, gas_token_client) = setup_gas_token(&env, &spender);
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
     let initial_amount = 1;
 
@@ -70,7 +70,7 @@ fn deploy_remote_canonical_token_succeeds() {
 
     let transfer_auth = auth_invocation!(
         spender,
-        gas_token_with_env.transfer(
+        gas_token_client.transfer(
             spender.clone(),
             gas_service.address.clone(),
             gas_token.amount
