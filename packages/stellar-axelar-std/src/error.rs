@@ -144,7 +144,6 @@ macro_rules! assert_auth {
         paste::paste! {
         let result = $client
             .mock_auths(&[$crate::mock_auth!(
-                $client.env,
                 caller,
                 $client.$method($($arg),*)
             )])
@@ -190,7 +189,6 @@ macro_rules! assert_auth_err {
         paste::paste! {
         let call_result = $client
             .mock_auths(&[$crate::mock_auth!(
-                $client.env,
                 caller,
                 $client.$method($($arg),*)
             )])
@@ -211,33 +209,6 @@ macro_rules! assert_auth_err {
 
 #[macro_export]
 macro_rules! mock_auth {
-    (
-        $env:expr,
-        $caller:expr,
-        $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
-        $sub_invokes:expr
-    ) => {{
-        use soroban_sdk::IntoVal;
-
-        soroban_sdk::testutils::MockAuth {
-            address: &$caller,
-            invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                contract: &$client.address,
-                fn_name: &stringify!($method).replace("try_", ""),
-                args: ($($arg.clone(),)*).into_val(&$env),
-                sub_invokes: $sub_invokes,
-            },
-        }
-    }};
-
-    (
-        $env:expr,
-        $caller:expr,
-        $client:ident . $method:ident ( $($arg:expr),* $(,)? )
-    ) => {{
-        $crate::mock_auth!($env, $caller, $client.$method($($arg),*), &[])
-    }};
-
     (
         $caller:expr,
         $client:ident . $method:ident ( $($arg:expr),* $(,)? ),
@@ -260,6 +231,6 @@ macro_rules! mock_auth {
         $caller:expr,
         $client:ident . $method:ident ( $($arg:expr),* $(,)? )
     ) => {{
-        $crate::mock_auth!($client.env, $caller, $client.$method($($arg),*), &[])
+        $crate::mock_auth!($caller, $client.$method($($arg),*), &[])
     }};
 }

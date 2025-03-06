@@ -18,7 +18,7 @@ fn deploy_remote_interchain_token_succeeds() {
     let (env, client, _, gas_service, _) = setup_env();
 
     let sender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
+    let (gas_token, gas_token_with_env) = setup_gas_token(&env, &sender);
     let minter: Option<Address> = None;
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
@@ -67,9 +67,8 @@ fn deploy_remote_interchain_token_succeeds() {
     .abi_encode(&env);
 
     let transfer_auth = auth_invocation!(
-        &env,
         sender,
-        gas_token.transfer(&sender, gas_service.address.clone(), gas_token.amount)
+        gas_token_with_env.transfer(&sender, gas_service.address.clone(), gas_token.amount)
     );
 
     let pay_gas_auth = auth_invocation!(
@@ -147,7 +146,7 @@ fn deploy_remote_interchain_token_succeeds_without_gas_token() {
 #[test]
 fn deploy_remote_interchain_token_fails_when_paused() {
     let (env, client, _, _, _) = setup_env();
-
+    let (gas_token, _) = setup_gas_token(&env, &Address::generate(&env));
     client.mock_all_auths().pause();
 
     assert_contract_err!(
@@ -155,7 +154,7 @@ fn deploy_remote_interchain_token_fails_when_paused() {
             &Address::generate(&env),
             &BytesN::from_array(&env, &[1; 32]),
             &String::from_str(&env, "ethereum"),
-            &Some(setup_gas_token(&env, &Address::generate(&env)))
+            &Some(gas_token)
         ),
         ContractError::ContractPaused
     );
@@ -166,7 +165,7 @@ fn deploy_remote_interchain_token_fails_untrusted_chain() {
     let (env, client, _, _, _) = setup_env();
 
     let sender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &sender);
+    let (gas_token, _) = setup_gas_token(&env, &sender);
     let minter: Option<Address> = None;
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
@@ -198,7 +197,7 @@ fn deploy_remote_interchain_token_fails_with_invalid_token_id() {
     let (env, client, _, _, _) = setup_env();
 
     let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
+    let (gas_token, _) = setup_gas_token(&env, &spender);
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
 
     let destination_chain = String::from_str(&env, "ethereum");
@@ -219,7 +218,7 @@ fn deploy_remote_token_fails_local_deployment() {
     let (env, client, _, _, _) = setup_env();
 
     let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
+    let (gas_token, _) = setup_gas_token(&env, &spender);
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
     let destination_chain = client.chain_name();
 

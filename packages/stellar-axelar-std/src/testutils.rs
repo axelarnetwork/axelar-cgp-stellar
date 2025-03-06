@@ -78,19 +78,4 @@ macro_rules! auth_invocation {
             }
         )]
     }};
-
-    // Case with &env required (i.e. Token)
-    ($env:expr, $caller:expr, $client:ident.$method:ident($($arg:expr),* $(,)?)) => {{
-        std::vec![(
-            $caller.clone(),
-            AuthorizedInvocation {
-                function: AuthorizedFunction::Contract((
-                    $client.address.clone(),
-                    Symbol::new($env, stringify!($method)),
-                    ($($arg),*).into_val($env),
-                )),
-                sub_invocations: std::vec![],
-            }
-        )]
-    }};
 }

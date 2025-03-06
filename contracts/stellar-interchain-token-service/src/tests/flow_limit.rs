@@ -179,7 +179,7 @@ fn set_flow_limit_to_none_succeeds() {
 #[test]
 fn zero_flow_limit_effectively_freezes_token() {
     let (env, client, gateway, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+    let (gas_token, _) = setup_gas_token(&env, &token.deployer);
 
     client.mock_all_auths().set_flow_limit(&token.id, &Some(0));
 
@@ -288,7 +288,7 @@ fn add_flow_in_fails_on_exceeding_flow_limit() {
 #[test]
 fn add_flow_out_succeeds() {
     let (env, client, _, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+    let (gas_token, _) = setup_gas_token(&env, &token.deployer);
 
     let amount = dummy_flow_limit();
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
@@ -316,7 +316,7 @@ fn add_flow_out_succeeds() {
 #[test]
 fn add_flow_out_fails_on_exceeding_flow_limit() {
     let (env, client, _, token) = setup();
-    let gas_token = setup_gas_token(&env, &token.deployer);
+    let (gas_token, _) = setup_gas_token(&env, &token.deployer);
 
     let amount = dummy_flow_limit();
     let (destination_chain, destination_address, data) = dummy_transfer_params(&env);
@@ -363,7 +363,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
 
     for (flow_limit, flow_in, flow_out) in &cases {
         let (env, client, gateway, token) = setup();
-        let gas_token = setup_gas_token(&env, &token.deployer);
+        let (gas_token, _) = setup_gas_token(&env, &token.deployer);
 
         client
             .mock_all_auths()
@@ -392,7 +392,7 @@ fn add_flow_fails_on_flow_comparison_overflow() {
 
     for (flow_limit, flow_out, flow_in) in cases {
         let (env, client, gateway, token) = setup();
-        let gas_token = setup_gas_token(&env, &token.deployer);
+        let (gas_token, _) = setup_gas_token(&env, &token.deployer);
 
         client
             .mock_all_auths()

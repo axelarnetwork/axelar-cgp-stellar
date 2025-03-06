@@ -17,7 +17,7 @@ use crate::types::{DeployInterchainToken, HubMessage, Message, TokenManagerType}
 fn deploy_remote_canonical_token_succeeds() {
     let (env, client, _, gas_service, _) = setup_env();
     let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
+    let (gas_token, gas_token_with_env) = setup_gas_token(&env, &spender);
     let asset = &env.register_stellar_asset_contract_v2(Address::generate(&env));
     let initial_amount = 1;
 
@@ -69,9 +69,8 @@ fn deploy_remote_canonical_token_succeeds() {
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
     let transfer_auth = auth_invocation!(
-        &env,
         spender,
-        gas_token.transfer(
+        gas_token_with_env.transfer(
             spender.clone(),
             gas_service.address.clone(),
             gas_token.amount
@@ -135,7 +134,6 @@ fn deploy_remote_canonical_token_succeeds_without_gas_token() {
     ));
 
     let deploy_remote_canonical_token_auth = auth_invocation!(
-        &env,
         spender,
         client.deploy_remote_canonical_token(token_address, destination_chain, spender, gas_token)
     );
@@ -147,7 +145,7 @@ fn deploy_remote_canonical_token_succeeds_without_gas_token() {
 fn deploy_remote_canonical_token_succeeds_native_token() {
     let (env, client, _, _, _) = setup_env();
     let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
+    let (gas_token, _) = setup_gas_token(&env, &spender);
     let token_address = client.native_token_address();
     let destination_chain = String::from_str(&env, "ethereum");
 
@@ -172,7 +170,7 @@ fn deploy_remote_canonical_token_succeeds_native_token() {
 fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
     let (env, client, _, _, _) = setup_env();
     let spender = Address::generate(&env);
-    let gas_token = setup_gas_token(&env, &spender);
+    let (gas_token, _) = setup_gas_token(&env, &spender);
 
     let token_metadata = TokenMetadata::new(&env, "name", "symbol", 255);
     let initial_supply = 1;
