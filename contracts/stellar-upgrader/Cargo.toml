@@ -1,6 +1,6 @@
 [package]
 name = "stellar-upgrader"
-version = "1.0.0"
+version = "1.1.0"
 edition = { workspace = true }
 description = "Upgrader contract, responsible for upgrading contracts and migrate data in an atomic transaction."
 license = { workspace = true }

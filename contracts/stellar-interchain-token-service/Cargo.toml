@@ -1,6 +1,6 @@
 [package]
 name = "stellar-interchain-token-service"
-version = "1.0.0"
+version = "1.1.0"
 edition = { workspace = true }
 description = "InterchainTokenService contract, responsible for allowing users/developers to easily create their own token bridge."
 license = { workspace = true }

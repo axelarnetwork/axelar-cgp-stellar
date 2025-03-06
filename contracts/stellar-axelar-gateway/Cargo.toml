@@ -1,6 +1,6 @@
 [package]
 name = "stellar-axelar-gateway"
-version = "1.0.0"
+version = "1.1.0"
 edition = { workspace = true }
 description = "AxelarGateway contract, responsible for serving as the gateway for cross-chain contract calls and token transfers within the Axelar network."
 license = { workspace = true }
