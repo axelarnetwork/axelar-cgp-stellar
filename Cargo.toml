@@ -22,12 +22,12 @@ proc-macro2 = { version = "1.0", default-features = false }
 rand = { version = "0.8.5", default-features = false }
 soroban-sdk = { version = "22.0.6" }
 soroban-token-sdk = { version = "22.0.6" }
+stellar-axelar-example = { version = "^1.0.0", path = "contracts/stellar-axelar-example" }
 stellar-axelar-gas-service = { version = "^1.0.0", path = "contracts/stellar-axelar-gas-service" }
 stellar-axelar-gateway = { version = "^1.0.0", path = "contracts/stellar-axelar-gateway" }
 stellar-axelar-operators = { version = "^1.0.0", path = "contracts/stellar-axelar-operators" }
 stellar-axelar-std = { version = "^1.0.0", path = "packages/stellar-axelar-std", features = ["derive"] }
 stellar-axelar-std-derive = { version = "^1.0.0", path = "packages/stellar-axelar-std-derive" }
-stellar-example = { version = "^1.0.0", path = "contracts/stellar-example" }
 stellar-interchain-token = { version = "^1.0.0", path = "contracts/stellar-interchain-token" }
 stellar-interchain-token-service = { version = "^1.0.0", path = "contracts/stellar-interchain-token-service" }
 stellar-token-manager = { version = "^1.0.0", path = "contracts/stellar-token-manager" }
