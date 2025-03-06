@@ -58,7 +58,7 @@ fn setup_tokens(env: &Env, user: &Address, amount: i128) -> (StellarAssetContrac
         .mock_all_auths()
         .mint(user, &amount);
 
-    let gas_token = setup_gas_token(env, user);
+    let (gas_token, _) = setup_gas_token(env, user);
 
     StellarAssetClient::new(env, &gas_token.address)
         .mock_all_auths()
