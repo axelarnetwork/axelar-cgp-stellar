@@ -111,14 +111,9 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let (_token, _token_with_env) = setup_token(&env, &spender, gas_amount - 1);
+    let (_token, token_with_env) = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
         address: _token.address,
-        amount: gas_amount,
-    };
-    let token_with_env = TokenWithEnv {
-        env: _token_with_env.env,
-        address: _token_with_env.address,
         amount: gas_amount,
     };
 
