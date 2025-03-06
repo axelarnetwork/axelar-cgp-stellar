@@ -33,17 +33,6 @@ extern crate std;
 ///     transfer_auth
 /// );
 ///
-/// // Create authorization for a Token
-/// let transfer_auth = auth_invocation!(
-///     &env,
-///     user,
-///     gas_token.transfer(
-///         spender,
-///         gas_service.address
-///         gas_token.amount
-///     )
-/// );
-///
 /// // Verify authorizations
 /// assert_eq!(env.auths(), pay_gas_auth);
 /// ```
