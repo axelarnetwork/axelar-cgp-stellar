@@ -7,7 +7,7 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::{bytes, Address, Bytes, Env, String};
 use stellar_axelar_std::events::fmt_last_emitted_event;
-use stellar_axelar_std::types::{Token, TokenWithEnv};
+use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, mock_auth};
 
 use crate::error::ContractError;
@@ -25,7 +25,7 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     (env, contract_id, operator, client)
 }
 
-fn setup_token(env: &Env, recipient: &Address, amount: i128) -> (Token, TokenWithEnv) {
+fn setup_token<'a>(env: &'a Env, recipient: &'a Address, amount: i128) -> (Token, TokenClient<'a>) {
     let asset = env.register_stellar_asset_contract_v2(Address::generate(env));
 
     StellarAssetClient::new(env, &asset.address())
@@ -37,11 +37,7 @@ fn setup_token(env: &Env, recipient: &Address, amount: i128) -> (Token, TokenWit
             address: asset.address(),
             amount,
         },
-        TokenWithEnv {
-            env: env.clone(),
-            address: asset.address(),
-            amount,
-        },
+        TokenClient::new(&env, &asset.address()),
     )
 }
 
@@ -111,7 +107,7 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let (_token, token_with_env) = setup_token(&env, &spender, gas_amount - 1);
+    let (_token, token_client) = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
         address: _token.address,
         amount: gas_amount,
@@ -122,7 +118,7 @@ fn pay_gas_fails_with_insufficient_user_balance() {
 
     let transfer_token_auth = mock_auth!(
         spender,
-        token_with_env.transfer(spender, client.address, token.amount)
+        token_client.transfer(spender, client.address, token.amount)
     );
 
     let pay_gas_auth = mock_auth!(
@@ -157,15 +153,14 @@ fn pay_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let (token, token_with_env) = setup_token(&env, &spender, gas_amount);
-    let token_client = TokenClient::new(&env, &token.address);
+    let (token, token_client) = setup_token(&env, &spender, gas_amount);
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     let transfer_token_auth = mock_auth!(
         spender,
-        token_with_env.transfer(spender, client.address, token.amount)
+        token_client.transfer(spender, client.address, token.amount)
     );
 
     let pay_gas_auth = mock_auth!(
@@ -337,15 +332,10 @@ fn collect_fees_succeeds() {
         address: asset.address(),
         amount: refund_amount,
     };
-    let token_with_env = TokenWithEnv {
-        env: env.clone(),
-        address: asset.address(),
-        amount: refund_amount,
-    };
 
     let transfer_token_auth = mock_auth!(
         operator,
-        token_with_env.transfer(operator, client.address, token.amount)
+        token_client.transfer(operator, client.address, token.amount)
     );
 
     let collect_fees_auth = mock_auth!(
@@ -403,17 +393,12 @@ fn refund_fails_with_insufficient_balance() {
         address: asset.address(),
         amount: refund_amount,
     };
-    let token_with_env = TokenWithEnv {
-        env: env.clone(),
-        address: asset.address(),
-        amount: refund_amount,
-    };
-
+    let token_client = TokenClient::new(&env, &asset.address());
     let message_id = message_id(&env);
 
     let transfer_token_auth = mock_auth!(
         operator,
-        token_with_env.transfer(operator, client.address, token.amount)
+        token_client.transfer(operator, client.address, token.amount)
     );
 
     let refund_auth = mock_auth!(

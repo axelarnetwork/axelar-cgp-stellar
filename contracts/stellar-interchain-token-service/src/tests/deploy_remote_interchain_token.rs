@@ -18,7 +18,7 @@ fn deploy_remote_interchain_token_succeeds() {
     let (env, client, _, gas_service, _) = setup_env();
 
     let sender = Address::generate(&env);
-    let (gas_token, gas_token_with_env) = setup_gas_token(&env, &sender);
+    let (gas_token, gas_token_client) = setup_gas_token(&env, &sender);
     let minter: Option<Address> = None;
     let salt = BytesN::<32>::from_array(&env, &[1; 32]);
     let token_metadata = TokenMetadata::new(&env, "name", "symbol", 6);
@@ -68,7 +68,7 @@ fn deploy_remote_interchain_token_succeeds() {
 
     let transfer_auth = auth_invocation!(
         sender,
-        gas_token_with_env.transfer(&sender, gas_service.address.clone(), gas_token.amount)
+        gas_token_client.transfer(&sender, gas_service.address.clone(), gas_token.amount)
     );
 
     let pay_gas_auth = auth_invocation!(
