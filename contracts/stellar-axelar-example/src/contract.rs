@@ -2,11 +2,11 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, token, Address, Bytes, BytesN, Env, String,
 };
 use stellar_axelar_gas_service::AxelarGasServiceClient;
-use stellar_axelar_gateway::executable::{AxelarExecutableInterface, NotApprovedError};
-use stellar_axelar_gateway::{impl_not_approved_error, AxelarGatewayMessagingClient};
+use stellar_axelar_gateway::executable::{AxelarExecutableInterface, CustomAxelarExecutable};
+use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
-use stellar_axelar_std::{ensure, InterchainTokenExecutable};
+use stellar_axelar_std::{ensure, AxelarExecutable, InterchainTokenExecutable};
 use stellar_interchain_token_service::executable::CustomInterchainTokenExecutable;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
@@ -15,7 +15,7 @@ use crate::interface::AxelarExampleInterface;
 use crate::storage;
 
 #[contract]
-#[derive(InterchainTokenExecutable)]
+#[derive(InterchainTokenExecutable, AxelarExecutable)]
 pub struct AxelarExample;
 
 #[contracterror]
@@ -27,32 +27,28 @@ pub enum AxelarExampleError {
     InvalidAmount = 3,
 }
 
-impl_not_approved_error!(AxelarExampleError);
-
 #[contractimpl]
-impl AxelarExecutableInterface for AxelarExample {
+impl CustomAxelarExecutable for AxelarExample {
     type Error = AxelarExampleError;
 
-    fn gateway(env: &Env) -> Address {
+    fn __gateway(env: &Env) -> Address {
         storage::gateway(env)
     }
 
-    fn execute(
-        env: Env,
+    fn __execute(
+        env: &Env,
         source_chain: String,
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) -> Result<(), AxelarExampleError> {
-        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
-
+    ) -> Result<(), Self::Error> {
         ExecutedEvent {
             source_chain,
             message_id,
             source_address,
             payload,
         }
-        .emit(&env);
+        .emit(env);
 
         Ok(())
     }

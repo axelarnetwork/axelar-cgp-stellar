@@ -5,14 +5,14 @@ use soroban_sdk::{
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
-use stellar_axelar_gateway::executable::AxelarExecutableInterface;
+use stellar_axelar_gateway::executable::{AxelarExecutableInterface, CustomAxelarExecutable};
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
 use stellar_axelar_std::{
-    ensure, interfaces, only_operator, only_owner, when_not_paused, Operatable, Ownable, Pausable,
-    Upgradable,
+    ensure, interfaces, only_operator, only_owner, when_not_paused, AxelarExecutable, Operatable,
+    Ownable, Pausable, Upgradable,
 };
 use stellar_interchain_token::InterchainTokenClient;
 
@@ -34,7 +34,7 @@ const ITS_HUB_CHAIN_NAME: &str = "axelar";
 const EXECUTE_WITH_INTERCHAIN_TOKEN: &str = "execute_with_interchain_token";
 
 #[contract]
-#[derive(Operatable, Ownable, Pausable, Upgradable)]
+#[derive(Operatable, Ownable, Pausable, Upgradable, AxelarExecutable)]
 pub struct InterchainTokenService;
 
 #[contractimpl]
@@ -314,27 +314,6 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
     }
 }
 
-#[contractimpl]
-impl AxelarExecutableInterface for InterchainTokenService {
-    type Error = ContractError;
-
-    fn gateway(env: &Env) -> Address {
-        storage::gateway(env)
-    }
-
-    fn execute(
-        env: Env,
-        source_chain: String,
-        message_id: String,
-        source_address: String,
-        payload: Bytes,
-    ) -> Result<(), ContractError> {
-        Self::validate_message(&env, &source_chain, &message_id, &source_address, &payload)?;
-
-        Self::execute_message(&env, source_chain, message_id, source_address, payload)
-    }
-}
-
 impl InterchainTokenService {
     fn pay_gas_and_call_contract(
         env: &Env,
@@ -378,27 +357,6 @@ impl InterchainTokenService {
             &hub_address,
             &payload,
         );
-
-        Ok(())
-    }
-
-    #[when_not_paused]
-    fn execute_message(
-        env: &Env,
-        source_chain: String,
-        message_id: String,
-        source_address: String,
-        payload: Bytes,
-    ) -> Result<(), ContractError> {
-        let (source_chain, message) =
-            Self::get_execute_params(env, source_chain, source_address, payload)?;
-
-        match message {
-            Message::InterchainTransfer(message) => {
-                Self::execute_transfer_message(env, &source_chain, message_id, message)
-            }
-            Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
-        }?;
 
         Ok(())
     }
@@ -709,6 +667,35 @@ impl InterchainTokenService {
             storage::try_token_id_config(env, token_id).is_none(),
             ContractError::TokenAlreadyRegistered
         );
+
+        Ok(())
+    }
+}
+
+impl CustomAxelarExecutable for InterchainTokenService {
+    type Error = ContractError;
+
+    fn __gateway(env: &Env) -> Address {
+        storage::gateway(env)
+    }
+
+    #[when_not_paused]
+    fn __execute(
+        env: &Env,
+        source_chain: String,
+        message_id: String,
+        source_address: String,
+        payload: Bytes,
+    ) -> Result<(), Self::Error> {
+        let (source_chain, message) =
+            Self::get_execute_params(env, source_chain, source_address, payload)?;
+
+        match message {
+            Message::InterchainTransfer(message) => {
+                Self::execute_transfer_message(env, &source_chain, message_id, message)
+            }
+            Message::DeployInterchainToken(message) => Self::execute_deploy_message(env, message),
+        }?;
 
         Ok(())
     }
