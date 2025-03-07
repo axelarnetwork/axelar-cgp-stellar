@@ -28,7 +28,7 @@ fn deploy_remote_canonical_token_succeeds() {
     let token_address = asset.address();
     let expected_id = client.canonical_interchain_token_id(&token_address);
     assert_eq!(client.register_canonical_token(&token_address), expected_id);
-    assert_eq!(client.token_address(&expected_id), token_address);
+    assert_eq!(client.registered_token_address(&expected_id), token_address);
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock
@@ -187,7 +187,7 @@ fn deploy_remote_canonical_token_succeeds_without_name_truncation() {
         &initial_supply,
         &minter,
     );
-    let token_address = client.token_address(&token_id);
+    let token_address = client.registered_token_address(&token_id);
     let destination_chain = String::from_str(&env, "ethereum");
 
     client.register_canonical_token(&token_address);

@@ -93,10 +93,10 @@ pub trait InterchainTokenServiceInterface:
     fn token_manager_address(env: &Env, token_id: BytesN<32>) -> Address;
 
     /// Returns the address of the token associated with the specified token ID.
-    fn token_address(env: &Env, token_id: BytesN<32>) -> Address;
+    fn registered_token_address(env: &Env, token_id: BytesN<32>) -> Address;
 
     /// Returns the address of the token manager associated with the specified token ID.
-    fn token_manager(env: &Env, token_id: BytesN<32>) -> Address;
+    fn deployed_token_manager(env: &Env, token_id: BytesN<32>) -> Address;
 
     /// Returns the type of the token manager associated with the specified token ID.
     fn token_manager_type(env: &Env, token_id: BytesN<32>) -> TokenManagerType;

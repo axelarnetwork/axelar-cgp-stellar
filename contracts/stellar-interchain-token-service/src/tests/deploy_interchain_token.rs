@@ -111,8 +111,8 @@ fn deploy_interchain_token_with_initial_supply_no_minter() {
         InterchainTokenDeployedEvent,
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
-    let token_address = client.token_address(&token_id);
-    let token_manager = client.token_manager(&token_id);
+    let token_address = client.registered_token_address(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
@@ -145,8 +145,8 @@ fn deploy_interchain_token_with_initial_supply_valid_minter() {
         InterchainTokenDeployedEvent,
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_EVENT_IDX));
 
-    let token_address = client.token_address(&token_id);
-    let token_manager = client.token_manager(&token_id);
+    let token_address = client.registered_token_address(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
@@ -205,8 +205,8 @@ fn deploy_interchain_token_zero_initial_supply_and_valid_minter() {
         InterchainTokenDeployedEvent,
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX));
 
-    let token_address = client.token_address(&token_id);
-    let token_manager = client.token_manager(&token_id);
+    let token_address = client.registered_token_address(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
@@ -236,8 +236,8 @@ fn deploy_interchain_token_fails_with_zero_initial_supply_and_no_minter() {
         InterchainTokenDeployedEvent,
     >(&env, INTERCHAIN_TOKEN_DEPLOYED_NO_SUPPLY_EVENT_IDX));
 
-    let token_address = client.token_address(&token_id);
-    let token_manager = client.token_manager(&token_id);
+    let token_address = client.registered_token_address(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
     let token = InterchainTokenClient::new(&env, &token_address);
 
     assert_eq!(token.owner(), client.address);
