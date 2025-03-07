@@ -1,6 +1,6 @@
 [package]
 name = "stellar-axelar-gas-service"
-version = "1.0.0"
+version = "1.1.0"
 edition = { workspace = true }
 description = "AxelarGasService contract, responsible for managing gas payments and refunds for cross-chain communication on the Axelar network."
 license = { workspace = true }
