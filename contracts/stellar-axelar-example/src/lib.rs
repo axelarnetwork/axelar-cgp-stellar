@@ -8,7 +8,7 @@ pub mod event;
 pub mod interface;
 mod storage;
 
-pub use contract::{Example, ExampleClient};
+pub use contract::{AxelarExample, AxelarExampleClient};
 
 #[cfg(test)]
 mod tests;
