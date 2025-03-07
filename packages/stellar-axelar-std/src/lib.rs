@@ -12,6 +12,8 @@ mod tests;
 
 pub mod traits;
 
+pub mod string;
+
 pub mod types;
 
 pub mod error;

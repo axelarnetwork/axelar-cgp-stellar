@@ -9,7 +9,7 @@ use crate::interfaces::CustomMigratableInterface;
 use crate::IntoEvent;
 
 #[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum ContractError {
     MigrationNotAllowed = 1,

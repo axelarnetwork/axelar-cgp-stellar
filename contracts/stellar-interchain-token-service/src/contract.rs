@@ -206,7 +206,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         caller: Address,
         salt: BytesN<32>,
         destination_chain: String,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<BytesN<32>, ContractError> {
         caller.require_auth();
 
@@ -222,6 +222,10 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         env: &Env,
         token_address: Address,
     ) -> Result<BytesN<32>, ContractError> {
+        // Validates the token address and it's associated token metadata
+        let _ =
+            token_metadata::token_metadata(env, &token_address, &Self::native_token_address(env))?;
+
         let token_id = Self::canonical_interchain_token_id(env, token_address.clone());
 
         Self::ensure_token_not_registered(env, token_id.clone())?;
@@ -242,7 +246,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         token_address: Address,
         destination_chain: String,
         spender: Address,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<BytesN<32>, ContractError> {
         spender.require_auth();
 
@@ -262,7 +266,7 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         destination_address: Bytes,
         amount: i128,
         data: Option<Bytes>,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ContractError> {
         ensure!(amount > 0, ContractError::InvalidAmount);
 
@@ -316,7 +320,7 @@ impl InterchainTokenService {
         caller: Address,
         destination_chain: String,
         message: Message,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ContractError> {
         ensure!(
             Self::is_trusted_chain(env, destination_chain.clone()),
@@ -335,15 +339,17 @@ impl InterchainTokenService {
         let hub_chain = Self::its_hub_chain_name(env);
         let hub_address = Self::its_hub_address(env);
 
-        gas_service.pay_gas(
-            &env.current_contract_address(),
-            &hub_chain,
-            &hub_address,
-            &payload,
-            &caller,
-            &gas_token,
-            &Bytes::new(env),
-        );
+        if let Some(gas_token) = gas_token {
+            gas_service.pay_gas(
+                &env.current_contract_address(),
+                &hub_chain,
+                &hub_address,
+                &payload,
+                &caller,
+                &gas_token,
+                &Bytes::new(env),
+            );
+        }
 
         gateway.call_contract(
             &env.current_contract_address(),
@@ -441,7 +447,7 @@ impl InterchainTokenService {
     /// * `caller` - Address of the caller initiating the deployment.
     /// * `token_id` - The token ID for the remote token being deployed.
     /// * `destination_chain` - The name of the destination chain where the token will be deployed.
-    /// * `gas_token` - The token used to pay for gas during the deployment.
+    /// * `gas_token` - An optional gas token used to pay for gas during the deployment.
     ///
     /// # Errors
     /// - `ContractError::InvalidDestinationChain`: If the `destination_chain` is the current chain.
@@ -456,7 +462,7 @@ impl InterchainTokenService {
         caller: Address,
         token_id: BytesN<32>,
         destination_chain: String,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) -> Result<(), ContractError> {
         ensure!(
             destination_chain != Self::chain_name(env),

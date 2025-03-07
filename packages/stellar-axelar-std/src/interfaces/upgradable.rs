@@ -34,7 +34,7 @@ pub trait CustomMigratableInterface: UpgradableInterface {
     /// Choose `()` if none is necessary
     type MigrationData: FromVal<Env, Val>;
     /// Error type returned if the migration fails.
-    /// It must implement the `Into<ContractError>` trait if migration is implemented with the `#[derive(Upgradable)]` macro.     
+    /// It must implement the `Into<ContractError>` trait if migration is implemented with the `#[derive(Upgradable)]` macro.
     type Error;
 
     /// Migrates contract state after upgrading the contract code.

@@ -11,17 +11,17 @@ use stellar_interchain_token_service::executable::CustomInterchainTokenExecutabl
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
-use crate::interface::ExampleInterface;
+use crate::interface::AxelarExampleInterface;
 use crate::storage;
 
 #[contract]
 #[derive(InterchainTokenExecutable, AxelarExecutable)]
-pub struct Example;
+pub struct AxelarExample;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
-pub enum ExampleError {
+pub enum AxelarExampleError {
     NotApproved = 1,
     InvalidItsAddress = 2,
     InvalidAmount = 3,
@@ -41,7 +41,7 @@ impl CustomAxelarExecutable for Example {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) -> Result<(), Self::Error> {
+    ) -> Result<(), Self::AxelarExampleError> {
         ExecutedEvent {
             source_chain,
             message_id,
@@ -54,8 +54,8 @@ impl CustomAxelarExecutable for Example {
     }
 }
 
-impl CustomInterchainTokenExecutable for Example {
-    type Error = ExampleError;
+impl CustomInterchainTokenExecutable for AxelarExample {
+    type Error = AxelarExampleError;
 
     fn __interchain_token_service(env: &Env) -> Address {
         storage::interchain_token_service(env)
@@ -71,7 +71,7 @@ impl CustomInterchainTokenExecutable for Example {
         token_address: Address,
         amount: i128,
     ) -> Result<(), Self::Error> {
-        ensure!(amount >= 0, ExampleError::InvalidAmount);
+        ensure!(amount >= 0, AxelarExampleError::InvalidAmount);
 
         let destination_address = Address::from_string_bytes(&payload);
 
@@ -98,7 +98,7 @@ impl CustomInterchainTokenExecutable for Example {
 }
 
 #[contractimpl]
-impl Example {
+impl AxelarExample {
     pub fn __constructor(
         env: &Env,
         gateway: Address,
@@ -112,7 +112,7 @@ impl Example {
 }
 
 #[contractimpl]
-impl ExampleInterface for Example {
+impl AxelarExampleInterface for AxelarExample {
     fn gas_service(env: &Env) -> Address {
         storage::gas_service(env)
     }
@@ -123,22 +123,24 @@ impl ExampleInterface for Example {
         destination_chain: String,
         destination_address: String,
         message: Bytes,
-        gas_token: Token,
+        gas_token: Option<Token>,
     ) {
         let gateway = AxelarGatewayMessagingClient::new(env, &Self::gateway(env));
         let gas_service = AxelarGasServiceClient::new(env, &Self::gas_service(env));
 
         caller.require_auth();
 
-        gas_service.pay_gas(
-            &env.current_contract_address(),
-            &destination_chain,
-            &destination_address,
-            &message,
-            &caller,
-            &gas_token,
-            &Bytes::new(env),
-        );
+        if let Some(gas_token) = gas_token {
+            gas_service.pay_gas(
+                &env.current_contract_address(),
+                &destination_chain,
+                &destination_address,
+                &message,
+                &caller,
+                &gas_token,
+                &Bytes::new(env),
+            );
+        }
 
         gateway.call_contract(
             &env.current_contract_address(),
@@ -156,8 +158,8 @@ impl ExampleInterface for Example {
         destination_app_contract: Bytes,
         amount: i128,
         recipient: Option<Bytes>,
-        gas_token: Token,
-    ) -> Result<(), ExampleError> {
+        gas_token: Option<Token>,
+    ) -> Result<(), AxelarExampleError> {
         caller.require_auth();
 
         let client = InterchainTokenServiceClient::new(env, &Self::interchain_token_service(env));

@@ -1,8 +1,8 @@
 [package]
-name = "stellar-example"
+name = "stellar-axelar-example"
 version = "1.0.0"
 edition = { workspace = true }
-description = "Example contract, responsible for demonstrating interchain message and token transfers with Gateway, GasService, and InterchainTokenService."
+description = "AxelarExample contract, responsible for demonstrating interchain message and token transfers with Gateway, GasService, and InterchainTokenService."
 license = { workspace = true }
 
 [lib]
