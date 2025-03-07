@@ -86,7 +86,7 @@ fn interchain_transfer_message_canonical_token_execute_succeeds() {
     let token_id = client
         .mock_all_auths()
         .register_canonical_token(&token_address);
-    let token_manager = client.token_manager(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
 
     StellarAssetClient::new(&env, &token_address)
         .mock_all_auths()
@@ -196,7 +196,7 @@ fn deploy_interchain_token_message_execute_succeeds() {
     let token_manager_deployed_event =
         events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -2);
 
-    let token = InterchainTokenClient::new(&env, &client.token_address(&token_id));
+    let token = InterchainTokenClient::new(&env, &client.registered_token_address(&token_id));
 
     assert!(token.is_minter(&Address::from_string_bytes(&sender)));
     assert_eq!(token.name(), token_metadata.name);

@@ -103,7 +103,7 @@ fn interchain_transfer_canonical_token_send_succeeds() {
     let token_id = client
         .mock_all_auths()
         .register_canonical_token(&token_address);
-    let token_manager = client.token_manager(&token_id);
+    let token_manager = client.deployed_token_manager(&token_id);
 
     assert_eq!(
         TokenClient::new(&env, &token_address).balance(&token_manager),
