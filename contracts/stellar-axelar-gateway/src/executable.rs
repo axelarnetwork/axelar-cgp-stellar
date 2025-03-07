@@ -1,10 +1,15 @@
 use soroban_sdk::{Address, Bytes, Env, String};
+pub use stellar_axelar_std::AxelarExecutable;
 use stellar_axelar_std::{derive_only, ensure};
 
 use crate::AxelarGatewayMessagingClient;
 
-/// Interface for an Axelar Executable app.
-pub trait AxelarExecutableInterface: CustomAxelarExecutableInterface + DeriveOnly {
+derive_only!();
+
+/// Interface for an Axelar Executable app. Use the [`AxelarExecutable`] derive macro to implement this interface.
+///
+/// **DO NOT IMPLEMENT THIS MANUALLY!**
+pub trait AxelarExecutableInterface: CustomAxelarExecutable + DeriveOnly {
     /// Return the trusted gateway contract id.
     fn gateway(env: &Env) -> Address;
 
@@ -15,16 +20,21 @@ pub trait AxelarExecutableInterface: CustomAxelarExecutableInterface + DeriveOnl
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) -> Result<(), <Self as CustomAxelarExecutableInterface>::Error>;
+    ) -> Result<(), <Self as CustomAxelarExecutable>::Error>;
 }
 
-derive_only!();
-
-pub trait CustomAxelarExecutableInterface {
+/// Encapsulates the logic for executing a cross-chain message. This trait must be implemented by a contract to be compatible with the [`AxelarExecutableInterface`].
+///
+/// Do NOT add the implementation of [`CustomAxelarExecutable`] to the public interface of the contract, i.e. do not annotate the `impl` block with `#[contractimpl]`
+pub trait CustomAxelarExecutable {
     type Error: Into<soroban_sdk::Error>;
 
+    /// Custom implementation of the gateway query function that's called by [`AxelarExecutableInterface::gateway`].
     fn __gateway(env: &Env) -> Address;
-    fn __validated_execute(
+
+    /// Custom implementation of the execute function that's called by [`AxelarExecutableInterface::execute`] after validation has succeeded.
+    /// It is guaranteed that the [`validate_message`] function has already been called when this function is executed.
+    fn __execute(
         env: &Env,
         source_chain: String,
         message_id: String,
@@ -34,9 +44,8 @@ pub trait CustomAxelarExecutableInterface {
 }
 
 /// Validate if a gateway has approved a message.
-/// This should be called from an implementation of `execute` before executing custom app logic.
-/// This method doesn't get exposed from the contract, as Soroban SDK's contractimpl macro ignores default trait methods.
-pub fn validate_message<T: CustomAxelarExecutableInterface>(
+/// This is called as part of the generated implementation of [`AxelarExecutableInterface::execute`] before running [`CustomAxelarExecutable::__execute`].
+pub fn validate_message<T: CustomAxelarExecutable>(
     env: &Env,
     source_chain: &String,
     message_id: &String,

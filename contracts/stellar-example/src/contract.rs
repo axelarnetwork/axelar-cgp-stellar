@@ -2,9 +2,7 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, token, Address, Bytes, BytesN, Env, String,
 };
 use stellar_axelar_gas_service::AxelarGasServiceClient;
-use stellar_axelar_gateway::executable::{
-    AxelarExecutableInterface, CustomAxelarExecutableInterface,
-};
+use stellar_axelar_gateway::executable::{AxelarExecutableInterface, CustomAxelarExecutable};
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::events::Event;
 use stellar_axelar_std::types::Token;
@@ -30,14 +28,14 @@ pub enum ExampleError {
 }
 
 #[contractimpl]
-impl CustomAxelarExecutableInterface for Example {
+impl CustomAxelarExecutable for Example {
     type Error = ExampleError;
 
     fn __gateway(env: &Env) -> Address {
         storage::gateway(env)
     }
 
-    fn __validated_execute(
+    fn __execute(
         env: &Env,
         source_chain: String,
         message_id: String,

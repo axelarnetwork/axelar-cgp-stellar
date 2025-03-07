@@ -5,9 +5,7 @@ use soroban_sdk::{
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use stellar_axelar_gas_service::AxelarGasServiceClient;
-use stellar_axelar_gateway::executable::{
-    AxelarExecutableInterface, CustomAxelarExecutableInterface,
-};
+use stellar_axelar_gateway::executable::{AxelarExecutableInterface, CustomAxelarExecutable};
 use stellar_axelar_gateway::AxelarGatewayMessagingClient;
 use stellar_axelar_std::address::AddressExt;
 use stellar_axelar_std::events::Event;
@@ -668,7 +666,7 @@ impl InterchainTokenService {
     }
 }
 
-impl CustomAxelarExecutableInterface for InterchainTokenService {
+impl CustomAxelarExecutable for InterchainTokenService {
     type Error = ContractError;
 
     fn __gateway(env: &Env) -> Address {
@@ -676,7 +674,7 @@ impl CustomAxelarExecutableInterface for InterchainTokenService {
     }
 
     #[when_not_paused]
-    fn __validated_execute(
+    fn __execute(
         env: &Env,
         source_chain: String,
         message_id: String,

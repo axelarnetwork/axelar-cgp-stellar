@@ -13,7 +13,7 @@ pub fn axelar_executable(name: &Ident) -> TokenStream2 {
         impl stellar_axelar_gateway::executable::DeriveOnly for #name {}
 
         #[allow(non_camel_case_types)]
-        type #error_alias = <#name as stellar_axelar_gateway::executable::CustomAxelarExecutableInterface>::Error;
+        type #error_alias = <#name as stellar_axelar_gateway::executable::CustomAxelarExecutable>::Error;
 
         #[contractimpl]
         impl AxelarExecutableInterface for #name {
@@ -28,10 +28,11 @@ pub fn axelar_executable(name: &Ident) -> TokenStream2 {
                 source_address: String,
                 payload: Bytes,
             ) -> Result<(), #error_alias> {
-                stellar_axelar_gateway::executable::validate_message::<Self>(env, &source_chain, &message_id, &source_address, &payload).map_err(|err| match err{
+                stellar_axelar_gateway::executable::validate_message::<Self>(env, &source_chain, &message_id, &source_address, &payload).map_err(|err| match err {
                     stellar_axelar_gateway::executable::ValidationError::NotApproved => #error_alias::NotApproved,
                 })?;
-                Self::__validated_execute(env, source_chain, message_id, source_address, payload)
+
+                Self::__execute(env, source_chain, message_id, source_address, payload)
             }
         }
     }

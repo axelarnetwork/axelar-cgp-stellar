@@ -37,6 +37,8 @@ pub trait CustomInterchainTokenExecutable {
     ) -> Result<(), Self::Error>;
 }
 
+derive_only!();
+
 /// Interface for an Interchain Token Executable app. Use the [`InterchainTokenExecutable`] derive macro to implement this interface.
 ///
 /// **DO NOT IMPLEMENT THIS MANUALLY!**
@@ -59,5 +61,3 @@ pub trait InterchainTokenExecutableInterface: CustomInterchainTokenExecutable + 
         amount: i128,
     ) -> Result<(), soroban_sdk::Error>;
 }
-
-derive_only!();
