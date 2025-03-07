@@ -27,8 +27,8 @@ fn upgrade_and_migrate_are_atomic() {
 
     let upgrader = UpgraderClient::new(&env, &upgrader_address);
 
-    let upgrade_auth = mock_auth!(env, owner, dummy_client.upgrade(hash_after_upgrade));
-    let migrate_auth = mock_auth!(env, owner, dummy_client.migrate(expected_data));
+    let upgrade_auth = mock_auth!(owner, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(owner, dummy_client.migrate(expected_data));
 
     upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(
         &contract_address,
@@ -94,8 +94,8 @@ fn upgrade_fails_if_caller_is_authenticated_but_not_owner() {
     // add the caller to the set of authenticated addresses
     let caller = Address::generate(&env);
 
-    let upgrade_auth = mock_auth!(env, caller, dummy_client.upgrade(hash_after_upgrade));
-    let migrate_auth = mock_auth!(env, caller, dummy_client.migrate(expected_data));
+    let upgrade_auth = mock_auth!(caller, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(caller, dummy_client.migrate(expected_data));
 
     // should panic: caller is authenticated, but not the owner
     upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(
@@ -124,8 +124,8 @@ fn upgrade_fails_if_correct_owner_is_not_authenticated_for_full_invocation_tree(
     // add the caller to the set of authenticated addresses
     let caller = Address::generate(&env);
 
-    let upgrade_auth = mock_auth!(env, owner, dummy_client.upgrade(hash_after_upgrade));
-    let migrate_auth = mock_auth!(env, caller, dummy_client.migrate(expected_data));
+    let upgrade_auth = mock_auth!(owner, dummy_client.upgrade(hash_after_upgrade));
+    let migrate_auth = mock_auth!(caller, dummy_client.migrate(expected_data));
 
     // only add the owner to the set of authenticated addresses for the upgrade function, and the caller for the migrate function
     upgrader.mock_auths(&[upgrade_auth, migrate_auth]).upgrade(

@@ -25,17 +25,20 @@ fn setup_env<'a>() -> (Env, Address, Address, AxelarGasServiceClient<'a>) {
     (env, contract_id, operator, client)
 }
 
-fn setup_token(env: &Env, recipient: &Address, amount: i128) -> Token {
+fn setup_token<'a>(env: &'a Env, recipient: &'a Address, amount: i128) -> (Token, TokenClient<'a>) {
     let asset = env.register_stellar_asset_contract_v2(Address::generate(env));
 
     StellarAssetClient::new(env, &asset.address())
         .mock_all_auths()
         .mint(recipient, &amount);
 
-    Token {
-        address: asset.address(),
-        amount,
-    }
+    (
+        Token {
+            address: asset.address(),
+            amount,
+        },
+        TokenClient::new(env, &asset.address()),
+    )
 }
 
 fn message_id(env: &Env) -> String {
@@ -104,9 +107,9 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 2;
-    let Token { address, .. } = setup_token(&env, &spender, gas_amount - 1);
+    let (_token, token_client) = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
-        address,
+        address: _token.address,
         amount: gas_amount,
     };
 
@@ -114,13 +117,11 @@ fn pay_gas_fails_with_insufficient_user_balance() {
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     let transfer_token_auth = mock_auth!(
-        env,
         spender,
-        token.transfer(spender, client.address, token.amount)
+        token_client.transfer(spender, client.address, token.amount)
     );
 
     let pay_gas_auth = mock_auth!(
-        env,
         spender,
         client.pay_gas(
             sender,
@@ -152,20 +153,17 @@ fn pay_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = setup_token(&env, &spender, gas_amount);
-    let token_client = TokenClient::new(&env, &token.address);
+    let (token, token_client) = setup_token(&env, &spender, gas_amount);
 
     let payload = bytes!(&env, 0x1234);
     let (destination_chain, destination_address) = dummy_destination_data(&env);
 
     let transfer_token_auth = mock_auth!(
-        env,
         spender,
-        token.transfer(spender, client.address, token.amount)
+        token_client.transfer(spender, client.address, token.amount)
     );
 
     let pay_gas_auth = mock_auth!(
-        env,
         spender,
         client.pay_gas(
             sender,
@@ -225,9 +223,9 @@ fn add_gas_fails_with_insufficient_user_balance() {
     let sender: Address = Address::generate(&env);
     let message_id = message_id(&env);
     let gas_amount: i128 = 2;
-    let Token { address, .. } = setup_token(&env, &spender, gas_amount - 1);
+    let (_token, _) = setup_token(&env, &spender, gas_amount - 1);
     let token = Token {
-        address,
+        address: _token.address,
         amount: gas_amount,
     };
     client
@@ -242,7 +240,7 @@ fn add_gas() {
     let spender: Address = Address::generate(&env);
     let sender: Address = Address::generate(&env);
     let gas_amount: i128 = 1;
-    let token = setup_token(&env, &spender, gas_amount);
+    let (token, _) = setup_token(&env, &spender, gas_amount);
     let token_client = TokenClient::new(&env, &token.address);
 
     let message_id = message_id(&env);
@@ -262,10 +260,9 @@ fn collect_fees_fails_with_zero_amount() {
     let spender: Address = Address::generate(&env);
     let refund_amount = 0;
     let supply: i128 = 1000;
-
-    let Token { address, .. } = setup_token(&env, &spender, supply);
+    let (_token, _) = setup_token(&env, &spender, supply);
     let token = Token {
-        address,
+        address: _token.address,
         amount: refund_amount,
     };
 
@@ -337,13 +334,11 @@ fn collect_fees_succeeds() {
     };
 
     let transfer_token_auth = mock_auth!(
-        env,
         operator,
-        token.transfer(operator, client.address, token.amount)
+        token_client.transfer(operator, client.address, token.amount)
     );
 
     let collect_fees_auth = mock_auth!(
-        env,
         operator,
         client.collect_fees(&operator, &token),
         &[(transfer_token_auth.invoke).clone()]
@@ -398,17 +393,15 @@ fn refund_fails_with_insufficient_balance() {
         address: asset.address(),
         amount: refund_amount,
     };
-
+    let token_client = TokenClient::new(&env, &asset.address());
     let message_id = message_id(&env);
 
     let transfer_token_auth = mock_auth!(
-        env,
         operator,
-        token.transfer(operator, client.address, token.amount)
+        token_client.transfer(operator, client.address, token.amount)
     );
 
     let refund_auth = mock_auth!(
-        env,
         operator,
         client.refund(&message_id, &receiver, &token),
         &[(transfer_token_auth.invoke).clone()]
