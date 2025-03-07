@@ -28,8 +28,8 @@ pub enum AxelarExampleError {
 }
 
 #[contractimpl]
-impl CustomAxelarExecutable for Example {
-    type Error = ExampleError;
+impl CustomAxelarExecutable for AxelarExample {
+    type Error = AxelarExampleError;
 
     fn __gateway(env: &Env) -> Address {
         storage::gateway(env)
@@ -41,7 +41,7 @@ impl CustomAxelarExecutable for Example {
         message_id: String,
         source_address: String,
         payload: Bytes,
-    ) -> Result<(), Self::AxelarExampleError> {
+    ) -> Result<(), Self::Error> {
         ExecutedEvent {
             source_chain,
             message_id,
