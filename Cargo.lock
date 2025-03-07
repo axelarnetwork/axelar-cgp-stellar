@@ -1972,6 +1972,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "stellar-axelar-example"
+version = "1.0.0"
+dependencies = [
+ "goldie",
+ "soroban-sdk",
+ "soroban-token-sdk",
+ "stellar-axelar-gas-service",
+ "stellar-axelar-gateway",
+ "stellar-axelar-std",
+ "stellar-interchain-token-service",
+]
+
+[[package]]
 name = "stellar-axelar-gas-service"
 version = "1.0.0"
 dependencies = [
@@ -2032,19 +2045,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.87",
-]
-
-[[package]]
-name = "stellar-example"
-version = "1.0.0"
-dependencies = [
- "goldie",
- "soroban-sdk",
- "soroban-token-sdk",
- "stellar-axelar-gas-service",
- "stellar-axelar-gateway",
- "stellar-axelar-std",
- "stellar-interchain-token-service",
 ]
 
 [[package]]

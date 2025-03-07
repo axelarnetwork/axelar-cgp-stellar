@@ -44,7 +44,7 @@ jobs:
       - name: Build all contracts
         run: |
           # Install Stellar CLI compatible with the soroban-sdk version in Cargo.toml
-          cargo install --locked stellar-cli --version ^22 --features opt
+          cargo install --locked stellar-cli --version 22.2.0 --features opt
 
           # Build all contracts
           stellar contract build

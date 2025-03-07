@@ -18,9 +18,9 @@ use stellar_axelar_std::{assert_contract_err, assert_ok, auth_invocation, events
 use stellar_interchain_token_service::testutils::setup_its;
 use stellar_interchain_token_service::InterchainTokenServiceClient;
 
-use crate::contract::ExampleError;
+use crate::contract::AxelarExampleError;
 use crate::event::{ExecutedEvent, TokenReceivedEvent, TokenSentEvent};
-use crate::{Example, ExampleClient};
+use crate::{AxelarExample, AxelarExampleClient};
 
 const SOURCE_CHAIN_NAME: &str = "source";
 const DESTINATION_CHAIN_NAME: &str = "destination";
@@ -30,7 +30,7 @@ struct TestConfig<'a> {
     gateway: AxelarGatewayClient<'a>,
     gas_service: AxelarGasServiceClient<'a>,
     its: InterchainTokenServiceClient<'a>,
-    app: ExampleClient<'a>,
+    app: AxelarExampleClient<'a>,
 }
 
 fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
@@ -38,10 +38,10 @@ fn setup_app<'a>(env: &Env, chain_name: String) -> TestConfig<'a> {
     let gas_service = setup_gas_service(env);
     let its = setup_its(env, &gateway, &gas_service, Some(chain_name));
     let app = env.register(
-        Example,
+        AxelarExample,
         (&gateway.address, &gas_service.address, &its.address),
     );
-    let app = ExampleClient::new(env, &app);
+    let app = AxelarExampleClient::new(env, &app);
 
     TestConfig {
         signers,
@@ -388,6 +388,6 @@ fn execute_fails_with_not_approved() {
 
     assert_contract_err!(
         app.try_execute(&source_chain, &message_id, &source_address, &payload),
-        ExampleError::NotApproved
+        AxelarExampleError::NotApproved
     );
 }

@@ -2,9 +2,9 @@ use soroban_sdk::{Address, Bytes, BytesN, Env, String};
 use stellar_axelar_gateway::executable::AxelarExecutableInterface;
 use stellar_axelar_std::types::Token;
 
-use crate::contract::ExampleError;
+use crate::contract::AxelarExampleError;
 
-pub trait ExampleInterface: AxelarExecutableInterface {
+pub trait AxelarExampleInterface: AxelarExecutableInterface {
     /// Retrieves the address of the gas service.
     fn gas_service(env: &Env) -> Address;
 
@@ -54,5 +54,5 @@ pub trait ExampleInterface: AxelarExecutableInterface {
         amount: i128,
         recipient: Option<Bytes>,
         gas_token: Option<Token>,
-    ) -> Result<(), ExampleError>;
+    ) -> Result<(), AxelarExampleError>;
 }
