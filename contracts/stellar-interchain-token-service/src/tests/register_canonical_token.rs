@@ -26,7 +26,10 @@ fn register_canonical_token_succeeds() {
     let token_manager_deployed_event =
         events::fmt_emitted_event_at_idx::<TokenManagerDeployedEvent>(&env, -1);
 
-    assert_eq!(client.token_address(&expected_id), token.address());
+    assert_eq!(
+        client.registered_token_address(&expected_id),
+        token.address()
+    );
     assert_eq!(
         client.token_manager_type(&expected_id),
         TokenManagerType::LockUnlock

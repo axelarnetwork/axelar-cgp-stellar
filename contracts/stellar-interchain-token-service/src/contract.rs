@@ -141,11 +141,11 @@ impl InterchainTokenServiceInterface for InterchainTokenService {
         deployer::token_manager_address(env, token_id)
     }
 
-    fn token_address(env: &Env, token_id: BytesN<32>) -> Address {
+    fn registered_token_address(env: &Env, token_id: BytesN<32>) -> Address {
         storage::token_id_config(env, token_id).token_address
     }
 
-    fn token_manager(env: &Env, token_id: BytesN<32>) -> Address {
+    fn deployed_token_manager(env: &Env, token_id: BytesN<32>) -> Address {
         storage::token_id_config(env, token_id).token_manager
     }
 

@@ -347,7 +347,7 @@ fn its_example() {
     .join("\n\n"));
 
     let destination_token =
-        token::TokenClient::new(&env, &destination_its.token_address(&token_id));
+        token::TokenClient::new(&env, &destination_its.registered_token_address(&token_id));
     assert_eq!(destination_token.balance(&destination_app.address), 0);
 
     let recipient = Address::from_string_bytes(&recipient.to_string_bytes());
