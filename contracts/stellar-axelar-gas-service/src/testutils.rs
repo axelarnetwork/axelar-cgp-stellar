@@ -21,7 +21,7 @@ pub fn setup_gas_token<'a>(env: &'a Env, sender: &'a Address) -> (Token, TokenCl
         address: asset.address(),
         amount: gas_amount,
     };
-    let gas_token_client = TokenClient::new(&env, &asset.address());
+    let gas_token_client = TokenClient::new(env, &asset.address());
 
     StellarAssetClient::new(env, &asset.address())
         .mock_all_auths()
