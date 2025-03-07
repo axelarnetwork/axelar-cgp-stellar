@@ -37,7 +37,7 @@ fn setup_token<'a>(env: &'a Env, recipient: &'a Address, amount: i128) -> (Token
             address: asset.address(),
             amount,
         },
-        TokenClient::new(&env, &asset.address()),
+        TokenClient::new(env, &asset.address()),
     )
 }
 
