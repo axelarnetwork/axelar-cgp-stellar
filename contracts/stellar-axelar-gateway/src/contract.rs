@@ -120,8 +120,8 @@ impl AxelarGatewayMessagingInterface for AxelarGateway {
         if message_approval == Self::message_approval_hash(&env, message.clone()) {
             storage::set_message_approval(
                 &env,
-                source_chain.clone(),
-                message_id.clone(),
+                source_chain,
+                message_id,
                 &MessageApprovalValue::Executed,
             );
 
