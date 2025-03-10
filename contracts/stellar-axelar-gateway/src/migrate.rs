@@ -1,7 +1,9 @@
 use soroban_sdk::{Env, String, Vec};
-use stellar_axelar_std::{ensure, interfaces::CustomMigratableInterface};
+use stellar_axelar_std::ensure;
+use stellar_axelar_std::interfaces::CustomMigratableInterface;
 
-use crate::{error::ContractError, storage, AxelarGateway};
+use crate::error::ContractError;
+use crate::{storage, AxelarGateway};
 
 mod legacy_storage {
     use soroban_sdk::{contracttype, BytesN, String};
