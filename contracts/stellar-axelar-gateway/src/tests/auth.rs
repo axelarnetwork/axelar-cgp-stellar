@@ -54,9 +54,9 @@ fn validate_proof_fails_with_invalid_signatures() {
 #[test]
 fn domain_separator_succeeds_with_register() {
     let TestConfig {
-        env,
         signers,
         client,
+        ..
     } = setup_env(randint(0, 10), randint(1, 10));
 
     assert_eq!(client.domain_separator(), signers.domain_separator);
@@ -92,9 +92,8 @@ fn minimum_rotation_delay_succeeds_with_register() {
 fn previous_signers_retention_succeeds_with_register() {
     let previous_signers_retention = randint(0, 10);
     let TestConfig {
-        env,
-        signers,
         client,
+        ..
     } = setup_env(previous_signers_retention, randint(1, 10));
 
     assert_eq!(
