@@ -89,8 +89,8 @@ fn migrate_fails_when_message_approval_not_found() {
 
     let migration_data = vec![
         &env,
-        (source_chain1.clone(), message_id1.clone()),
-        (source_chain2.clone(), message_id2.clone()),
+        (source_chain1, message_id1),
+        (source_chain2, message_id2),
     ];
 
     assert_err!(
