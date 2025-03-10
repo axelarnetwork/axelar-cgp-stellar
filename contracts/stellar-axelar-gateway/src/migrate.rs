@@ -70,7 +70,8 @@ impl CustomMigratableInterface for AxelarGateway {
                 ContractError::MessageApprovalNotFound
             );
 
-            let message_approval = legacy_storage::message_approval(_env, message_approval_key.clone());
+            let message_approval =
+                legacy_storage::message_approval(_env, message_approval_key.clone());
 
             storage::set_message_approval(
                 _env,
