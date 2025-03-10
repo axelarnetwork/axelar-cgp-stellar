@@ -2,11 +2,11 @@ use soroban_sdk::testutils::{Address as _, Events};
 use soroban_sdk::{bytes, vec, Address, BytesN, String};
 use stellar_axelar_std::{assert_auth, assert_auth_err, assert_contract_err, events};
 
-use super::utils::setup_env;
 use crate::error::ContractError;
 use crate::event::{
     ContractCalledEvent, MessageApprovedEvent, MessageExecutedEvent, SignersRotatedEvent,
 };
+use crate::tests::testutils::{setup_env, TestConfig};
 #[cfg(any(test, feature = "testutils"))]
 use crate::testutils::{
     generate_proof, generate_signers_set, generate_signers_set_with_rng, generate_test_message,
@@ -24,7 +24,7 @@ fn deterministic_rng() -> rand_chacha::ChaCha20Rng {
 
 #[test]
 fn call_contract() {
-    let (env, _signers, client) = setup_env(1, 5);
+    let TestConfig { env, client, .. } = setup_env(1, 5);
 
     let user: Address = Address::generate(&env);
     let destination_chain = String::from_str(&env, DESTINATION_CHAIN);
@@ -40,7 +40,7 @@ fn call_contract() {
 
 #[test]
 fn validate_message() {
-    let (env, _signers, client) = setup_env(1, 5);
+    let TestConfig { env, client, .. } = setup_env(1, 5);
 
     let (
         Message {
@@ -69,7 +69,11 @@ fn validate_message() {
 
 #[test]
 fn approve_message() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
     let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let Message {
         source_chain,
@@ -98,7 +102,11 @@ fn approve_message() {
 
 #[test]
 fn execute_approved_message() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
     let (message, _) = generate_test_message_with_rng(&env, deterministic_rng());
     let Message {
         source_chain,
@@ -141,7 +149,11 @@ fn execute_approved_message() {
 
 #[test]
 fn fail_execute_invalid_proof() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
     let (message, _) = generate_test_message(&env);
 
     let invalid_signers = generate_signers_set(&env, randint(1, 10), signers.domain_separator);
@@ -158,7 +170,11 @@ fn fail_execute_invalid_proof() {
 
 #[test]
 fn approve_messages_fail_empty_messages() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     let messages = soroban_sdk::Vec::new(&env);
     let data_hash = get_approve_hash(&env, messages.clone());
@@ -172,7 +188,11 @@ fn approve_messages_fail_empty_messages() {
 
 #[test]
 fn approve_messages_fails_when_contract_is_paused() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     assert_auth!(client.owner(), client.pause());
 
@@ -189,7 +209,11 @@ fn approve_messages_fails_when_contract_is_paused() {
 
 #[test]
 fn approve_messages_skip_duplicate_message() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
     let (message, _) = generate_test_message(&env);
 
     let messages = vec![&env, message];
@@ -203,7 +227,11 @@ fn approve_messages_skip_duplicate_message() {
 
 #[test]
 fn rotate_signers() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let new_signers = generate_signers_set_with_rng(
         &env,
@@ -221,7 +249,11 @@ fn rotate_signers() {
 
 #[test]
 fn approve_messages_after_rotation() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let new_signers = generate_signers_set_with_rng(
         &env,
@@ -246,7 +278,11 @@ fn approve_messages_after_rotation() {
 
 #[test]
 fn rotate_signers_bypass_rotation_delay() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
     let new_signers = generate_signers_set_with_rng(
         &env,
         5,
@@ -266,7 +302,11 @@ fn rotate_signers_bypass_rotation_delay() {
 
 #[test]
 fn rotate_signers_bypass_rotation_delay_unauthorized() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let new_signers = generate_signers_set(&env, 5, signers.domain_separator.clone());
 
@@ -288,7 +328,11 @@ fn rotate_signers_bypass_rotation_delay_unauthorized() {
 
 #[test]
 fn rotate_signers_fail_not_latest_signers() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let bypass_rotation_delay = false;
 
@@ -309,7 +353,7 @@ fn rotate_signers_fail_not_latest_signers() {
 
 #[test]
 fn transfer_operatorship_unauthorized() {
-    let (env, _, client) = setup_env(1, randint(1, 10));
+    let TestConfig { env, client, .. } = setup_env(1, randint(1, 10));
     let not_operator = Address::generate(&env);
 
     assert_auth_err!(
@@ -321,7 +365,7 @@ fn transfer_operatorship_unauthorized() {
 
 #[test]
 fn transfer_ownership_unauthorized() {
-    let (env, _, client) = setup_env(1, randint(1, 10));
+    let TestConfig { env, client, .. } = setup_env(1, randint(1, 10));
 
     let new_owner = Address::generate(&env);
 
@@ -334,7 +378,11 @@ fn transfer_ownership_unauthorized() {
 
 #[test]
 fn epoch_by_signers_hash() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let bypass_rotation_delay = false;
 
@@ -352,7 +400,7 @@ fn epoch_by_signers_hash() {
 
 #[test]
 fn epoch_by_signers_hash_fail_invalid_signers() {
-    let (env, _, client) = setup_env(1, 5);
+    let TestConfig { env, client, .. } = setup_env(1, 5);
     let signers_hash = BytesN::<32>::from_array(&env, &[1; 32]);
 
     assert_contract_err!(
@@ -363,7 +411,11 @@ fn epoch_by_signers_hash_fail_invalid_signers() {
 
 #[test]
 fn signers_hash_by_epoch() {
-    let (env, signers, client) = setup_env(1, 5);
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, 5);
 
     let bypass_rotation_delay = false;
 
@@ -382,7 +434,7 @@ fn signers_hash_by_epoch() {
 
 #[test]
 fn signers_hash_by_epoch_fail_invalid_epoch() {
-    let (_, _, client) = setup_env(1, 5);
+    let TestConfig { client, .. } = setup_env(1, 5);
     let invalid_epoch = 43u64;
 
     assert_contract_err!(
@@ -393,7 +445,7 @@ fn signers_hash_by_epoch_fail_invalid_epoch() {
 
 #[test]
 fn version() {
-    let (env, _signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig { env, client, .. } = setup_env(1, randint(1, 10));
 
     assert_eq!(
         client.version(),
@@ -404,7 +456,7 @@ fn version() {
 #[test]
 #[should_panic(expected = "HostError: Error(Storage, MissingValue)")]
 fn upgrade_invalid_wasm_hash() {
-    let (env, _, client) = setup_env(1, randint(1, 10));
+    let TestConfig { env, client, .. } = setup_env(1, randint(1, 10));
 
     let new_wasm_hash = BytesN::<32>::from_array(&env, &[0; 32]);
     client.mock_all_auths().upgrade(&new_wasm_hash);
@@ -412,7 +464,7 @@ fn upgrade_invalid_wasm_hash() {
 
 #[test]
 fn upgrade_unauthorized() {
-    let (env, _signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig { env, client, .. } = setup_env(1, randint(1, 10));
 
     let not_owner = Address::generate(&env);
     let new_wasm_hash = BytesN::<32>::from_array(&env, &[0; 32]);

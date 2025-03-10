@@ -2,8 +2,8 @@ use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::{vec, Address, BytesN, Env, Vec};
 use stellar_axelar_std::{assert_auth, assert_contract_err};
 
-use super::utils::setup_env;
 use crate::error::ContractError;
+use crate::tests::testutils::{setup_env, TestConfig};
 use crate::testutils::{generate_proof, generate_signers_set, randint};
 use crate::types::{ProofSignature, ProofSigner, WeightedSigner, WeightedSigners};
 use crate::{AxelarGateway, AxelarGatewayClient};
@@ -37,7 +37,11 @@ fn initialization_fails_with_empty_signer_set() {
 #[test]
 #[should_panic(expected = "failed ED25519 verification")]
 fn validate_proof_fails_with_invalid_signatures() {
-    let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let proof_hash: BytesN<32> = BytesN::random(&env);
     let proof = generate_proof(&env, proof_hash, signers);
@@ -49,7 +53,9 @@ fn validate_proof_fails_with_invalid_signatures() {
 
 #[test]
 fn domain_separator_succeeds_with_register() {
-    let (_, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        signers, client, ..
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     assert_eq!(client.domain_separator(), signers.domain_separator);
 }
@@ -83,7 +89,7 @@ fn minimum_rotation_delay_succeeds_with_register() {
 #[test]
 fn previous_signers_retention_succeeds_with_register() {
     let previous_signers_retention = randint(0, 10);
-    let (_, _, client) = setup_env(previous_signers_retention, randint(1, 10));
+    let TestConfig { client, .. } = setup_env(previous_signers_retention, randint(1, 10));
 
     assert_eq!(
         client.previous_signers_retention(),
@@ -93,7 +99,11 @@ fn previous_signers_retention_succeeds_with_register() {
 
 #[test]
 fn validate_proof_fails_with_empty_signatures() {
-    let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let msg_hash: BytesN<32> = BytesN::random(&env);
     let mut proof = generate_proof(&env, msg_hash.clone(), signers);
@@ -115,7 +125,11 @@ fn validate_proof_fails_with_empty_signatures() {
 
 #[test]
 fn validate_proof_fails_if_threshold_not_met() {
-    let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let mut total_weight = 0u128;
 
@@ -144,7 +158,11 @@ fn validate_proof_fails_if_threshold_not_met() {
 
 #[test]
 fn validate_proof_fails_with_invalid_signer_set() {
-    let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let new_signers = generate_signers_set(&env, randint(1, 10), signers.domain_separator);
 
@@ -158,7 +176,11 @@ fn validate_proof_fails_with_invalid_signer_set() {
 
 #[test]
 fn validate_proof_fails_on_threshold_overflow() {
-    let (env, mut signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        mut signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let last_index = signers.signers.signers.len() - 1;
 
@@ -178,7 +200,11 @@ fn validate_proof_fails_on_threshold_overflow() {
 
 #[test]
 fn rotate_signers_fails_with_empty_signers() {
-    let (env, signers, client) = setup_env(randint(0, 10), randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(randint(0, 10), randint(1, 10));
 
     let empty_signers = WeightedSigners {
         signers: Vec::<WeightedSigner>::new(&env),
@@ -199,7 +225,11 @@ fn rotate_signers_fails_with_empty_signers() {
 
 #[test]
 fn rotate_signers_fails_with_zero_weight() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
 
@@ -222,7 +252,11 @@ fn rotate_signers_fails_with_zero_weight() {
 
 #[test]
 fn rotate_signers_fails_on_weight_overflow() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     let mut new_signers = generate_signers_set(&env, randint(3, 10), BytesN::random(&env));
 
@@ -245,7 +279,12 @@ fn rotate_signers_fails_on_weight_overflow() {
 
 #[test]
 fn rotate_signers_fails_with_zero_threshold() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
+
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
 
     new_signers.signers.threshold = 0u128;
@@ -263,7 +302,12 @@ fn rotate_signers_fails_with_zero_threshold() {
 
 #[test]
 fn rotate_signers_fails_with_low_total_weight() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
+
     let mut new_signers = generate_signers_set(&env, randint(1, 10), BytesN::random(&env));
 
     let total_weight = new_signers
@@ -291,7 +335,11 @@ fn rotate_signers_fails_with_low_total_weight() {
 
 #[test]
 fn rotate_signers_fails_with_wrong_signer_order() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     let min_signers = 2; // need at least 2 signers to test incorrect ordering
     let mut new_signers =
@@ -321,7 +369,11 @@ fn rotate_signers_fails_with_wrong_signer_order() {
 
 #[test]
 fn rotate_signers_fails_with_duplicated_signers() {
-    let (env, signers, client) = setup_env(1, randint(1, 10));
+    let TestConfig {
+        env,
+        signers,
+        client,
+    } = setup_env(1, randint(1, 10));
 
     let new_signers = generate_signers_set(&env, randint(1, 10), signers.domain_separator.clone());
     let duplicated_signers = new_signers.clone();
@@ -346,7 +398,11 @@ fn rotate_signers_fails_with_duplicated_signers() {
 #[test]
 fn rotate_signers_fails_with_outdated_signer_set() {
     let previous_signer_retention = randint(0, 5);
-    let (env, original_signers, client) = setup_env(previous_signer_retention, randint(1, 10));
+    let TestConfig {
+        env,
+        signers: original_signers,
+        client,
+    } = setup_env(previous_signer_retention, randint(1, 10));
 
     let msg_hash: BytesN<32> = BytesN::random(&env);
 
@@ -414,7 +470,11 @@ fn rotate_signers_fails_with_insufficient_rotation_delay() {
 #[test]
 fn multi_rotate_signers() {
     let previous_signer_retention = randint(1, 5);
-    let (env, original_signers, client) = setup_env(previous_signer_retention, randint(1, 10));
+    let TestConfig {
+        env,
+        signers: original_signers,
+        client,
+    } = setup_env(previous_signer_retention, randint(1, 10));
 
     let msg_hash: BytesN<32> = BytesN::random(&env);
 

@@ -25,11 +25,13 @@ mod tests;
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "library", not(feature = "testutils")))] {
         pub use interface::{AxelarGatewayClient, AxelarGatewayInterface};
+        // pub mod migrate;
     } else {
         mod auth;
         pub mod event;
         mod storage;
         mod contract;
+        mod migrate;
 
         pub use contract::{AxelarGateway, AxelarGatewayClient};
     }
